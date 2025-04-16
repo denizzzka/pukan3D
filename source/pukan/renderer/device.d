@@ -6,9 +6,9 @@ import pukan.exceptions;
 import log = std.logger;
 import std.string: toStringz;
 
-class Device
-{
-    this(Backend b)
-    {
-    }
-}
+//~ class Device
+//~ {
+    //~ this(Backend b)
+    //~ {
+    //~ }
+//~ }

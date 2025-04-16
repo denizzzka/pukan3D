@@ -4,7 +4,6 @@ public import pukan.renderer.device;
 
 import pukan.vulkan_sdk;
 import pukan.exceptions;
-import log = std.logger;
 import std.stdio;
 import std.string: toStringz;
 
@@ -14,8 +13,15 @@ uint makeApiVersion(uint variant, uint major, uint minor, uint patch)
     return ((((uint)(variant)) << 29U) | (((uint)(major)) << 22U) | (((uint)(minor)) << 12U) | ((uint)(patch)));
 }
 
-class Backend
+class Backend(alias Logger)
 {
+    static void log_info(string s)
+    {
+        Logger.info(s);
+        //~ static if(getThreadLocalLogger !is null)
+            //~ getThreadLocalLogger.info(s);
+    }
+
     VkApplicationInfo info = {
          sType: VkStructureType.VK_STRUCTURE_TYPE_APPLICATION_INFO,
          apiVersion: makeApiVersion(0, 1, 2, 0),
@@ -57,7 +63,7 @@ class Backend
         vkCreateInstance(&createInfo, allocator, &instance)
             .vkCheck("Vulkan instance creation failed");
 
-        log.info("Vulkan instance created");
+        log_info("Vulkan instance created");
     }
 
     ~this()
@@ -126,9 +132,9 @@ class Backend
         }
     }
 
-    debug DebugLogger attachDebugger()
+    debug auto attachDebugger()
     {
-        auto d = new DebugLogger(this);
+        auto d = new DebugLogger!Backend(this);
 
         // Extension commands that are not core or WSI have to be loaded
         auto fun = cast(PFN_vkCreateDebugUtilsMessengerEXT) vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
@@ -148,14 +154,15 @@ auto vkCheck(VkResult ret, string err_descr = "Vulkan exception")
     return ret;
 }
 
-class DebugLogger
+//TODO: rename to DebugChartRecorder?
+class DebugLogger(TBackend)
 {
-    Backend backend;
+    TBackend backend;
 
     VkDebugUtilsMessengerCreateInfoEXT createInfo;
     VkDebugUtilsMessengerEXT messenger;
 
-    this(Backend b)
+    this(TBackend b)
     {
         with(VkDebugUtilsMessageSeverityFlagBitsEXT)
         with(VkDebugUtilsMessageTypeFlagBitsEXT)

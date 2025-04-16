@@ -1,5 +1,6 @@
 import pukan;
 import raylib;
+import std.logger;
 import std.stdio;
 import std.string: toStringz;
 
@@ -25,7 +26,9 @@ void main() {
 
     InitWindow(width, height, name.toStringz);
     SetTargetFPS(fps);
-    auto vk = new Backend(name, makeApiVersion(1,2,3,4));
+
+    static auto getLogger() => stdThreadLocalLog();
+    auto vk = new Backend!(getLogger)(name, makeApiVersion(1,2,3,4));
     vk.printAllAvailableLayers();
 
     debug {
