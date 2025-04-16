@@ -1,5 +1,5 @@
 import pukan;
-import raylib;
+static import dsdl;
 import std.logger;
 import std.stdio;
 import std.string: toStringz;
@@ -32,8 +32,22 @@ void main() {
 
 	immutable name = "D/pukan3D/Raylib project";
 
-    InitWindow(width, height, name.toStringz);
-    SetTargetFPS(fps);
+    dsdl.loadSO();
+    dsdl.init(everything: true);
+
+    auto window = new dsdl.Window(
+        name,
+        [
+            dsdl.WindowPos.undefined,
+            dsdl.WindowPos.undefined,
+        ],
+        [800, 600],
+        openGL: true,
+        resizable: true
+    );
+
+    window.minimumSize = [400, 300];
+    auto renderer = new dsdl.Renderer(window, accelerated : true, presentVSync : true);
 
     static auto getLogger() => stdThreadLocalLog();
     auto vk = new Backend!(getLogger)(name, makeApiVersion(1,2,3,4));
@@ -43,17 +57,27 @@ void main() {
     debug auto dbg = vk.attachFlightRecorder();
     debug scope(exit) destroy(dbg);
 
-    while(!WindowShouldClose()) {
-        // process events
-        // update
-        // render
-        BeginDrawing();
-        ClearBackground(Colors.WHITE);
-        
-        // draw stuff
-        
-        EndDrawing();
+    bool running = true;
+    while (running) {
+        dsdl.pumpEvents();
+        while (auto event = dsdl.pollEvent())
+        {
+            // On quit
+            if (cast(dsdl.QuitEvent) event) {
+                running = false;
+            }
+        }
+
+        // Clears the screen with white
+        renderer.drawColor = dsdl.Color(255, 255, 255);
+        renderer.clear();
+
+        // Draws a filled red box at the center of the screen
+        renderer.drawColor = dsdl.Color(255, 0, 0);
+        renderer.fillRect(dsdl.Rect(350, 250, 100, 100));
+
+        renderer.present();
     }
 
-    CloseWindow();
+    dsdl.quit();
 }
