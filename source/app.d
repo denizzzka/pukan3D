@@ -29,8 +29,7 @@ void main() {
     vk.printAllAvailableLayers();
 
     debug {
-        auto dbg = new DebugLogger();
-        vk.attachDebugger(dbg);
+        auto dbg = vk.attachDebugger();
     }
 
     while(!WindowShouldClose()) {

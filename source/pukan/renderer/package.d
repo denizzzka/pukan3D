@@ -81,13 +81,17 @@ class Backend
         }
     }
 
-    debug void attachDebugger(DebugLogger d)
+    debug DebugLogger attachDebugger()
     {
+        auto d = new DebugLogger(this);
+
         // Extension commands that are not core or WSI have to be loaded
         auto fun = cast(PFN_vkCreateDebugUtilsMessengerEXT) vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
 
         fun(instance, &d.createInfo, allocator, &d.messenger)
             .vkCheck(__FUNCTION__);
+
+        return d;
     }
 }
 
@@ -101,10 +105,12 @@ auto vkCheck(VkResult ret, string err_descr = "Vulkan exception")
 
 class DebugLogger
 {
+    Backend backend;
+
     VkDebugUtilsMessengerCreateInfoEXT createInfo;
     VkDebugUtilsMessengerEXT messenger;
 
-    this()
+    this(Backend b)
     {
         with(VkDebugUtilsMessageSeverityFlagBitsEXT)
         with(VkDebugUtilsMessageTypeFlagBitsEXT)
