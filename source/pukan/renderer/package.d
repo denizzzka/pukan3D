@@ -129,7 +129,7 @@ class Backend(alias Logger)
         }
     }
 
-    debug auto attachFlightRecorder()
+    debug scope attachFlightRecorder()
     {
         auto d = new FlightRecorder!Backend(this);
 
@@ -160,6 +160,8 @@ class FlightRecorder(TBackend)
 
     this(TBackend b)
     {
+        backend = b;
+
         with(VkDebugUtilsMessageSeverityFlagBitsEXT)
         with(VkDebugUtilsMessageTypeFlagBitsEXT)
         createInfo = VkDebugUtilsMessengerCreateInfoEXT(
@@ -168,6 +170,13 @@ class FlightRecorder(TBackend)
             messageType: VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT,
             pfnUserCallback: &messenger_callback
         );
+    }
+
+    ~this()
+    {
+        auto fun = cast(PFN_vkDestroyDebugUtilsMessengerEXT) vkGetInstanceProcAddr(backend.instance, "vkDestroyDebugUtilsMessengerEXT");
+
+        fun(backend.instance, messenger, backend.allocator);
     }
 
     extern(C) static uint messenger_callback(

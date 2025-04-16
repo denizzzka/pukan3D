@@ -22,6 +22,14 @@ enum height = 640;
 //~ }
 
 void main() {
+    version(none)
+    version(linux)
+    version(DigitalMars)
+    {
+        import etc.linux.memoryerror;
+        registerMemoryAssertHandler();
+    }
+
 	immutable name = "D/pukan3D/Raylib project";
 
     InitWindow(width, height, name.toStringz);
@@ -29,11 +37,11 @@ void main() {
 
     static auto getLogger() => stdThreadLocalLog();
     auto vk = new Backend!(getLogger)(name, makeApiVersion(1,2,3,4));
+    scope(exit) destroy(vk);
     vk.printAllAvailableLayers();
 
-    debug {
-        auto dbg = vk.attachFlightRecorder();
-    }
+    debug auto dbg = vk.attachFlightRecorder();
+    debug scope(exit) destroy(dbg);
 
     while(!WindowShouldClose()) {
         // process events
