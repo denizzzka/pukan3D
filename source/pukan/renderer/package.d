@@ -1,6 +1,8 @@
 module pukan.renderer;
 
 import pukan.vulkan_sdk;
+import pukan.exceptions;
+import log = std.logger;
 import std.string: toStringz;
 
 /// VK_MAKE_API_VERSION macros
@@ -19,6 +21,7 @@ class Backend
     };
 
     VkInstance instance;
+    VkAllocationCallbacks* custom_allocator = null;
 
     this(string appName, uint appVer)
     {
@@ -30,7 +33,11 @@ class Backend
             pApplicationInfo: &info,
         };
 
-        vkCreateInstance(&createInfo, null, &instance);
+        auto ret = vkCreateInstance(&createInfo, custom_allocator, &instance);
+        if(ret != VkResult.VK_SUCCESS)
+            throw new PukanException("Vulkan instance creation failed", ret);
+
+        log.info("Vulkan instance created");
     }
 }
 
