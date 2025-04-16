@@ -146,7 +146,7 @@ class Backend(alias Logger)
 auto vkCheck(VkResult ret, string err_descr = "Vulkan exception")
 {
     if(ret != VkResult.VK_SUCCESS)
-        throw new PukanException(err_descr, ret);
+        throw new PukanExceptionWithCode(err_descr, ret);
 
     return ret;
 }
