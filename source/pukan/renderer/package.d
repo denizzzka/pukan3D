@@ -94,26 +94,29 @@ class Backend(alias Logger)
     void printAllDevices()
     {
         foreach(d; devices)
-        {
-            VkPhysicalDeviceProperties props;
-            vkGetPhysicalDeviceProperties(d, &props);
+            printDevice(d);
+    }
 
-            VkPhysicalDeviceProperties2 props2 = {
-                sType: VkStructureType.VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2
-            };
-            vkGetPhysicalDeviceProperties2(d, &props2);
+    static void printDevice(VkPhysicalDevice d)
+    {
+        VkPhysicalDeviceProperties props;
+        vkGetPhysicalDeviceProperties(d, &props);
 
-            VkPhysicalDeviceMemoryProperties mem;
-            vkGetPhysicalDeviceMemoryProperties(d, &mem);
+        VkPhysicalDeviceProperties2 props2 = {
+            sType: VkStructureType.VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2
+        };
+        vkGetPhysicalDeviceProperties2(d, &props2);
 
-            VkPhysicalDeviceFeatures features;
-            vkGetPhysicalDeviceFeatures(d, &features);
+        VkPhysicalDeviceMemoryProperties mem;
+        vkGetPhysicalDeviceMemoryProperties(d, &mem);
 
-            log_info(props);
-            log_info(props2);
-            log_info(mem);
-            log_info(features);
-        }
+        VkPhysicalDeviceFeatures features;
+        vkGetPhysicalDeviceFeatures(d, &features);
+
+        log_info(props);
+        log_info(props2);
+        log_info(mem);
+        log_info(features);
     }
 
     debug scope attachFlightRecorder()
@@ -144,7 +147,11 @@ auto getArrayFrom(alias func, T)(T obj)
     import std.traits;
 
     uint count;
-    func(obj, &count, null).vkCheck;
+
+    static if(is(ReturnType!func == void))
+        func(obj, &count, null);
+    else
+        func(obj, &count, null).vkCheck;
 
     alias Tptr = Parameters!func[2];
 
@@ -154,7 +161,10 @@ auto getArrayFrom(alias func, T)(T obj)
     {
         ret.length = count;
 
-        func(obj, &count, ret.ptr).vkCheck;
+        static if(is(ReturnType!func == void))
+            func(obj, &count, ret.ptr);
+        else
+            func(obj, &count, ret.ptr).vkCheck;
     }
 
     return ret;
