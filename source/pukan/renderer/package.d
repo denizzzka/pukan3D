@@ -4,7 +4,6 @@ public import pukan.renderer.device;
 
 import pukan.vulkan_sdk;
 import pukan.exceptions;
-import std.stdio;
 import std.string: toStringz;
 
 /// VK_MAKE_API_VERSION macros
@@ -15,7 +14,7 @@ uint makeApiVersion(uint variant, uint major, uint minor, uint patch)
 
 class Backend(alias Logger)
 {
-    static void log_info(string s)
+    static void log_info(A...)(A s)
     {
         Logger.info(s);
         //~ static if(getThreadLocalLogger !is null)
@@ -85,7 +84,7 @@ class Backend(alias Logger)
             vkEnumerateInstanceLayerProperties(&count, layers.ptr).vkCheck;
 
             foreach(l; layers)
-                writeln(l.layerName);
+                log_info(l.layerName);
         }
     }
 
@@ -125,10 +124,10 @@ class Backend(alias Logger)
             VkPhysicalDeviceFeatures features;
             vkGetPhysicalDeviceFeatures(d, &features);
 
-            writeln(props);
-            writeln(props2);
-            writeln(mem);
-            writeln(features);
+            log_info(props);
+            log_info(props2);
+            log_info(mem);
+            log_info(features);
         }
     }
 
