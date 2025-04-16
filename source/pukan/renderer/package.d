@@ -39,11 +39,16 @@ class Backend
 
         debug extension_list ~= VK_EXT_DEBUG_UTILS_EXTENSION_NAME.ptr;
 
+        const(char*)[] validation_layers;
+        debug validation_layers ~= "VK_LAYER_KHRONOS_validation";
+
         VkInstanceCreateInfo createInfo = {
             sType: VkStructureType.VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
             pApplicationInfo: &info,
             ppEnabledExtensionNames: extension_list.ptr,
             enabledExtensionCount: cast(uint) extension_list.length,
+            ppEnabledLayerNames: validation_layers.ptr,
+            enabledLayerCount: cast(uint) validation_layers.length,
         };
 
         auto ret = vkCreateInstance(&createInfo, custom_allocator, &instance);
