@@ -28,9 +28,17 @@ class Backend
         info.pApplicationName = appName.toStringz;
         info.applicationVersion = appVer;
 
+        const(char*)[] extension_list = [
+            VK_KHR_SURFACE_EXTENSION_NAME.ptr,
+        ];
+
+        debug extension_list ~= VK_EXT_DEBUG_UTILS_EXTENSION_NAME.ptr;
+
         VkInstanceCreateInfo createInfo = {
             sType: VkStructureType.VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
             pApplicationInfo: &info,
+            ppEnabledExtensionNames: extension_list.ptr,
+            enabledExtensionCount: cast(uint) extension_list.length,
         };
 
         auto ret = vkCreateInstance(&createInfo, custom_allocator, &instance);
