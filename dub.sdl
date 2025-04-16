@@ -1,5 +1,5 @@
-name "pukan3d"
-description "A minimal D application."
+name "pukan"
+description "Vulkan API D library"
 authors "denizzz"
 copyright "Copyright © 2025, denizzz"
 license "BSL-1.0"
