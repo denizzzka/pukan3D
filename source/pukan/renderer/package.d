@@ -58,9 +58,32 @@ class Backend
         log.info("Vulkan instance created");
     }
 
-    this()
+    ~this()
     {
         vkDestroyInstance(instance, custom_allocator);
+    }
+
+    void printAllAvailableLayers()
+    {
+        uint count;
+
+        auto ret = vkEnumerateInstanceLayerProperties(&count, null);
+        if(ret != VkResult.VK_SUCCESS)
+            throw new PukanException("vkEnumerateInstanceLayerProperties failed", ret);
+
+        if(count > 0)
+        {
+            VkLayerProperties[] layers;
+            layers.length = count;
+
+            ret = vkEnumerateInstanceLayerProperties(&count, layers.ptr);
+            if(ret != VkResult.VK_SUCCESS)
+                throw new PukanException("vkEnumerateInstanceLayerProperties failed", ret);
+
+            import std.stdio;
+            foreach(l; layers)
+                writeln(l.layerName);
+        }
     }
 }
 

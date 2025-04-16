@@ -26,6 +26,7 @@ void main() {
     InitWindow(width, height, name.toStringz);
     SetTargetFPS(fps);
     auto vk = new Backend(name, makeApiVersion(1,2,3,4));
+    vk.printAllAvailableLayers();
 
     while(!WindowShouldClose()) {
         // process events
