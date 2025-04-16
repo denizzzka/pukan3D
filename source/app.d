@@ -32,7 +32,7 @@ void main() {
     vk.printAllAvailableLayers();
 
     debug {
-        auto dbg = vk.attachDebugger();
+        auto dbg = vk.attachFlightRecorder();
     }
 
     while(!WindowShouldClose()) {

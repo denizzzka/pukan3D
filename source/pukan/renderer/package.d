@@ -132,9 +132,9 @@ class Backend(alias Logger)
         }
     }
 
-    debug auto attachDebugger()
+    debug auto attachFlightRecorder()
     {
-        auto d = new DebugLogger!Backend(this);
+        auto d = new FlightRecorder!Backend(this);
 
         // Extension commands that are not core or WSI have to be loaded
         auto fun = cast(PFN_vkCreateDebugUtilsMessengerEXT) vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
@@ -154,8 +154,7 @@ auto vkCheck(VkResult ret, string err_descr = "Vulkan exception")
     return ret;
 }
 
-//TODO: rename to DebugChartRecorder?
-class DebugLogger(TBackend)
+class FlightRecorder(TBackend)
 {
     TBackend backend;
 
