@@ -28,6 +28,11 @@ void main() {
     auto vk = new Backend(name, makeApiVersion(1,2,3,4));
     vk.printAllAvailableLayers();
 
+    debug {
+        auto dbg = new DebugLogger();
+        vk.attachDebugger(dbg);
+    }
+
     while(!WindowShouldClose()) {
         // process events
         // update

@@ -80,6 +80,15 @@ class Backend
                 writeln(l.layerName);
         }
     }
+
+    debug void attachDebugger(DebugLogger d)
+    {
+        // Extension commands that are not core or WSI have to be loaded
+        auto fun = cast(PFN_vkCreateDebugUtilsMessengerEXT) vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
+
+        fun(instance, &d.createInfo, custom_allocator, &d.messenger)
+            .vkCheck(__FUNCTION__);
+    }
 }
 
 auto vkCheck(VkResult ret, string err_descr = "Vulkan exception")
@@ -88,6 +97,37 @@ auto vkCheck(VkResult ret, string err_descr = "Vulkan exception")
         throw new PukanException(err_descr, ret);
 
     return ret;
+}
+
+class DebugLogger
+{
+    VkDebugUtilsMessengerCreateInfoEXT createInfo;
+    VkDebugUtilsMessengerEXT messenger;
+
+    this()
+    {
+        with(VkDebugUtilsMessageSeverityFlagBitsEXT)
+        with(VkDebugUtilsMessageTypeFlagBitsEXT)
+        createInfo = VkDebugUtilsMessengerCreateInfoEXT(
+            sType: VkStructureType.VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT,
+            messageSeverity: (VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT),
+            messageType: VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT,
+            pfnUserCallback: &messenger_callback
+        );
+    }
+
+    extern(C) static uint messenger_callback(
+        VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+        VkDebugUtilsMessageTypeFlagsEXT messageType,
+        const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+        void* pUserData
+    )
+    {
+        import std.stdio;
+        writeln(pCallbackData.pMessage);
+
+        return VkResult.VK_SUCCESS;
+    }
 }
 
 class Frame
