@@ -32,6 +32,11 @@ class Backend
             VK_KHR_SURFACE_EXTENSION_NAME.ptr,
         ];
 
+        version(Windows)
+            extension_list ~= VK_KHR_WIN32_SURFACE_EXTENSION_NAME.ptr;
+        else
+            extension_list ~= VK_KHR_XCB_SURFACE_EXTENSION_NAME.ptr; //X11
+
         debug extension_list ~= VK_EXT_DEBUG_UTILS_EXTENSION_NAME.ptr;
 
         VkInstanceCreateInfo createInfo = {
