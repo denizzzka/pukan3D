@@ -1,8 +1,11 @@
 module pukan.renderer;
 
+public import pukan.renderer.device;
+
 import pukan.vulkan_sdk;
 import pukan.exceptions;
 import log = std.logger;
+import std.stdio;
 import std.string: toStringz;
 
 /// VK_MAKE_API_VERSION macros
@@ -75,9 +78,51 @@ class Backend
 
             vkEnumerateInstanceLayerProperties(&count, layers.ptr).vkCheck;
 
-            import std.stdio;
             foreach(l; layers)
                 writeln(l.layerName);
+        }
+    }
+
+    VkPhysicalDevice[] devices()
+    {
+        uint count;
+
+        vkEnumeratePhysicalDevices(instance, &count, null).vkCheck;
+
+        VkPhysicalDevice[] devs;
+
+        if(count > 0)
+        {
+            devs.length = count;
+
+            vkEnumeratePhysicalDevices(instance, &count, devs.ptr).vkCheck;
+        }
+
+        return devs;
+    }
+
+    void printAllDevices()
+    {
+        foreach(d; devices)
+        {
+            VkPhysicalDeviceProperties props;
+            vkGetPhysicalDeviceProperties(d, &props);
+
+            VkPhysicalDeviceProperties2 props2 = {
+                sType: VkStructureType.VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2
+            };
+            vkGetPhysicalDeviceProperties2(d, &props2);
+
+            VkPhysicalDeviceMemoryProperties mem;
+            vkGetPhysicalDeviceMemoryProperties(d, &mem);
+
+            VkPhysicalDeviceFeatures features;
+            vkGetPhysicalDeviceFeatures(d, &features);
+
+            writeln(props);
+            writeln(props2);
+            writeln(mem);
+            writeln(features);
         }
     }
 
