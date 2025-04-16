@@ -21,7 +21,7 @@ class Backend
     };
 
     VkInstance instance;
-    VkAllocationCallbacks* custom_allocator = null;
+    VkAllocationCallbacks* allocator = null;
 
     this(string appName, uint appVer)
     {
@@ -51,7 +51,7 @@ class Backend
             enabledLayerCount: cast(uint) validation_layers.length,
         };
 
-        vkCreateInstance(&createInfo, custom_allocator, &instance)
+        vkCreateInstance(&createInfo, allocator, &instance)
             .vkCheck("Vulkan instance creation failed");
 
         log.info("Vulkan instance created");
@@ -59,7 +59,7 @@ class Backend
 
     ~this()
     {
-        vkDestroyInstance(instance, custom_allocator);
+        vkDestroyInstance(instance, allocator);
     }
 
     void printAllAvailableLayers()
@@ -86,7 +86,7 @@ class Backend
         // Extension commands that are not core or WSI have to be loaded
         auto fun = cast(PFN_vkCreateDebugUtilsMessengerEXT) vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
 
-        fun(instance, &d.createInfo, custom_allocator, &d.messenger)
+        fun(instance, &d.createInfo, allocator, &d.messenger)
             .vkCheck(__FUNCTION__);
     }
 }
