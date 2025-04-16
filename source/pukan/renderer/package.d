@@ -39,6 +39,11 @@ class Backend
 
         log.info("Vulkan instance created");
     }
+
+    this()
+    {
+        vkDestroyInstance(instance, custom_allocator);
+    }
 }
 
 class Frame
