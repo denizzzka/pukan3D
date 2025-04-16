@@ -17,8 +17,6 @@ class Backend(alias Logger)
     static void log_info(A...)(A s)
     {
         Logger.info(s);
-        //~ static if(getThreadLocalLogger !is null)
-            //~ getThreadLocalLogger.info(s);
     }
 
     VkApplicationInfo info = {
