@@ -51,9 +51,8 @@ class Backend
             enabledLayerCount: cast(uint) validation_layers.length,
         };
 
-        auto ret = vkCreateInstance(&createInfo, custom_allocator, &instance);
-        if(ret != VkResult.VK_SUCCESS)
-            throw new PukanException("Vulkan instance creation failed", ret);
+        vkCreateInstance(&createInfo, custom_allocator, &instance)
+            .vkCheck("Vulkan instance creation failed");
 
         log.info("Vulkan instance created");
     }
@@ -67,24 +66,28 @@ class Backend
     {
         uint count;
 
-        auto ret = vkEnumerateInstanceLayerProperties(&count, null);
-        if(ret != VkResult.VK_SUCCESS)
-            throw new PukanException("vkEnumerateInstanceLayerProperties failed", ret);
+        vkEnumerateInstanceLayerProperties(&count, null).vkCheck;
 
         if(count > 0)
         {
             VkLayerProperties[] layers;
             layers.length = count;
 
-            ret = vkEnumerateInstanceLayerProperties(&count, layers.ptr);
-            if(ret != VkResult.VK_SUCCESS)
-                throw new PukanException("vkEnumerateInstanceLayerProperties failed", ret);
+            vkEnumerateInstanceLayerProperties(&count, layers.ptr).vkCheck;
 
             import std.stdio;
             foreach(l; layers)
                 writeln(l.layerName);
         }
     }
+}
+
+auto vkCheck(VkResult ret, string err_descr = "Vulkan exception")
+{
+    if(ret != VkResult.VK_SUCCESS)
+        throw new PukanException(err_descr, ret);
+
+    return ret;
 }
 
 class Frame
