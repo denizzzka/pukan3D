@@ -88,20 +88,7 @@ class Backend(alias Logger)
 
     VkPhysicalDevice[] devices()
     {
-        uint count;
-
-        vkEnumeratePhysicalDevices(instance, &count, null).vkCheck;
-
-        VkPhysicalDevice[] devs;
-
-        if(count > 0)
-        {
-            devs.length = count;
-
-            vkEnumeratePhysicalDevices(instance, &count, devs.ptr).vkCheck;
-        }
-
-        return devs;
+        return getArrayFrom!vkEnumeratePhysicalDevices(instance);
     }
 
     void printAllDevices()
@@ -147,6 +134,28 @@ auto vkCheck(VkResult ret, string err_descr = "Vulkan exception")
 {
     if(ret != VkResult.VK_SUCCESS)
         throw new PukanExceptionWithCode(err_descr, ret);
+
+    return ret;
+}
+
+/// Special helper to fetch values using methods like vkEnumeratePhysicalDevices
+auto getArrayFrom(alias func, T)(T obj)
+{
+    import std.traits;
+
+    uint count;
+    func(obj, &count, null).vkCheck;
+
+    alias Tptr = Parameters!func[2];
+
+    PointerTarget!Tptr[] ret;
+
+    if(count > 0)
+    {
+        ret.length = count;
+
+        func(obj, &count, ret.ptr).vkCheck;
+    }
 
     return ret;
 }
