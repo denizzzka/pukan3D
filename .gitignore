@@ -1,0 +1,16 @@
+.dub
+docs.json
+__dummy.html
+docs/
+/pukan3d
+pukan3d.so
+pukan3d.dylib
+pukan3d.dll
+pukan3d.a
+pukan3d.lib
+pukan3d-test-*
+*.exe
+*.pdb
+*.o
+*.obj
+*.lst
