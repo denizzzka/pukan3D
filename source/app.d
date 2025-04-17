@@ -59,6 +59,8 @@ void main() {
     //~ glfwSetKeyCallback(demo.window, &demo_key_callback);
 
     import pukan.vulkan_sdk: VkSurfaceKHR;
+    static import glfw3.internal;
+
     VkSurfaceKHR surface;
     glfwCreateWindowSurface(
         vk.instance,
