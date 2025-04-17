@@ -14,14 +14,6 @@ uint makeApiVersion(uint variant, uint major, uint minor, uint patch)
 
 class Backend(alias Logger)
 {
-    // non-dispatcheable handles, so placing it here
-    VkSurfaceKHR surface;
-
-    static void log_info(A...)(A s)
-    {
-        Logger.info(s);
-    }
-
     VkApplicationInfo info = {
          sType: VkStructureType.VK_STRUCTURE_TYPE_APPLICATION_INFO,
          apiVersion: makeApiVersion(0, 1, 2, 0),
@@ -31,6 +23,14 @@ class Backend(alias Logger)
 
     VkInstance instance;
     VkAllocationCallbacks* allocator = null;
+
+    // non-dispatcheable handles, so placing it here
+    VkSurfaceKHR surface;
+
+    static void log_info(A...)(A s)
+    {
+        Logger.info(s);
+    }
 
     this(string appName, uint appVer)
     {
