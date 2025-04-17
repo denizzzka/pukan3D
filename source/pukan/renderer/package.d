@@ -73,20 +73,10 @@ class Backend(alias Logger)
 
     void printAllAvailableLayers()
     {
-        uint count;
+        auto layers = getArrayFrom!vkEnumerateInstanceLayerProperties();
 
-        vkEnumerateInstanceLayerProperties(&count, null).vkCheck;
-
-        if(count > 0)
-        {
-            VkLayerProperties[] layers;
-            layers.length = count;
-
-            vkEnumerateInstanceLayerProperties(&count, layers.ptr).vkCheck;
-
-            foreach(l; layers)
-                log_info(l.layerName);
-        }
+        foreach(l; layers)
+            log_info(l.layerName);
     }
 
     VkPhysicalDevice[] devices()
@@ -145,7 +135,7 @@ auto vkCheck(VkResult ret, string err_descr = "Vulkan exception")
 }
 
 /// Special helper to fetch values using methods like vkEnumeratePhysicalDevices
-auto getArrayFrom(alias func, T)(T obj)
+auto getArrayFrom(alias func, T...)(T obj)
 {
     import std.traits;
 
@@ -156,7 +146,8 @@ auto getArrayFrom(alias func, T)(T obj)
     else
         func(obj, &count, null).vkCheck;
 
-    alias Tptr = Parameters!func[2];
+    enum len = Parameters!func.length;
+    alias Tptr = Parameters!func[len-1];
 
     PointerTarget!Tptr[] ret;
 
