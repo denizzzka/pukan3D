@@ -1,6 +1,6 @@
 import pukan;
-import bindbc.sdl;
-static import dsdl;
+import glfw3.api;
+import std.exception;
 import std.logger;
 import std.stdio;
 import std.string: toStringz;
@@ -17,9 +17,9 @@ enum height = 640;
 
 //~ Clock getClock()
 //~ {
-	//~ Clock r;
-	//~ r.el
-	//~ GetTime
+    //~ Clock r;
+    //~ r.el
+    //~ GetTime
 //~ }
 
 void main() {
@@ -31,55 +31,39 @@ void main() {
         registerMemoryAssertHandler();
     }
 
-	immutable name = "D/pukan3D/Raylib project";
+    immutable name = "D/pukan3D/Raylib project";
 
     static auto getLogger() => stdThreadLocalLog();
     auto vk = new Backend!(getLogger)(name, makeApiVersion(1,2,3,4));
     scope(exit) destroy(vk);
-
-    dsdl.loadSO();
-    dsdl.init(everything: true);
-
-    auto sdl_window = SDL_CreateWindow(
-        name.toStringz,
-        SDL_WINDOWPOS_UNDEFINED,
-        SDL_WINDOWPOS_UNDEFINED,
-        640, 360,
-        SDL_WINDOW_SHOWN | SDL_WINDOW_VULKAN
-    );
-
-    auto window = new dsdl.Window(sdl_window, userRef: cast(void*) vk);
-    auto renderer = new dsdl.Renderer(window, accelerated : true, presentVSync : true);
 
     vk.printAllAvailableLayers();
 
     debug auto dbg = vk.attachFlightRecorder();
     debug scope(exit) destroy(dbg);
 
+    enforce(glfwInit());
+    scope(exit) glfwTerminate();
+
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+    auto window = glfwCreateWindow(width, height, name.toStringz, null, null);
+    enforce(window, "Cannot create a window");
+
+    //~ glfwSetWindowUserPointer(demo.window, demo);
+    //~ glfwSetWindowRefreshCallback(demo.window, &demo_refresh_callback);
+    //~ glfwSetFramebufferSizeCallback(demo.window, &demo_resize_callback);
+    //~ glfwSetKeyCallback(demo.window, &demo_key_callback);
+
     import pukan.vulkan_sdk: VkSurfaceKHR;
-    SDL_Vulkan_CreateSurface(window.sdlWindow, vk.instance, &vk.surface);
+    VkSurfaceKHR surface;
+    glfwCreateWindowSurface(
+        vk.instance,
+        window,
+        cast(glfw3.internal.VkAllocationCallbacks*) vk.allocator,
+        cast(ulong*) &surface
+    );
 
-    bool running = true;
-    while (running) {
-        dsdl.pumpEvents();
-        while (auto event = dsdl.pollEvent())
-        {
-            // On quit
-            if (cast(dsdl.QuitEvent) event) {
-                running = false;
-            }
-        }
+    vk.useSurface(surface);
 
-        // Clears the screen with white
-        renderer.drawColor = dsdl.Color(255, 255, 255);
-        renderer.clear();
-
-        // Draws a filled red box at the center of the screen
-        renderer.drawColor = dsdl.Color(255, 0, 0);
-        renderer.fillRect(dsdl.Rect(350, 250, 100, 100));
-
-        renderer.present();
-    }
-
-    dsdl.quit();
+    // implement main loop
 }

@@ -68,7 +68,15 @@ class Backend(alias Logger)
 
     ~this()
     {
+        if(surface)
+            vkDestroySurfaceKHR(instance, surface, allocator);
+
         vkDestroyInstance(instance, allocator);
+    }
+
+    void useSurface(VkSurfaceKHR s) @live
+    {
+        surface = s;
     }
 
     void printAllAvailableLayers()

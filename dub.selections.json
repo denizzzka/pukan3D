@@ -1,9 +1,6 @@
 {
 	"fileVersion": 1,
 	"versions": {
-		"bindbc-common": "1.0.5",
-		"bindbc-loader": "1.1.5",
-		"bindbc-sdl": "1.5.2",
-		"dsdl": "1.0.0"
+		"glfw-d": "1.1.1"
 	}
 }
