@@ -12,3 +12,8 @@ alias DeltaTime = Typedef!(float, float.init, "delta time");
 //~ {
     //~ VkInstance instance;
 //~ }
+
+struct MuteLogger
+{
+    void info(T...)(T s) {}
+}

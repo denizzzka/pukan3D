@@ -33,7 +33,11 @@ void main() {
 
     immutable name = "D/pukan3D/Raylib project";
 
-    static auto getLogger() => stdThreadLocalLog();
+    version(all)
+        static auto getLogger() => stdThreadLocalLog();
+    else
+        static auto getLogger() => MuteLogger();
+
     auto vk = new Backend!(getLogger)(name, makeApiVersion(1,2,3,4));
     scope(exit) destroy(vk);
 
