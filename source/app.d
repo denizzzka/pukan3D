@@ -56,6 +56,9 @@ void main() {
     debug auto dbg = vk.attachFlightRecorder();
     debug scope(exit) destroy(dbg);
 
+    import pukan.vulkan_sdk: VkSurfaceKHR;
+    SDL_Vulkan_CreateSurface(window.sdlWindow, vk.instance, &vk.surface);
+
     bool running = true;
     while (running) {
         dsdl.pumpEvents();

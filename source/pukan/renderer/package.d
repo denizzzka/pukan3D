@@ -14,6 +14,9 @@ uint makeApiVersion(uint variant, uint major, uint minor, uint patch)
 
 class Backend(alias Logger)
 {
+    // non-dispatcheable handles, so placing it here
+    VkSurfaceKHR surface;
+
     static void log_info(A...)(A s)
     {
         Logger.info(s);
