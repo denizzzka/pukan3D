@@ -1,4 +1,5 @@
 import pukan;
+import bindbc.sdl;
 static import dsdl;
 import std.logger;
 import std.stdio;
@@ -32,26 +33,24 @@ void main() {
 
 	immutable name = "D/pukan3D/Raylib project";
 
-    dsdl.loadSO();
-    dsdl.init(everything: true);
-
-    auto window = new dsdl.Window(
-        name,
-        [
-            dsdl.WindowPos.undefined,
-            dsdl.WindowPos.undefined,
-        ],
-        [800, 600],
-        openGL: true,
-        resizable: true
-    );
-
-    window.minimumSize = [400, 300];
-    auto renderer = new dsdl.Renderer(window, accelerated : true, presentVSync : true);
-
     static auto getLogger() => stdThreadLocalLog();
     auto vk = new Backend!(getLogger)(name, makeApiVersion(1,2,3,4));
     scope(exit) destroy(vk);
+
+    dsdl.loadSO();
+    dsdl.init(everything: true);
+
+    auto sdl_window = SDL_CreateWindow(
+        name.toStringz,
+        SDL_WINDOWPOS_UNDEFINED,
+        SDL_WINDOWPOS_UNDEFINED,
+        640, 360,
+        SDL_WINDOW_SHOWN | SDL_WINDOW_VULKAN
+    );
+
+    auto window = new dsdl.Window(sdl_window, userRef: cast(void*) vk);
+    auto renderer = new dsdl.Renderer(window, accelerated : true, presentVSync : true);
+
     vk.printAllAvailableLayers();
 
     debug auto dbg = vk.attachFlightRecorder();
