@@ -7,12 +7,17 @@ mixin template SurfaceMethods()
 {
     void printSurfaceFormats(VkPhysicalDevice pd, VkSurfaceKHR surface)
     {
-        auto fmt = getArrayFrom!vkGetPhysicalDeviceSurfaceFormatsKHR(pd, surface);
-
-        log_info(fmt);
+        auto fmts = getArrayFrom!vkGetPhysicalDeviceSurfaceFormatsKHR(pd, surface);
+        log_info(fmts);
     }
 
-    void printSurfaceCapabilities(VkPhysicalDevice pd)
+    void printPresentModes(VkPhysicalDevice pd, VkSurfaceKHR surface)
+    {
+        auto modes = getArrayFrom!vkGetPhysicalDeviceSurfacePresentModesKHR(pd, surface);
+        log_info(modes);
+    }
+
+    void printSurfaceCapabilities(VkPhysicalDevice pd, VkSurfaceKHR surface)
     {
         VkSurfaceCapabilitiesKHR c;
         vkGetPhysicalDeviceSurfaceCapabilitiesKHR(pd, surface, &c).vkCheck;
