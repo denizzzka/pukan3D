@@ -97,5 +97,8 @@ void main() {
 
     auto queue = device.getQueue();
 
+    auto swapChain = device.createSwapChain(capab);
+    scope(exit) destroy(swapChain);
+
     // implement main loop
 }

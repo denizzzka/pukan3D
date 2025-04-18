@@ -11,6 +11,7 @@ class LogicalDevice(Backend)
 {
     Backend backend;
     VkDevice device;
+
     const uint familyIdx;
 
     package this(Backend b, VkPhysicalDevice physicalDevice, const(char*)[] extension_list)
@@ -59,5 +60,41 @@ class LogicalDevice(Backend)
         vkGetDeviceQueue(device, familyIdx, queueIdx, &ret);
 
         return ret;
+    }
+
+    auto createSwapChain(in VkSurfaceCapabilitiesKHR capabilities)
+    {
+        VkSwapchainCreateInfoKHR cinf = {
+            sType: VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
+            surface: backend.surface,
+            imageFormat: VK_FORMAT_B8G8R8A8_SRGB,
+            imageColorSpace: VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
+            imageExtent: capabilities.currentExtent,
+            imageArrayLayers: 1, // number of views in a multiview/stereo surface. For non-stereoscopic-3D applications, this value is 1
+            imageUsage: VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, // specifies that the image can be used to create a VkImageView suitable for use as a color or resolve attachment in a VkFramebuffer
+            presentMode: VkPresentModeKHR.VK_PRESENT_MODE_MAILBOX_KHR,
+            minImageCount: capabilities.minImageCount + 1,
+        };
+
+        VkExtent2D extent = capabilities.currentExtent;
+
+        return new SwapChain!LogicalDevice(this, cinf);
+    }
+}
+
+class SwapChain(LogicalDevice)
+{
+    LogicalDevice device;
+    VkSwapchainKHR swapchain;
+
+    private this(LogicalDevice d, VkSwapchainCreateInfoKHR cinf)
+    {
+        device = d;
+        vkCreateSwapchainKHR(d.device, &cinf, d.backend.allocator, &swapchain).vkCheck;
+    }
+
+    ~this()
+    {
+        vkDestroySwapchainKHR(device.device, swapchain, device.backend.allocator);
     }
 }
