@@ -72,11 +72,13 @@ class LogicalDevice(Backend)
             imageExtent: capabilities.currentExtent,
             imageArrayLayers: 1, // number of views in a multiview/stereo surface. For non-stereoscopic-3D applications, this value is 1
             imageUsage: VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, // specifies that the image can be used to create a VkImageView suitable for use as a color or resolve attachment in a VkFramebuffer
+            imageSharingMode: VK_SHARING_MODE_EXCLUSIVE,
             presentMode: VkPresentModeKHR.VK_PRESENT_MODE_MAILBOX_KHR,
             minImageCount: capabilities.minImageCount + 1,
+            preTransform: capabilities.currentTransform,
+            compositeAlpha: VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
+            clipped: VK_TRUE,
         };
-
-        VkExtent2D extent = capabilities.currentExtent;
 
         return new SwapChain!LogicalDevice(this, cinf);
     }
@@ -87,7 +89,7 @@ class SwapChain(LogicalDevice)
     LogicalDevice device;
     VkSwapchainKHR swapchain;
 
-    private this(LogicalDevice d, VkSwapchainCreateInfoKHR cinf)
+    this(LogicalDevice d, VkSwapchainCreateInfoKHR cinf)
     {
         device = d;
         vkCreateSwapchainKHR(d.device, &cinf, d.backend.allocator, &swapchain).vkCheck;
