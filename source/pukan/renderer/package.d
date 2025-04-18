@@ -186,7 +186,12 @@ class Instance(alias Logger)
 
     auto createLogicalDevice(VkPhysicalDevice d)
     {
-        return new LogicalDevice!Instance(this, d);
+        //TODO: get extension_list from arguments
+        const(char*)[] extension_list = [
+            VK_KHR_SWAPCHAIN_EXTENSION_NAME.ptr,
+        ];
+
+        return new LogicalDevice!Instance(this, d, extension_list);
     }
 }
 

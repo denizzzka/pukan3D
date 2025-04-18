@@ -13,7 +13,7 @@ class LogicalDevice(Backend)
     VkDevice device;
     const uint familyIdx;
 
-    package this(Backend b, VkPhysicalDevice physicalDevice)
+    package this(Backend b, VkPhysicalDevice physicalDevice, const(char*)[] extension_list)
     {
         backend = b;
 
@@ -34,6 +34,8 @@ class LogicalDevice(Backend)
             sType: VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
             queueCreateInfoCount: 1,
             pQueueCreateInfos: &queueCreateInfo,
+            ppEnabledExtensionNames: extension_list.ptr,
+            enabledExtensionCount: cast(uint) extension_list.length,
         };
 
         vkCreateDevice(physicalDevice, &createInfo, b.allocator, &device).vkCheck;
