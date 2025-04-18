@@ -32,6 +32,7 @@ class Backend(alias Logger)
         Logger.info(s);
     }
 
+    //TODO: add "needed extensions list" argument
     ///
     this(string appName, uint appVer)
     {

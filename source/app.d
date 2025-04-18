@@ -1,5 +1,6 @@
 import pukan;
 import glfw3.api;
+import std.conv: to;
 import std.exception;
 import std.logger;
 import std.stdio;
@@ -51,6 +52,8 @@ void main() {
     enforce(glfwInit());
     scope(exit) glfwTerminate();
 
+    enforce(glfwVulkanSupported());
+
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     auto window = glfwCreateWindow(width, height, name.toStringz, null, null);
     enforce(window, "Cannot create a window");
@@ -59,6 +62,13 @@ void main() {
     //~ glfwSetWindowRefreshCallback(demo.window, &demo_refresh_callback);
     //~ glfwSetFramebufferSizeCallback(demo.window, &demo_resize_callback);
     //~ glfwSetKeyCallback(demo.window, &demo_key_callback);
+
+    // Print needed extensions
+    uint count;
+    const char** extensions = glfwGetRequiredInstanceExtensions(&count);
+    writeln("glfw needed extensions:");
+    foreach(i; 0 .. count)
+        writeln(extensions[i].to!string);
 
     import pukan.vulkan_sdk: VkSurfaceKHR;
     static import glfw3.internal;
