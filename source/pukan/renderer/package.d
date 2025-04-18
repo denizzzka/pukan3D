@@ -36,17 +36,11 @@ class Instance(alias Logger)
         Logger.info(s);
     }
 
-    //TODO: add "needed extensions list" argument
     ///
-    this(string appName, uint appVer)
+    this(string appName, uint appVer, const(char*)[] extension_list)
     {
         info.pApplicationName = appName.toStringz;
         info.applicationVersion = appVer;
-
-        //TODO: get extension_list from arguments
-        const(char*)[] extension_list = [
-            VK_KHR_SURFACE_EXTENSION_NAME.ptr,
-        ];
 
         version(Windows)
             extension_list ~= VK_KHR_WIN32_SURFACE_EXTENSION_NAME.ptr;

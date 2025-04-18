@@ -41,18 +41,6 @@ void main() {
 
     immutable name = "D/pukan3D/Raylib project";
 
-    auto vk = new Backend!(getLogger)(name, makeApiVersion(1,2,3,4));
-    scope(exit) destroy(vk);
-
-    //~ vk.printAllDevices();
-    //~ vk.printAllAvailableLayers();
-
-    debug auto dbg = vk.attachFlightRecorder();
-    debug scope(exit) destroy(dbg);
-
-    auto device = vk.createLogicalDevice();
-    scope(exit) destroy(device);
-
     enforce(glfwInit());
     scope(exit) glfwTerminate();
 
@@ -68,11 +56,24 @@ void main() {
     //~ glfwSetKeyCallback(demo.window, &demo_key_callback);
 
     // Print needed extensions
-    uint count;
-    const char** extensions = glfwGetRequiredInstanceExtensions(&count);
+    uint ext_count;
+    const char** extensions = glfwGetRequiredInstanceExtensions(&ext_count);
+
     writeln("glfw needed extensions:");
-    foreach(i; 0 .. count)
+    foreach(i; 0 .. ext_count)
         writeln(extensions[i].to!string);
+
+    auto vk = new Backend!(getLogger)(name, makeApiVersion(1,2,3,4), extensions[0 .. ext_count]);
+    scope(exit) destroy(vk);
+
+    //~ vk.printAllDevices();
+    //~ vk.printAllAvailableLayers();
+
+    debug auto dbg = vk.attachFlightRecorder();
+    debug scope(exit) destroy(dbg);
+
+    auto device = vk.createLogicalDevice();
+    scope(exit) destroy(device);
 
     import pukan.vulkan_sdk: VkSurfaceKHR;
     static import glfw3.internal;
