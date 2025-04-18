@@ -210,6 +210,7 @@ auto vkCheck(VkResult ret, string err_descr = "Vulkan exception")
     return ret;
 }
 
+//TODO: move to misc module
 /// Special helper to fetch values using methods like vkEnumeratePhysicalDevices
 auto getArrayFrom(alias func, T...)(T obj)
 {
