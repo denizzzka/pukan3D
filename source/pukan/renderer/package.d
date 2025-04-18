@@ -32,6 +32,7 @@ class Backend(alias Logger)
         Logger.info(s);
     }
 
+    ///
     this(string appName, uint appVer)
     {
         info.pApplicationName = appName.toStringz;
@@ -64,6 +65,12 @@ class Backend(alias Logger)
             .vkCheck("Vulkan instance creation failed");
 
         log_info("Vulkan instance created");
+    }
+
+    ///
+    this(VkInstance ins)
+    {
+        instance = ins;
     }
 
     ~this()
