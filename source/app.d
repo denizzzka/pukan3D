@@ -100,5 +100,8 @@ void main() {
     auto swapChain = device.createSwapChain(capab);
     scope(exit) destroy(swapChain);
 
+    auto images = swapChain.getImages();
+    assert(images.length >= 3, "images.length == "~images.length.to!string);
+
     // implement main loop
 }

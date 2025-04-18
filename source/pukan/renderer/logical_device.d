@@ -88,15 +88,30 @@ class SwapChain(LogicalDevice)
 {
     LogicalDevice device;
     VkSwapchainKHR swapchain;
+    const uint imageCount;
 
     this(LogicalDevice d, VkSwapchainCreateInfoKHR cinf)
     {
         device = d;
         vkCreateSwapchainKHR(d.device, &cinf, d.backend.allocator, &swapchain).vkCheck;
+
+        uint cnt;
+        vkGetSwapchainImagesKHR(device.device, swapchain, &cnt, null).vkCheck;
+        imageCount = cnt;
     }
 
     ~this()
     {
         vkDestroySwapchainKHR(device.device, swapchain, device.backend.allocator);
+    }
+
+    VkImage[] getImages()
+    {
+        uint cnt = imageCount;
+        VkImage* images;
+        vkGetSwapchainImagesKHR(device.device, swapchain, &cnt, images).vkCheck;
+        assert(cnt == imageCount);
+
+        return images[0 .. imageCount];
     }
 }
