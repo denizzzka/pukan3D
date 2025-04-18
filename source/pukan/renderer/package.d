@@ -87,6 +87,7 @@ class Backend(alias Logger)
             log_info(l.layerName);
     }
 
+    /// Returns: array of pointers to devices descriptions
     VkPhysicalDevice[] devices()
     {
         return getArrayFrom!vkEnumeratePhysicalDevices(instance);
