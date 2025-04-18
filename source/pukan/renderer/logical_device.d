@@ -88,20 +88,19 @@ class SwapChain(LogicalDevice)
 {
     LogicalDevice device;
     VkSwapchainKHR swapchain;
+    VkImage[] images;
 
     this(LogicalDevice d, VkSwapchainCreateInfoKHR cinf)
     {
         device = d;
+
         vkCreateSwapchainKHR(d.device, &cinf, d.backend.allocator, &swapchain).vkCheck;
+
+        images = getArrayFrom!vkGetSwapchainImagesKHR(device.device, swapchain);
     }
 
     ~this()
     {
         vkDestroySwapchainKHR(device.device, swapchain, device.backend.allocator);
-    }
-
-    VkImage[] getImages()
-    {
-        return getArrayFrom!vkGetSwapchainImagesKHR(device.device, swapchain);
     }
 }
