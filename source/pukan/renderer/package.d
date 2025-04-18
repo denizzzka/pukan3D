@@ -2,6 +2,7 @@ module pukan.renderer;
 
 public import pukan.renderer.logical_device;
 public import pukan.renderer.surface;
+import pukan: toPrettyString;
 
 import pukan.vulkan_sdk;
 import pukan.exceptions;
@@ -98,8 +99,7 @@ class Instance(alias Logger)
     {
         auto layers = getArrayFrom!vkEnumerateInstanceLayerProperties();
 
-        foreach(l; layers)
-            log_info(l.layerName);
+        log_info(layers.toPrettyString);
     }
 
     /// Returns: array of pointers to devices descriptions
@@ -130,10 +130,14 @@ class Instance(alias Logger)
         VkPhysicalDeviceFeatures features;
         vkGetPhysicalDeviceFeatures(d, &features);
 
-        log_info(props);
+        log_info("Properties:");
+        log_info(props.toPrettyString);
+        log_info("Properties 2:");
         log_info(props2);
-        log_info(mem);
-        log_info(features);
+        log_info("Memory:");
+        log_info(mem.toPrettyString);
+        log_info("Features:");
+        log_info(features.toPrettyString);
     }
 
     debug scope attachFlightRecorder()
@@ -277,6 +281,7 @@ class FlightRecorder(TBackend)
         void* pUserData
     )
     {
+        //TODO: move out from renderer package
         import std.stdio;
         writeln(pCallbackData.pMessage);
 

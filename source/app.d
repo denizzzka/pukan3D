@@ -44,7 +44,8 @@ void main() {
     auto vk = new Backend!(getLogger)(name, makeApiVersion(1,2,3,4));
     scope(exit) destroy(vk);
 
-    vk.printAllAvailableLayers();
+    //~ vk.printAllDevices();
+    //~ vk.printAllAvailableLayers();
 
     debug auto dbg = vk.attachFlightRecorder();
     debug scope(exit) destroy(dbg);
