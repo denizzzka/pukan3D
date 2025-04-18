@@ -13,7 +13,8 @@ uint makeApiVersion(uint variant, uint major, uint minor, uint patch)
     return ((((uint)(variant)) << 29U) | (((uint)(major)) << 22U) | (((uint)(minor)) << 12U) | ((uint)(patch)));
 }
 
-class Backend(alias Logger)
+///
+class Instance(alias Logger)
 {
     VkApplicationInfo info = {
          sType: VkStructureType.VK_STRUCTURE_TYPE_APPLICATION_INFO,
@@ -40,6 +41,7 @@ class Backend(alias Logger)
         info.pApplicationName = appName.toStringz;
         info.applicationVersion = appVer;
 
+        //TODO: get extension_list from arguments
         const(char*)[] extension_list = [
             VK_KHR_SURFACE_EXTENSION_NAME.ptr,
         ];
@@ -133,7 +135,7 @@ class Backend(alias Logger)
 
     debug scope attachFlightRecorder()
     {
-        auto d = new FlightRecorder!Backend(this);
+        auto d = new FlightRecorder!Instance(this);
 
         // Extension commands that are not core or WSI have to be loaded
         auto fun = cast(PFN_vkCreateDebugUtilsMessengerEXT) vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
@@ -184,9 +186,12 @@ class Backend(alias Logger)
 
     auto createLogicalDevice(VkPhysicalDevice d)
     {
-        return new LogicalDevice!Backend(this, d);
+        return new LogicalDevice!Instance(this, d);
     }
 }
+
+//TODO: remove or rename Instance to appropriate name
+alias Backend = Instance;
 
 auto vkCheck(VkResult ret, string err_descr = "Vulkan exception")
 {
