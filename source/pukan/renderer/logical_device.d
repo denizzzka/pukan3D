@@ -89,10 +89,14 @@ class SwapChain(LogicalDevice)
     LogicalDevice device;
     VkSwapchainKHR swapchain;
     VkImage[] images;
+    VkFormat imageFormat;
+    VkExtent2D imageExtent;
 
     this(LogicalDevice d, VkSwapchainCreateInfoKHR cinf)
     {
         device = d;
+        imageFormat = cinf.imageFormat;
+        imageExtent = cinf.imageExtent;
 
         vkCreateSwapchainKHR(d.device, &cinf, d.backend.allocator, &swapchain).vkCheck;
 
