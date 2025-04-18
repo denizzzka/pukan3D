@@ -72,6 +72,7 @@ class Backend(alias Logger)
     this(VkInstance ins)
     {
         instance = ins;
+        log_info("Vulkan instance obtained");
     }
 
     ~this()
