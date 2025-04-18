@@ -22,6 +22,13 @@ enum height = 640;
     //~ GetTime
 //~ }
 
+// TODO: remove DebugVersion, https://github.com/dlang/phobos/issues/10750
+debug version = DebugVersion;
+version(DebugVersion)
+    static auto getLogger() => stdThreadLocalLog();
+else
+    static auto getLogger() => MuteLogger();
+
 void main() {
     version(none)
     version(linux)
@@ -32,11 +39,6 @@ void main() {
     }
 
     immutable name = "D/pukan3D/Raylib project";
-
-    version(all)
-        static auto getLogger() => stdThreadLocalLog();
-    else
-        static auto getLogger() => MuteLogger();
 
     auto vk = new Backend!(getLogger)(name, makeApiVersion(1,2,3,4));
     scope(exit) destroy(vk);
