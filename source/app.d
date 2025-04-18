@@ -49,6 +49,9 @@ void main() {
     debug auto dbg = vk.attachFlightRecorder();
     debug scope(exit) destroy(dbg);
 
+    auto device = vk.createLogicalDevice();
+    scope(exit) destroy(device);
+
     enforce(glfwInit());
     scope(exit) glfwTerminate();
 
@@ -82,9 +85,6 @@ void main() {
     );
 
     vk.useSurface(surface);
-
-    auto device = vk.createLogicalDevice();
-    scope(exit) destroy(device);
 
     auto queue = device.getQueue();
 
