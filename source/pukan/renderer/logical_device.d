@@ -11,19 +11,21 @@ class LogicalDevice(Backend)
 {
     Backend backend;
     VkDevice device;
+    const uint familyIdx;
 
-    package this(Backend b, VkPhysicalDevice physicalDevice, )
+    package this(Backend b, VkPhysicalDevice physicalDevice)
     {
         backend = b;
 
         const fqIdxs = b.findSuitableQueueFamilies();
         enforce(fqIdxs.length > 0);
+        familyIdx = cast(uint) fqIdxs[0];
 
         immutable float queuePriority = 1.0f;
 
         VkDeviceQueueCreateInfo queueCreateInfo = {
             sType: VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
-            queueFamilyIndex: cast(uint) fqIdxs[0],
+            queueFamilyIndex: familyIdx,
             queueCount: 1,
             pQueuePriorities: &queuePriority,
         };
@@ -40,5 +42,20 @@ class LogicalDevice(Backend)
     ~this()
     {
         vkDestroyDevice(device, backend.allocator);
+    }
+
+    //TODO: remove
+    auto getQueue()
+    {
+        return getQueue(0);
+    }
+
+    ///
+    auto getQueue(uint queueIdx)
+    {
+        VkQueue ret;
+        vkGetDeviceQueue(device, familyIdx, queueIdx, &ret);
+
+        return ret;
     }
 }

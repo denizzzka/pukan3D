@@ -86,5 +86,7 @@ void main() {
     auto device = vk.createLogicalDevice();
     scope(exit) destroy(device);
 
+    auto queue = device.getQueue();
+
     // implement main loop
 }
