@@ -87,9 +87,13 @@ void main() {
     );
 
     vk.useSurface(surface);
-    vk.printSurfaceCapabilities(vk.devices[vk.deviceIdx], surface);
     vk.printSurfaceFormats(vk.devices[vk.deviceIdx], surface);
     vk.printPresentModes(vk.devices[vk.deviceIdx], surface);
+
+    const capab = vk.getSurfaceCapabilities(vk.devices[vk.deviceIdx], surface);
+    capab.toPrettyString.writeln;
+
+    enforce(capab.currentExtent.width != uint.max, "unsupported, see VkSurfaceCapabilitiesKHR(3) Manual Page");
 
     auto queue = device.getQueue();
 

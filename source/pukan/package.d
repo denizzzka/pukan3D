@@ -18,7 +18,7 @@ struct MuteLogger
     void info(T...)(T s) {}
 }
 
-string toPrettyString(T)(ref T val)
+string toPrettyString(T)(in T val)
 {
     import mir.ser.json: serializeJsonPretty;
     import std.conv: to;

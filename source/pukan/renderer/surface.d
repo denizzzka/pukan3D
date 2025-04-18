@@ -17,11 +17,11 @@ mixin template SurfaceMethods()
         log_info(modes.toPrettyString);
     }
 
-    void printSurfaceCapabilities(VkPhysicalDevice pd, VkSurfaceKHR surface)
+    auto getSurfaceCapabilities(VkPhysicalDevice pd, VkSurfaceKHR surface)
     {
         VkSurfaceCapabilitiesKHR c;
         vkGetPhysicalDeviceSurfaceCapabilitiesKHR(pd, surface, &c).vkCheck;
 
-        log_info(c.toPrettyString);
+        return c;
     }
 }
