@@ -1,6 +1,7 @@
 module pukan.renderer;
 
 public import pukan.renderer.logical_device;
+public import pukan.renderer.surface;
 
 import pukan.vulkan_sdk;
 import pukan.exceptions;
@@ -86,6 +87,8 @@ class Instance(alias Logger)
         vkDestroyInstance(instance, allocator);
     }
 
+    mixin SurfaceMethods;
+
     void useSurface(VkSurfaceKHR s) @live
     {
         surface = s;
@@ -146,10 +149,13 @@ class Instance(alias Logger)
         return d;
     }
 
+    //TODO: remove, devices should be selectable
+    immutable deviceIdx = 0;
+
     auto findSuitablePhysicalDevice()
     {
         if(devices.length > 0)
-            return devices[0];
+            return devices[deviceIdx];
 
         throw new PukanException("appropriate device not found");
     }

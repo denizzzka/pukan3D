@@ -85,6 +85,7 @@ void main() {
     );
 
     vk.useSurface(surface);
+    vk.printSurfaceCapabilities(vk.devices[vk.deviceIdx]);
 
     auto queue = device.getQueue();
 
