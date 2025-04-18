@@ -133,6 +133,28 @@ class Backend(alias Logger)
 
         return d;
     }
+
+    auto findSuitablePhysicalDevice()
+    {
+        if(devices.length > 0)
+            return devices[0];
+
+        throw new PukanException("appropriate device not found");
+    }
+
+    static auto findSuitableQueueFamilies(VkPhysicalDevice dev)
+    {
+        auto qFamilyProps = getArrayFrom!vkGetPhysicalDeviceQueueFamilyProperties(dev);
+        size_t[] apprIndices;
+
+        foreach(i, qfp; qFamilyProps)
+        {
+            if (qfp.queueFlags & VK_QUEUE_GRAPHICS_BIT)
+               apprIndices ~= i;
+        }
+
+        return apprIndices;
+    }
 }
 
 auto vkCheck(VkResult ret, string err_descr = "Vulkan exception")
