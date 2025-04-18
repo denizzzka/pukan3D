@@ -50,7 +50,10 @@ class Instance(alias Logger)
         debug extension_list ~= VK_EXT_DEBUG_UTILS_EXTENSION_NAME.ptr;
 
         const(char*)[] validation_layers;
-        debug validation_layers ~= "VK_LAYER_KHRONOS_validation";
+        debug validation_layers ~= [
+            "VK_LAYER_KHRONOS_validation",
+            //~ "VK_LAYER_MESA_device_select",
+        ];
 
         VkInstanceCreateInfo createInfo = {
             sType: VkStructureType.VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
@@ -277,8 +280,9 @@ class FlightRecorder(TBackend)
     )
     {
         //TODO: move out from renderer package
+        import std.conv: to;
         import std.stdio;
-        writeln(pCallbackData.pMessage);
+        pCallbackData.pMessage.to!string.writeln;
 
         return VkResult.VK_SUCCESS;
     }
