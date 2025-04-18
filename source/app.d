@@ -83,5 +83,8 @@ void main() {
 
     vk.useSurface(surface);
 
+    auto device = vk.createLogicalDevice();
+    scope(exit) destroy(device);
+
     // implement main loop
 }

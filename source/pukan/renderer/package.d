@@ -1,9 +1,10 @@
 module pukan.renderer;
 
-public import pukan.renderer.device;
+public import pukan.renderer.logical_device;
 
 import pukan.vulkan_sdk;
 import pukan.exceptions;
+import std.exception: enforce;
 import std.string: toStringz;
 
 /// VK_MAKE_API_VERSION macros
@@ -151,6 +152,15 @@ class Backend(alias Logger)
         throw new PukanException("appropriate device not found");
     }
 
+    /// Returns: family indices
+    auto findSuitableQueueFamilies()
+    {
+        return findSuitableQueueFamilies(
+            findSuitablePhysicalDevice()
+        );
+    }
+
+    /// ditto
     static auto findSuitableQueueFamilies(VkPhysicalDevice dev)
     {
         auto qFamilyProps = getArrayFrom!vkGetPhysicalDeviceQueueFamilyProperties(dev);
@@ -163,6 +173,18 @@ class Backend(alias Logger)
         }
 
         return apprIndices;
+    }
+
+    auto createLogicalDevice()
+    {
+        enforce(devices.length > 0, "no devices found");
+
+        return createLogicalDevice(devices[0]);
+    }
+
+    auto createLogicalDevice(VkPhysicalDevice d)
+    {
+        return new LogicalDevice!Backend(this, d);
     }
 }
 
