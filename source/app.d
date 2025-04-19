@@ -75,7 +75,7 @@ void main() {
     auto device = vk.createLogicalDevice();
     scope(exit) destroy(device);
 
-    import pukan.vulkan_sdk: VkSurfaceKHR;
+    import pukan.vulkan.bindings: VkSurfaceKHR;
     static import glfw3.internal;
 
     VkSurfaceKHR surface;

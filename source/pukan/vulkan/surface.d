@@ -1,6 +1,6 @@
-module pukan.renderer.surface;
+module pukan.vulkan.surface;
 
-import pukan.vulkan_sdk;
+import pukan.vulkan.bindings;
 import pukan: toPrettyString;
 
 mixin template SurfaceMethods()

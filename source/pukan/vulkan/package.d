@@ -1,11 +1,11 @@
 //TODO: rename to vulkan
-module pukan.renderer;
+module pukan.vulkan;
 
-public import pukan.renderer.logical_device;
-public import pukan.renderer.surface;
+public import pukan.vulkan.logical_device;
+public import pukan.vulkan.surface;
 import pukan: toPrettyString;
 
-import pukan.vulkan_sdk;
+import pukan.vulkan.bindings;
 import pukan.exceptions;
 import std.exception: enforce;
 import std.string: toStringz;

@@ -1,7 +1,7 @@
-module pukan.renderer.logical_device;
+module pukan.vulkan.logical_device;
 
-import pukan.renderer;
-import pukan.vulkan_sdk;
+import pukan.vulkan;
+import pukan.vulkan.bindings;
 import pukan.exceptions;
 import log = std.logger;
 import std.exception: enforce;

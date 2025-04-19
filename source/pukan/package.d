@@ -1,8 +1,8 @@
 module pukan;
 
-public import pukan.renderer;
+public import pukan.vulkan;
 
-import pukan.vulkan_sdk;
+import pukan.vulkan.bindings;
 
 import std.typecons;
 

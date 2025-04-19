@@ -12,7 +12,7 @@ class PukanException: Exception
 
 class PukanExceptionWithCode: PukanException
 {
-    import pukan.vulkan_sdk: VkResult;
+    import pukan.vulkan.bindings: VkResult;
 
     VkResult code;
 
