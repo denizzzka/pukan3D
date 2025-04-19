@@ -105,5 +105,10 @@ void main() {
         foreach(img; imgViews)
             destroy(img);
 
+    auto vertShader = device.loadShader("vert.spv");
+    scope(exit) destroy(vertShader);
+    auto fragShader = device.loadShader("frag.spv");
+    scope(exit) destroy(fragShader);
+
     // implement main loop
 }

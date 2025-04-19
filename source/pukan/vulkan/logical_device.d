@@ -82,6 +82,11 @@ class LogicalDevice(Backend)
 
         return new SwapChain!LogicalDevice(this, cinf);
     }
+
+    auto loadShader(string filename)
+    {
+        return new ShaderModule!LogicalDevice(this, filename);
+    }
 }
 
 class SwapChain(LogicalDevice)
