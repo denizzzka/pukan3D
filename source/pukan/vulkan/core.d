@@ -203,7 +203,8 @@ class Instance(alias Logger)
 //TODO: remove or rename Instance to appropriate name
 alias Backend = Instance;
 
-auto vkCheck(VkResult ret, string err_descr = "Vulkan exception")
+//TODO: do not display __FUNCTION__ on release builds
+auto vkCheck(VkResult ret, string err_descr = __FUNCTION__)
 {
     if(ret != VkResult.VK_SUCCESS)
         throw new PukanExceptionWithCode(err_descr, ret);

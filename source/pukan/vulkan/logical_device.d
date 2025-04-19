@@ -9,7 +9,7 @@ import std.string: toStringz;
 
 class LogicalDevice(Backend)
 {
-    Backend backend;
+    Backend backend; // TODO: rewrite to "Instance instance"
     VkDevice device;
 
     const uint familyIdx;
@@ -106,5 +106,60 @@ class SwapChain(LogicalDevice)
     ~this()
     {
         vkDestroySwapchainKHR(device.device, swapchain, device.backend.allocator);
+    }
+
+    auto createImageViews()
+    {
+        alias ImgView = ImageView!SwapChain;
+
+        //~ auto ret = new ImgView[images.length];
+        ImgView[] ret;
+        ret.length = images.length;
+
+        foreach(i, img; images)
+        {
+            ret[i] = new ImgView(this, img);
+            device.backend.log_info("img view created, ", i);
+        }
+
+        return ret;
+    }
+}
+
+class ImageView(SwapChain)
+{
+    SwapChain swapchain;
+    VkImageView imgView;
+
+    this(SwapChain sc, VkImage img)
+    {
+        swapchain = sc;
+
+        VkImageViewCreateInfo cinf = {
+            sType: VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+            viewType: VK_IMAGE_VIEW_TYPE_2D,
+            format: sc.imageFormat,
+            components: VkComponentMapping(
+                r: VK_COMPONENT_SWIZZLE_IDENTITY,
+                g: VK_COMPONENT_SWIZZLE_IDENTITY,
+                b: VK_COMPONENT_SWIZZLE_IDENTITY,
+                a: VK_COMPONENT_SWIZZLE_IDENTITY,
+            ),
+            subresourceRange: VkImageSubresourceRange(
+                aspectMask: VK_IMAGE_ASPECT_COLOR_BIT,
+                baseMipLevel: 0,
+                levelCount: 1,
+                baseArrayLayer: 0,
+                layerCount: 1,
+            ),
+            image: img,
+        };
+
+        vkCreateImageView(sc.device.device, &cinf, sc.device.backend.allocator, &imgView).vkCheck;
+    }
+
+    ~this()
+    {
+        vkDestroyImageView(swapchain.device.device, imgView, swapchain.device.backend.allocator);
     }
 }
