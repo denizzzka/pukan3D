@@ -34,4 +34,17 @@ class ShaderModule(LogicalDevice)
     {
         vkDestroyShaderModule(device.device, shaderModule, device.backend.allocator);
     }
+
+    auto createShaderStageInfo(VkShaderStageFlagBits stage)
+    {
+        VkPipelineShaderStageCreateInfo cinf = {
+            sType: VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+            stage: stage,
+            pName: "main", // shader entry point
+        };
+
+        __traits(getMember, cinf, "module") = shaderModule;
+
+        return cinf;
+    }
 }

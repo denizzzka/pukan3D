@@ -87,6 +87,16 @@ class LogicalDevice(Backend)
     {
         return new ShaderModule!LogicalDevice(this, filename);
     }
+
+    auto createSemaphore()
+    {
+        return new Semaphore!LogicalDevice(this);
+    }
+
+    auto createFence()
+    {
+        return new Fence!LogicalDevice(this);
+    }
 }
 
 class SwapChain(LogicalDevice)
@@ -96,6 +106,7 @@ class SwapChain(LogicalDevice)
     VkImage[] images;
     VkFormat imageFormat;
     VkExtent2D imageExtent;
+    VkFramebuffer[] frameBuffers;
 
     this(LogicalDevice d, VkSwapchainCreateInfoKHR cinf)
     {
@@ -110,16 +121,17 @@ class SwapChain(LogicalDevice)
 
     ~this()
     {
+        foreach(ref fb; frameBuffers)
+            vkDestroyFramebuffer(device.device, fb, device.backend.allocator);
+
         vkDestroySwapchainKHR(device.device, swapchain, device.backend.allocator);
     }
 
+    alias ImgView = ImageView!SwapChain;
+
     auto createImageViews()
     {
-        alias ImgView = ImageView!SwapChain;
-
-        //~ auto ret = new ImgView[images.length];
-        ImgView[] ret;
-        ret.length = images.length;
+        auto ret = new ImgView[images.length];
 
         foreach(i, img; images)
         {
@@ -127,6 +139,32 @@ class SwapChain(LogicalDevice)
         }
 
         return ret;
+    }
+
+    void initFramebuffers(ImgView[] imageViews, VkRenderPass renderPass)
+    {
+        assert(imageViews.length == images.length);
+
+        frameBuffers.length = images.length;
+
+        foreach(i, ref fb; frameBuffers)
+        {
+            VkFramebufferCreateInfo framebufferInfo;
+            framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+            framebufferInfo.renderPass = renderPass;
+            framebufferInfo.attachmentCount = 1;
+            framebufferInfo.pAttachments = &imageViews[i].imgView;
+            framebufferInfo.width = imageExtent.width;
+            framebufferInfo.height = imageExtent.height;
+            framebufferInfo.layers = 1;
+
+            vkCreateFramebuffer(device.device, &framebufferInfo, device.backend.allocator, &fb).vkCheck;
+        }
+    }
+
+    auto createCommandPool()
+    {
+        return new CommandPool!SwapChain(this, device.familyIdx);
     }
 }
 
@@ -165,5 +203,51 @@ class ImageView(SwapChain)
     ~this()
     {
         vkDestroyImageView(swapchain.device.device, imgView, swapchain.device.backend.allocator);
+    }
+}
+
+class Semaphore(LogicalDevice)
+{
+    LogicalDevice device;
+    VkSemaphore semaphore;
+
+    this(LogicalDevice dev)
+    {
+        device = dev;
+
+        VkSemaphoreCreateInfo cinf = {
+            sType: VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,
+        };
+
+        vkCreateSemaphore(device.device, &cinf, device.backend.allocator, &semaphore).vkCheck;
+    }
+
+    ~this()
+    {
+        //FIXME: possible double free? test with null VkSemaphore, and check all code for this!
+        vkDestroySemaphore(device.device, semaphore, device.backend.allocator);
+    }
+}
+
+class Fence(LogicalDevice)
+{
+    LogicalDevice device;
+    VkFence fence;
+
+    this(LogicalDevice dev)
+    {
+        device = dev;
+
+        VkFenceCreateInfo cinf = {
+            sType: VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
+            flags: VK_FENCE_CREATE_SIGNALED_BIT,
+        };
+
+        vkCreateFence(device.device, &cinf, device.backend.allocator, &fence).vkCheck;
+    }
+
+    ~this()
+    {
+        vkDestroyFence(device.device, fence, device.backend.allocator);
     }
 }

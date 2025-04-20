@@ -49,7 +49,7 @@ class Instance(alias Logger)
 
         const(char*)[] validation_layers;
         debug validation_layers ~= [
-            "VK_LAYER_KHRONOS_validation",
+            "VK_LAYER_KHRONOS_validation", //TODO: sType member isn't needed if this validation disabled
             //~ "VK_LAYER_MESA_device_select",
         ];
 
@@ -204,10 +204,10 @@ class Instance(alias Logger)
 alias Backend = Instance;
 
 //TODO: do not display __FUNCTION__ on release builds
-auto vkCheck(VkResult ret, string err_descr = __FUNCTION__)
+auto vkCheck(VkResult ret, string err_descr = __FUNCTION__, string file = __FILE__, size_t line = __LINE__)
 {
     if(ret != VkResult.VK_SUCCESS)
-        throw new PukanExceptionWithCode(err_descr, ret);
+        throw new PukanExceptionWithCode(err_descr, ret, file, line);
 
     return ret;
 }
