@@ -124,7 +124,6 @@ class SwapChain(LogicalDevice)
         foreach(i, img; images)
         {
             ret[i] = new ImgView(this, img);
-            device.backend.log_info("img view created, ", i);
         }
 
         return ret;
