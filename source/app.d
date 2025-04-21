@@ -263,7 +263,7 @@ void main() {
     pipelineInfo.basePipelineIndex = -1; // Optional
 
     VkPipeline graphicsPipeline;
-    vkCreateGraphicsPipelines(device.device, null, 1, &pipelineInfo, null, &graphicsPipeline).vkCheck;
+    vkCreateGraphicsPipelines(device.device, null, 1, &pipelineInfo, vk.allocator, &graphicsPipeline).vkCheck;
     scope(exit) vkDestroyPipeline(device.device, graphicsPipeline, vk.allocator);
 
     swapChain.initFramebuffers(imgViews, renderPass);
