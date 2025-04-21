@@ -97,6 +97,11 @@ class LogicalDevice(Backend)
     {
         return new Fence!LogicalDevice(this);
     }
+
+    auto createGraphicsPipelines(VkGraphicsPipelineCreateInfo[] infos)
+    {
+        return new GraphicsPipelines!LogicalDevice(this, infos);
+    }
 }
 
 class SwapChain(LogicalDevice)

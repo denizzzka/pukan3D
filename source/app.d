@@ -262,9 +262,9 @@ void main() {
     pipelineInfo.basePipelineHandle = null; // Optional
     pipelineInfo.basePipelineIndex = -1; // Optional
 
-    VkPipeline graphicsPipeline;
-    vkCreateGraphicsPipelines(device.device, null, 1, &pipelineInfo, vk.allocator, &graphicsPipeline).vkCheck;
-    scope(exit) vkDestroyPipeline(device.device, graphicsPipeline, vk.allocator);
+    alias GP = GraphicsPipelines!(typeof(device));
+    auto graphicsPipelines = new GP(device, [pipelineInfo]);
+    scope(exit) destroy(graphicsPipelines);
 
     swapChain.initFramebuffers(imgViews, renderPass);
 
@@ -274,7 +274,7 @@ void main() {
     cmdPool.initBuffs(1);
     enforce(cmdPool.commandBuffers.length == 1, "commandBuffers.length="~cmdPool.commandBuffers.length.to!string);
 
-    cmdPool.recordCommandBuffer(cmdPool.commandBuffers[0], renderPass, 0, graphicsPipeline);
+    cmdPool.recordCommandBuffer(cmdPool.commandBuffers[0], renderPass, 0, graphicsPipelines.pipelines[0]);
 
     auto imageAvailable = device.createSemaphore;
     scope(exit) destroy(imageAvailable);
@@ -297,7 +297,7 @@ void main() {
         vkAcquireNextImageKHR(device.device, swapChain.swapchain, ulong.max, imageAvailable.semaphore, null, &imageIndex);
 
         cmdPool.resetBuffer(0);
-        cmdPool.recordCommandBuffer(cmdPool.commandBuffers[0], renderPass, imageIndex, graphicsPipeline);
+        cmdPool.recordCommandBuffer(cmdPool.commandBuffers[0], renderPass, imageIndex, graphicsPipelines.pipelines[0]);
 
         {
             VkSubmitInfo submitInfo;
