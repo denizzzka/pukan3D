@@ -236,7 +236,17 @@ void main() {
         int width;
         int height;
 
-        while (width == 0 || height == 0) {
+        glfwGetFramebufferSize(window, &width, &height);
+
+        while (width == 0 || height == 0)
+        {
+            /*
+            TODO: I don't understand this logic, but it allowed to
+            overcome refresh freezes when increasing the window size.
+            Perhaps this code does not work as it should, but it is
+            shown in this form in different articles.
+            */
+
             glfwGetFramebufferSize(window, &width, &height);
             glfwWaitEvents();
         }
