@@ -6,3 +6,4 @@ public import pukan.vulkan.logical_device;
 public import pukan.vulkan.pipelines;
 public import pukan.vulkan.surface;
 public import pukan.vulkan.shaders;
+public import pukan.vulkan.swapchain;
