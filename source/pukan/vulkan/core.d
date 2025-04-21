@@ -3,6 +3,7 @@ module pukan.vulkan.core;
 import pukan.exceptions;
 import pukan.vulkan;
 import pukan.vulkan.bindings;
+import pukan.vulkan.helpers;
 import pukan: toPrettyString;
 import std.exception: enforce;
 import std.string: toStringz;
@@ -23,7 +24,8 @@ class Instance(alias Logger)
          engineVersion: makeApiVersion(0, 0, 0, 1),
     };
 
-    VkInstance instance;
+    alias VkT = VkObj!(VkInstanceCreateInfo*, VkAllocationCallbacks*);
+    VkT instance;
     VkAllocationCallbacks* allocator = null;
 
     // non-dispatcheable handles, so placing it here
@@ -62,8 +64,7 @@ class Instance(alias Logger)
             enabledLayerCount: cast(uint) validation_layers.length,
         };
 
-        vkCreateInstance(&createInfo, allocator, &instance)
-            .vkCheck("Vulkan instance creation failed");
+        instance = create(&createInfo, allocator);
 
         log_info("Vulkan instance created");
     }
@@ -71,7 +72,7 @@ class Instance(alias Logger)
     ///
     this(VkInstance ins)
     {
-        instance = ins;
+        instance = new VkT(ins, null);
         log_info("Vulkan instance obtained");
     }
 
@@ -80,7 +81,7 @@ class Instance(alias Logger)
         if(surface)
             vkDestroySurfaceKHR(instance, surface, allocator);
 
-        vkDestroyInstance(instance, allocator);
+        destroy(instance);
     }
 
     mixin SurfaceMethods;

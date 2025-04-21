@@ -31,7 +31,6 @@ else
     static auto getLogger() => MuteLogger();
 
 void main() {
-    version(none)
     version(linux)
     version(DigitalMars)
     {
