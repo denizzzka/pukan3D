@@ -100,7 +100,7 @@ class LogicalDevice(Backend)
 
     auto createFence()
     {
-        return new Fence!LogicalDevice(this);
+        return create!Fence;
     }
 }
 
