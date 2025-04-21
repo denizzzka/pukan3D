@@ -70,11 +70,6 @@ class SwapChain(LogicalDevice)
             vkCreateFramebuffer(device.device, &framebufferInfo, device.backend.allocator, &fb).vkCheck;
         }
     }
-
-    auto createCommandPool()
-    {
-        return new CommandPool!SwapChain(this, device.familyIdx);
-    }
 }
 
 void createImageView(SwapChain)(ref VkImageView imgView, SwapChain sc, VkImage img)

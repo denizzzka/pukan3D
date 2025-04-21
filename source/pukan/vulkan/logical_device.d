@@ -102,6 +102,11 @@ class LogicalDevice(Backend)
     {
         return create!Fence;
     }
+
+    auto createCommandPool()
+    {
+        return new CommandPool!LogicalDevice(this, familyIdx);
+    }
 }
 
 class Semaphore(LogicalDevice)

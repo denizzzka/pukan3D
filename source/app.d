@@ -106,6 +106,9 @@ void main() {
     auto fragShader = device.loadShader("frag.spv");
     scope(exit) destroy(fragShader);
 
+    auto cmdPool = device.createCommandPool();
+    scope(exit) destroy(cmdPool);
+
     import pukan.vulkan.bindings;
     import pukan.vulkan.helpers;
 
@@ -208,13 +211,10 @@ void main() {
 
     swapChain.initFramebuffers(renderPass);
 
-    auto cmdPool = swapChain.createCommandPool();
-    scope(exit) destroy(cmdPool);
-
     cmdPool.initBuffs(1);
     enforce(cmdPool.commandBuffers.length == 1, "commandBuffers.length="~cmdPool.commandBuffers.length.to!string);
 
-    cmdPool.recordCommandBuffer(cmdPool.commandBuffers[0], renderPass, 0, graphicsPipelines.pipelines[0]);
+    cmdPool.recordCommandBuffer(swapChain, cmdPool.commandBuffers[0], renderPass, 0, graphicsPipelines.pipelines[0]);
 
     auto imageAvailable = device.createSemaphore;
     scope(exit) destroy(imageAvailable);
@@ -259,7 +259,7 @@ void main() {
         }
 
         cmdPool.resetBuffer(0);
-        cmdPool.recordCommandBuffer(cmdPool.commandBuffers[0], renderPass, imageIndex, graphicsPipelines.pipelines[0]);
+        cmdPool.recordCommandBuffer(swapChain, cmdPool.commandBuffers[0], renderPass, imageIndex, graphicsPipelines.pipelines[0]);
 
         {
             VkSubmitInfo submitInfo;

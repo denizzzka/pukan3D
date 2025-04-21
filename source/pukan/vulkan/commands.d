@@ -3,28 +3,28 @@ module pukan.vulkan.commands;
 import pukan.vulkan;
 import pukan.vulkan.bindings;
 
-class CommandPool(SwapChain)
+class CommandPool(LogicalDevice)
 {
-    SwapChain swapChain;
+    LogicalDevice device;
 
     VkCommandPool commandPool;
     VkCommandBuffer[] commandBuffers;
 
-    this(SwapChain sc, uint queueFamilyIndex)
+    this(LogicalDevice dev, uint queueFamilyIndex)
     {
-        swapChain = sc;
+        device = dev;
 
         VkCommandPoolCreateInfo cinf;
         cinf.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
         cinf.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
         cinf.queueFamilyIndex = queueFamilyIndex;
 
-        vkCreateCommandPool(swapChain.device.device, &cinf, swapChain.device.backend.allocator, &commandPool).vkCheck;
+        vkCreateCommandPool(device.device, &cinf, device.backend.allocator, &commandPool).vkCheck;
     }
 
     ~this()
     {
-        vkDestroyCommandPool(swapChain.device.device, commandPool, swapChain.device.backend.allocator);
+        vkDestroyCommandPool(device.device, commandPool, device.backend.allocator);
     }
 
     void initBuffs(uint count)
@@ -39,11 +39,11 @@ class CommandPool(SwapChain)
             allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
             allocInfo.commandBufferCount = cast(uint) commandBuffers.length;
 
-            vkAllocateCommandBuffers(swapChain.device.device, &allocInfo, &buf).vkCheck;
+            vkAllocateCommandBuffers(device.device, &allocInfo, &buf).vkCheck;
         }
     }
 
-    void recordCommandBuffer(VkCommandBuffer commandBuffer, VkRenderPass renderPass, uint imageIndex, ref VkPipeline graphicsPipeline)
+    void recordCommandBuffer(SwapChain!LogicalDevice swapChain, VkCommandBuffer commandBuffer, VkRenderPass renderPass, uint imageIndex, ref VkPipeline graphicsPipeline)
     {
         VkCommandBufferBeginInfo beginInfo;
         beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
