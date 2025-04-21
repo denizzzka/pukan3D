@@ -114,18 +114,7 @@ void main() {
         fragShader.createShaderStageInfo(VK_SHADER_STAGE_FRAGMENT_BIT),
     ];
 
-    // Non-programmable stages:
-    VkPipelineVertexInputStateCreateInfo vertexInputInfo;
-    vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-    //~ vertexInputInfo.vertexBindingDescriptionCount = 0;
-    //~ vertexInputInfo.pVertexBindingDescriptions = null;
-    //~ vertexInputInfo.vertexAttributeDescriptionCount = 0;
-    //~ vertexInputInfo.pVertexAttributeDescriptions = null;
-
-    VkPipelineInputAssemblyStateCreateInfo inputAssembly;
-    inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-    inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-    inputAssembly.primitiveRestartEnable = VK_FALSE;
+    import pukan.vulkan.defaults;
 
     VkViewport viewport;
     viewport.x = 0.0f;
@@ -145,19 +134,6 @@ void main() {
     viewportState.pViewports = &viewport;
     viewportState.scissorCount = 1;
     viewportState.pScissors = &scissor;
-
-    VkPipelineRasterizationStateCreateInfo rasterizer;
-    rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
-    rasterizer.rasterizerDiscardEnable = VK_FALSE;
-    rasterizer.depthClampEnable = VK_FALSE;
-    rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
-    rasterizer.lineWidth = 1.0f;
-    rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
-    rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
-    rasterizer.depthBiasEnable = VK_FALSE;
-    rasterizer.depthBiasConstantFactor = 0.0f; // Optional
-    rasterizer.depthBiasClamp = 0.0f; // Optional
-    rasterizer.depthBiasSlopeFactor = 0.0f; // Optional
 
     VkPipelineMultisampleStateCreateInfo multisampling;
     multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
