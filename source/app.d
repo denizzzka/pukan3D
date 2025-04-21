@@ -256,7 +256,6 @@ void main() {
 
         // Draw frame:
         vkWaitForFences(device.device, 1, &inFlightFence.fence, VK_TRUE, uint.max).vkCheck;
-        vkResetFences(device.device, 1, &inFlightFence.fence).vkCheck;
 
         uint32_t imageIndex;
 
@@ -274,6 +273,8 @@ void main() {
                     throw new PukanExceptionWithCode(ret, "failed to acquire swap chain image");
             }
         }
+
+        vkResetFences(device.device, 1, &inFlightFence.fence).vkCheck;
 
         cmdPool.resetBuffer(0);
         cmdPool.recordCommandBuffer(swapChain, cmdPool.commandBuffers[0], renderPass, imageIndex, graphicsPipelines.pipelines[0]);
