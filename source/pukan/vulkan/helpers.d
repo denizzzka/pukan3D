@@ -29,6 +29,14 @@ private
 
     alias TCreateInfo = T[createInfoIdx];
 
+    static if(createInfoIdx == 0)
+        enum methodsHaveThisPtr = false;
+    else
+    {
+        enum methodsHaveThisPtr = true;
+        T[0] vkThis;
+    }
+
     enum string infoStructName = TCreateInfo.stringof;
     enum resultingName = infoStructName[0 .. $ - ("CreateInfo".length + 1)];
     mixin("alias BaseType = "~resultingName~";");
@@ -52,6 +60,9 @@ private
             createInfo.sType = sTypeMustBe;
         }
 
+        static if(methodsHaveThisPtr)
+            vkThis = a[0];
+
         allocator = a[createInfoIdx + 1];
 
         mixin("auto r = "~ctorName~"(a, &vkObj).vkCheck;");
@@ -67,7 +78,7 @@ private
 
     ~this()
     {
-        mixin(dtorName~"(vkObj, allocator);");
+        mixin(dtorName~"("~(methodsHaveThisPtr ? "vkThis, " : "")~"vkObj, allocator);");
     }
 }
 

@@ -112,6 +112,8 @@ void main() {
     scope(exit) destroy(fragShader);
 
     import pukan.vulkan.bindings;
+    import pukan.vulkan.helpers;
+
     auto shaderStages = [
         vertShader.createShaderStageInfo(VK_SHADER_STAGE_VERTEX_BIT),
         fragShader.createShaderStageInfo(VK_SHADER_STAGE_FRAGMENT_BIT),
@@ -235,7 +237,6 @@ void main() {
     subpass.colorAttachmentCount = 1;
     subpass.pColorAttachments = &colorAttachmentRef;
 
-    VkRenderPass renderPass;
     VkRenderPassCreateInfo renderPassInfo;
     renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
     renderPassInfo.attachmentCount = 1;
@@ -243,8 +244,8 @@ void main() {
     renderPassInfo.subpassCount = 1;
     renderPassInfo.pSubpasses = &subpass;
 
-    vkCreateRenderPass(device.device, &renderPassInfo, vk.allocator, &renderPass).vkCheck;
-    scope(exit) vkDestroyRenderPass(device.device, renderPass, vk.allocator);
+    scope renderPass = create(device.device, &renderPassInfo, vk.allocator);
+    scope(exit) destroy(renderPass);
 
     VkGraphicsPipelineCreateInfo pipelineInfo;
     pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
