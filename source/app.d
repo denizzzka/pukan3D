@@ -46,7 +46,7 @@ void main() {
     enforce(glfwVulkanSupported());
 
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+    //~ glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
     auto window = glfwCreateWindow(width, height, name.toStringz, null, null);
     enforce(window, "Cannot create a window");
@@ -224,6 +224,14 @@ void main() {
     auto inFlightFence = device.createFence;
     scope(exit) destroy(inFlightFence);
 
+    void recreateSwapChain()
+    {
+        destroy(swapChain);
+        swapChain = device.createSwapChain(capab);
+    }
+
+    import pukan.exceptions;
+
     // Main loop
     while (!glfwWindowShouldClose(window))
     {
@@ -234,7 +242,21 @@ void main() {
         vkResetFences(device.device, 1, &inFlightFence.fence).vkCheck;
 
         uint32_t imageIndex;
-        vkAcquireNextImageKHR(device.device, swapChain.swapchain, ulong.max, imageAvailable.semaphore, null, &imageIndex);
+
+        {
+            auto ret = vkAcquireNextImageKHR(device.device, swapChain.swapchain, ulong.max, imageAvailable.semaphore, null, &imageIndex);
+
+            if(ret == VK_ERROR_OUT_OF_DATE_KHR)
+            {
+                recreateSwapChain();
+                continue;
+            }
+            else
+            {
+                if(ret != VK_SUCCESS && ret != VK_SUBOPTIMAL_KHR)
+                    throw new PukanExceptionWithCode(ret, "failed to acquire swap chain image");
+            }
+        }
 
         cmdPool.resetBuffer(0);
         cmdPool.recordCommandBuffer(cmdPool.commandBuffers[0], renderPass, imageIndex, graphicsPipelines.pipelines[0]);
@@ -271,7 +293,22 @@ void main() {
 
             presentInfo.pImageIndices = &imageIndex;
 
-            vkQueuePresentKHR(presentQueue, &presentInfo);
+            bool framebufferResized; // unused
+
+            {
+                auto ret = vkQueuePresentKHR(presentQueue, &presentInfo);
+
+                if (ret == VK_ERROR_OUT_OF_DATE_KHR || ret == VK_SUBOPTIMAL_KHR || framebufferResized)
+                {
+                    framebufferResized = false;
+                    recreateSwapChain();
+                }
+                else
+                {
+                    if(ret != VK_SUCCESS)
+                        throw new PukanExceptionWithCode(ret, "failed to acquire swap chain image");
+                }
+            }
         }
     }
 
