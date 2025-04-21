@@ -244,6 +244,7 @@ void main() {
         vkDeviceWaitIdle(device.device);
         destroy(swapChain);
         swapChain = createSwapChain();
+        swapChain.initFramebuffers(renderPass);
     }
 
     import pukan.exceptions;
@@ -311,6 +312,11 @@ void main() {
 
             bool framebufferResized; // unused
 
+            glfwWaitEventsTimeout(0.3);
+            static size_t frameNum;
+            frameNum++;
+            writeln("frame: ", frameNum);
+
             {
                 auto ret = vkQueuePresentKHR(presentQueue, &presentInfo);
 
@@ -318,6 +324,7 @@ void main() {
                 {
                     framebufferResized = false;
                     recreateSwapChain();
+                    continue;
                 }
                 else
                 {
