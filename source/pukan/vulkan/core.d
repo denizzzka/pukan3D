@@ -208,7 +208,7 @@ alias Backend = Instance;
 auto vkCheck(VkResult ret, string err_descr = __FUNCTION__, string file = __FILE__, size_t line = __LINE__)
 {
     if(ret != VkResult.VK_SUCCESS)
-        throw new PukanExceptionWithCode(err_descr, ret, file, line);
+        throw new PukanExceptionWithCode(ret, err_descr, file, line);
 
     return ret;
 }
