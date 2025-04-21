@@ -87,7 +87,7 @@ class CommandPool(LogicalDevice)
 
         vkCmdEndRenderPass(commandBuffer);
 
-        vkEndCommandBuffer(commandBuffer).vkCheck("failed to record command buffer!");
+        vkEndCommandBuffer(commandBuffer).vkCheck("failed to record command buffer");
     }
 
     void resetBuffer(uint buffIdx)
