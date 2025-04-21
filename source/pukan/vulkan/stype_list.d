@@ -15,6 +15,7 @@ alias ST = VkStructureType;
 alias sType_list = AliasSeq!(
     Entry!(VkInstanceCreateInfo,        ST.VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO),
     Entry!(VkRenderPassCreateInfo,      ST.VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO),
+    Entry!(VkPipelineLayoutCreateInfo,  ST.VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO),
 );
 
 template getCreateInfoStructureType(T)

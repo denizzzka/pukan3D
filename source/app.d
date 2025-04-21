@@ -203,18 +203,16 @@ void main() {
     dynamicState.dynamicStateCount = cast(uint) dynamicStates.length;
     dynamicState.pDynamicStates = dynamicStates.ptr;
 
-    // Can be used to pass uniform vars into shaders
-    VkPipelineLayout pipelineLayout;
+    // pipeline layout can be used to pass uniform vars into shaders
 
     VkPipelineLayoutCreateInfo pipelineLayoutInfo;
-    pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     pipelineLayoutInfo.setLayoutCount = 0; // Optional
     pipelineLayoutInfo.pSetLayouts = null; // Optional
     pipelineLayoutInfo.pushConstantRangeCount = 0; // Optional
     pipelineLayoutInfo.pPushConstantRanges = null; // Optional
 
-    vkCreatePipelineLayout(device.device, &pipelineLayoutInfo, null, &pipelineLayout).vkCheck;
-    scope(exit) vkDestroyPipelineLayout(device.device, pipelineLayout, vk.allocator);
+    auto pipelineLayout = create(device.device, &pipelineLayoutInfo, vk.allocator);
+    scope(exit) destroy(pipelineLayout);
 
     // ========= Create render pass: =========
 
@@ -238,7 +236,6 @@ void main() {
     subpass.pColorAttachments = &colorAttachmentRef;
 
     VkRenderPassCreateInfo renderPassInfo;
-    renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
     renderPassInfo.attachmentCount = 1;
     renderPassInfo.pAttachments = &colorAttachment;
     renderPassInfo.subpassCount = 1;
