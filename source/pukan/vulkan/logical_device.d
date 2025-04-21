@@ -88,19 +88,19 @@ class LogicalDevice(Backend)
         return new ShaderModule!LogicalDevice(this, filename);
     }
 
+    auto create(alias ClassType, A...)(A a)
+    {
+        return new ClassType!LogicalDevice(this, a);
+    }
+
     auto createSemaphore()
     {
-        return new Semaphore!LogicalDevice(this);
+        return create!Semaphore;
     }
 
     auto createFence()
     {
         return new Fence!LogicalDevice(this);
-    }
-
-    auto createGraphicsPipelines(VkGraphicsPipelineCreateInfo[] infos)
-    {
-        return new GraphicsPipelines!LogicalDevice(this, infos);
     }
 }
 

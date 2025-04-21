@@ -262,8 +262,7 @@ void main() {
     pipelineInfo.basePipelineHandle = null; // Optional
     pipelineInfo.basePipelineIndex = -1; // Optional
 
-    alias GP = GraphicsPipelines!(typeof(device));
-    auto graphicsPipelines = new GP(device, [pipelineInfo]);
+    auto graphicsPipelines = device.create!GraphicsPipelines([pipelineInfo]);
     scope(exit) destroy(graphicsPipelines);
 
     swapChain.initFramebuffers(imgViews, renderPass);
