@@ -11,6 +11,7 @@ class SwapChain(LogicalDevice)
     VkFormat imageFormat;
     VkExtent2D imageExtent;
     VkFramebuffer[] frameBuffers;
+    VkImageView[] imageViews;
 
     this(LogicalDevice d, VkSwapchainCreateInfoKHR cinf)
     {
@@ -21,6 +22,8 @@ class SwapChain(LogicalDevice)
         vkCreateSwapchainKHR(d.device, &cinf, d.backend.allocator, &swapchain).vkCheck;
 
         images = getArrayFrom!vkGetSwapchainImagesKHR(device.device, swapchain);
+
+        createImageViews();
     }
 
     ~this()
@@ -28,24 +31,26 @@ class SwapChain(LogicalDevice)
         foreach(ref fb; frameBuffers)
             vkDestroyFramebuffer(device.device, fb, device.backend.allocator);
 
+        destroyImageViews();
+
         vkDestroySwapchainKHR(device.device, swapchain, device.backend.allocator);
     }
 
-    alias ImgView = ImageView!SwapChain;
-
-    auto createImageViews()
+    void createImageViews()
     {
-        auto ret = new ImgView[images.length];
+        imageViews.length = images.length;
 
-        foreach(i, img; images)
-        {
-            ret[i] = new ImgView(this, img);
-        }
-
-        return ret;
+        foreach(i, ref view; imageViews)
+            createImageView(view, this, images[i]);
     }
 
-    void initFramebuffers(ImgView[] imageViews, VkRenderPass renderPass)
+    void destroyImageViews()
+    {
+        foreach(ref iv; imageViews)
+            vkDestroyImageView(device.device, iv, device.backend.allocator);
+    }
+
+    void initFramebuffers(VkImageView[] imageViews, VkRenderPass renderPass)
     {
         assert(imageViews.length == images.length);
 
@@ -57,7 +62,7 @@ class SwapChain(LogicalDevice)
             framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
             framebufferInfo.renderPass = renderPass;
             framebufferInfo.attachmentCount = 1;
-            framebufferInfo.pAttachments = &imageViews[i].imgView;
+            framebufferInfo.pAttachments = &imageViews[i];
             framebufferInfo.width = imageExtent.width;
             framebufferInfo.height = imageExtent.height;
             framebufferInfo.layers = 1;
@@ -72,40 +77,27 @@ class SwapChain(LogicalDevice)
     }
 }
 
-class ImageView(SwapChain)
+void createImageView(SwapChain)(ref VkImageView imgView, SwapChain sc, VkImage img)
 {
-    SwapChain swapchain;
-    VkImageView imgView;
+    VkImageViewCreateInfo cinf = {
+        sType: VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+        viewType: VK_IMAGE_VIEW_TYPE_2D,
+        format: sc.imageFormat,
+        components: VkComponentMapping(
+            r: VK_COMPONENT_SWIZZLE_IDENTITY,
+            g: VK_COMPONENT_SWIZZLE_IDENTITY,
+            b: VK_COMPONENT_SWIZZLE_IDENTITY,
+            a: VK_COMPONENT_SWIZZLE_IDENTITY,
+        ),
+        subresourceRange: VkImageSubresourceRange(
+            aspectMask: VK_IMAGE_ASPECT_COLOR_BIT,
+            baseMipLevel: 0,
+            levelCount: 1,
+            baseArrayLayer: 0,
+            layerCount: 1,
+        ),
+        image: img,
+    };
 
-    this(SwapChain sc, VkImage img)
-    {
-        swapchain = sc;
-
-        VkImageViewCreateInfo cinf = {
-            sType: VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
-            viewType: VK_IMAGE_VIEW_TYPE_2D,
-            format: sc.imageFormat,
-            components: VkComponentMapping(
-                r: VK_COMPONENT_SWIZZLE_IDENTITY,
-                g: VK_COMPONENT_SWIZZLE_IDENTITY,
-                b: VK_COMPONENT_SWIZZLE_IDENTITY,
-                a: VK_COMPONENT_SWIZZLE_IDENTITY,
-            ),
-            subresourceRange: VkImageSubresourceRange(
-                aspectMask: VK_IMAGE_ASPECT_COLOR_BIT,
-                baseMipLevel: 0,
-                levelCount: 1,
-                baseArrayLayer: 0,
-                layerCount: 1,
-            ),
-            image: img,
-        };
-
-        vkCreateImageView(sc.device.device, &cinf, sc.device.backend.allocator, &imgView).vkCheck;
-    }
-
-    ~this()
-    {
-        vkDestroyImageView(swapchain.device.device, imgView, swapchain.device.backend.allocator);
-    }
+    vkCreateImageView(sc.device.device, &cinf, sc.device.backend.allocator, &imgView).vkCheck;
 }

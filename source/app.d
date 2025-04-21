@@ -101,11 +101,6 @@ void main() {
     auto swapChain = device.createSwapChain(capab);
     scope(exit) destroy(swapChain);
 
-    auto imgViews = swapChain.createImageViews();
-    scope(exit)
-        foreach(img; imgViews)
-            destroy(img);
-
     auto vertShader = device.loadShader("vert.spv");
     scope(exit) destroy(vertShader);
     auto fragShader = device.loadShader("frag.spv");
@@ -265,7 +260,7 @@ void main() {
     auto graphicsPipelines = device.create!GraphicsPipelines([pipelineInfo]);
     scope(exit) destroy(graphicsPipelines);
 
-    swapChain.initFramebuffers(imgViews, renderPass);
+    swapChain.initFramebuffers(swapChain.imageViews, renderPass);
 
     auto cmdPool = swapChain.createCommandPool();
     scope(exit) destroy(cmdPool);
