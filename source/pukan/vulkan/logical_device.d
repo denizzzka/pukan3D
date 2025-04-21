@@ -224,7 +224,6 @@ class Semaphore(LogicalDevice)
 
     ~this()
     {
-        //FIXME: possible double free? test with null VkSemaphore, and check all code for this!
         vkDestroySemaphore(device.device, semaphore, device.backend.allocator);
     }
 }
