@@ -50,7 +50,7 @@ class SwapChain(LogicalDevice)
             vkDestroyImageView(device.device, iv, device.backend.allocator);
     }
 
-    void initFramebuffers(VkImageView[] imageViews, VkRenderPass renderPass)
+    void initFramebuffers(VkRenderPass renderPass)
     {
         assert(imageViews.length == images.length);
 

@@ -260,7 +260,7 @@ void main() {
     auto graphicsPipelines = device.create!GraphicsPipelines([pipelineInfo]);
     scope(exit) destroy(graphicsPipelines);
 
-    swapChain.initFramebuffers(swapChain.imageViews, renderPass);
+    swapChain.initFramebuffers(renderPass);
 
     auto cmdPool = swapChain.createCommandPool();
     scope(exit) destroy(cmdPool);
