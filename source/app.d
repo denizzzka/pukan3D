@@ -226,6 +226,7 @@ void main() {
 
     void recreateSwapChain()
     {
+        vkDeviceWaitIdle(device.device);
         destroy(swapChain);
         swapChain = device.createSwapChain(capab);
     }
