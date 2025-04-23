@@ -47,13 +47,31 @@ class Instance(alias Logger)
         else
             extension_list ~= VK_KHR_XCB_SURFACE_EXTENSION_NAME.ptr; //X11
 
-        debug extension_list ~= VK_EXT_DEBUG_UTILS_EXTENSION_NAME.ptr;
+        debug extension_list ~= [
+            VK_EXT_DEBUG_UTILS_EXTENSION_NAME.ptr,
+            //~ VK_EXT_LAYER_SETTINGS_EXTENSION_NAME.ptr, //no effect
+        ];
 
         const(char*)[] validation_layers;
         debug validation_layers ~= [
             "VK_LAYER_KHRONOS_validation", //TODO: sType member isn't needed if this validation disabled
-            //~ "VK_LAYER_MESA_device_select",
         ];
+
+        debug const value = VK_TRUE;
+
+        debug auto settings = [
+            //~ VkLayerSettingEXT("VK_LAYER_KHRONOS_validation", "validate_best_practices", VK_LAYER_SETTING_TYPE_BOOL32_EXT, 1, &value),
+            VkLayerSettingEXT("VK_LAYER_KHRONOS_validation", "gpuav_reserve_binding_slot", VK_LAYER_SETTING_TYPE_BOOL32_EXT, 1, &value),
+            //~ VkLayerSettingEXT("VK_LAYER_KHRONOS_validation", "gpuav_enable", VK_LAYER_SETTING_TYPE_BOOL32_EXT, 1, &value),
+            //~ VkLayerSettingEXT("VK_LAYER_KHRONOS_validation", "printf_enable", VK_LAYER_SETTING_TYPE_BOOL32_EXT, 1, &value),
+            //~ VkLayerSettingEXT("VK_LAYER_KHRONOS_validation", "validate_sync", VK_LAYER_SETTING_TYPE_BOOL32_EXT, 1, &value), //FIXME: enable and check
+        ];
+
+        debug VkLayerSettingsCreateInfoEXT layersSettings = {
+                sType: VK_STRUCTURE_TYPE_LAYER_SETTINGS_CREATE_INFO_EXT,
+                pSettings: settings.ptr,
+                settingCount: cast(uint) settings.length,
+        };
 
         VkInstanceCreateInfo createInfo = {
             sType: VkStructureType.VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
@@ -62,6 +80,7 @@ class Instance(alias Logger)
             enabledExtensionCount: cast(uint) extension_list.length,
             ppEnabledLayerNames: validation_layers.ptr,
             enabledLayerCount: cast(uint) validation_layers.length,
+            pNext: &layersSettings,
         };
 
         instance = create(&createInfo, allocator);
