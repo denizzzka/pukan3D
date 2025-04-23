@@ -104,6 +104,25 @@ class Instance(alias Logger)
         return getArrayFrom!vkEnumeratePhysicalDevices(instance);
     }
 
+    uint findMemoryType(uint memoryTypeBitFilter, VkMemoryPropertyFlags properties)
+    {
+        return findMemoryType(devices[0], memoryTypeBitFilter, properties);
+    }
+
+    static uint findMemoryType(VkPhysicalDevice physicalDevice, uint memoryTypeBitFilter, VkMemoryPropertyFlags properties)
+    {
+        VkPhysicalDeviceMemoryProperties memProperties;
+        vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties);
+
+        for(uint i = 0; i < memProperties.memoryTypeCount; i++)
+        {
+            if ((memoryTypeBitFilter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties)
+                return i;
+        }
+
+        throw new PukanException("failed to find suitable memory type");
+    }
+
     void printAllDevices()
     {
         foreach(d; devices)
@@ -281,10 +300,8 @@ class FlightRecorder(TBackend)
     {
         //TODO: move out from renderer package
         import std.conv: to;
-        import std.stdio;
-        pCallbackData.pMessage.to!string.writeln;
 
-        return VkResult.VK_SUCCESS;
+        throw new PukanException(pCallbackData.pMessage.to!string);
     }
 }
 

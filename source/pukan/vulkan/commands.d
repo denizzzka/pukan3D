@@ -43,7 +43,19 @@ class CommandPool(LogicalDevice)
         }
     }
 
-    void recordCommandBuffer(SwapChain!LogicalDevice swapChain, VkCommandBuffer commandBuffer, VkRenderPass renderPass, uint imageIndex, ref VkPipeline graphicsPipeline)
+    static void recordBegin(ref VkCommandBuffer commandBuffer, VkCommandBufferBeginInfo beginInfo)
+    {
+        debug beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+
+        vkBeginCommandBuffer(commandBuffer, &beginInfo).vkCheck;
+    }
+
+    static void recordEnd(ref VkCommandBuffer commandBuffer)
+    {
+        vkEndCommandBuffer(commandBuffer).vkCheck;
+    }
+
+    void recordCommandBuffer(SwapChain!LogicalDevice swapChain, VkCommandBuffer commandBuffer, VkRenderPass renderPass, uint imageIndex, VkBuffer vertexBuffer, ref VkPipeline graphicsPipeline)
     {
         VkCommandBufferBeginInfo beginInfo;
         beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -81,6 +93,10 @@ class CommandPool(LogicalDevice)
             scissor.offset = VkOffset2D(0, 0);
             scissor.extent = swapChain.imageExtent;
             vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+
+            auto vertexBuffers = [vertexBuffer];
+            VkDeviceSize[] offsets = [VkDeviceSize(0)];
+            vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers.ptr, offsets.ptr);
 
             vkCmdDraw(commandBuffer, 3, 1, 0, 0);
         }

@@ -4,31 +4,52 @@ import pukan.vulkan.bindings;
 import std.meta;
 import std.traits;
 
-struct Entry(T, alias t)
+struct Entry(C, R, alias t)
 {
-    alias CreateInfoT = T;
+    alias CreateInfoT = C;
+    alias ResultT = R;
     enum VkStructureType sType = t;
 }
 
 alias ST = VkStructureType;
 
 alias sType_list = AliasSeq!(
-    Entry!(VkInstanceCreateInfo,        ST.VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO),
-    Entry!(VkRenderPassCreateInfo,      ST.VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO),
-    Entry!(VkPipelineLayoutCreateInfo,  ST.VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO),
+    Entry!(VkInstanceCreateInfo,        VkInstance,         ST.VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO),
+    Entry!(VkRenderPassCreateInfo,      VkRenderPass,       ST.VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO),
+    Entry!(VkPipelineLayoutCreateInfo,  VkPipelineLayout,   ST.VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO),
+    Entry!(VkBufferCreateInfo,          VkBuffer,           ST.VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO),
+    Entry!(VkMemoryAllocateInfo,        VkDeviceMemory,     ST.VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO),
 );
 
-template getCreateInfoStructureType(T)
+template getEntry(InfoT)
 {
     static foreach(e; sType_list)
     {
-        static if(is(e.CreateInfoT == PointerTarget!T))
-            enum VkStructureType getCreateInfoStructureType = e.sType;
+        static if(is(e.CreateInfoT == InfoT))
+            alias getEntry = e;
     }
+}
+
+template getCreateInfoStructureType(Tptr)
+{
+    alias T = PointerTarget!Tptr;
+
+    enum VkStructureType getCreateInfoStructureType = getEntry!T.sType;
 }
 
 unittest
 {
     enum x = getCreateInfoStructureType!(VkInstanceCreateInfo*);
     static assert(x == VkStructureType.VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO);
+}
+
+template ResultType(T)
+{
+    alias ResultType = getEntry!T.ResultT;
+}
+
+unittest
+{
+    alias x = ResultType!VkMemoryAllocateInfo;
+    static assert(is(x == VkDeviceMemory));
 }

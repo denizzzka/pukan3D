@@ -4,14 +4,6 @@ import pukan.vulkan.bindings;
 
 // Non-programmable stages:
 
-VkPipelineVertexInputStateCreateInfo vertexInputInfo = {
-    sType: VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
-    //~ vertexBindingDescriptionCount: 0,
-    //~ pVertexBindingDescriptions: null,
-    //~ vertexAttributeDescriptionCount: 0,
-    //~ pVertexAttributeDescriptions: null,
-};
-
 VkPipelineInputAssemblyStateCreateInfo inputAssembly = {
     sType: VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
     topology: VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,

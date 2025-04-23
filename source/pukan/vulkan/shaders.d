@@ -48,3 +48,47 @@ class ShaderModule(LogicalDevice)
         return cinf;
     }
 }
+
+import dlib.math.vector;
+
+struct Vertex {
+    Vector2f pos;
+    Vector3f color;
+
+    static auto getBindingDescription() {
+        VkVertexInputBindingDescription r = {
+            binding: 0,
+            stride: this.sizeof,
+            inputRate: VK_VERTEX_INPUT_RATE_VERTEX,
+        };
+
+        return r;
+    }
+
+    static auto getAttributeDescriptions()
+    {
+        VkVertexInputAttributeDescription[2] ad;
+
+        ad[0] = VkVertexInputAttributeDescription(
+            binding: 0,
+            location: 0,
+            format: VK_FORMAT_R32G32_SFLOAT,
+            offset: pos.offsetof,
+        );
+
+        ad[1] = VkVertexInputAttributeDescription(
+            binding: 0,
+            location: 1,
+            format: VK_FORMAT_R32G32B32_SFLOAT,
+            offset: color.offsetof,
+        );
+
+        return ad;
+    }
+};
+
+const Vertex[] vertices = [
+    Vertex(Vector2f(0.0f, -0.5f), Vector3f(1.0f, 0.0f, 0.0f)),
+    Vertex(Vector2f(0.5f, 0.5f), Vector3f(0.0f, 1.0f, 0.0f)),
+    Vertex(Vector2f(-0.5f, 0.5f), Vector3f(0.0f, 0.0f, 1.0f)),
+];

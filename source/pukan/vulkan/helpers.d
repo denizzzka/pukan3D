@@ -2,15 +2,14 @@ module pukan.vulkan.helpers;
 
 import pukan.vulkan;
 import pukan.vulkan.bindings;
-import pukan.vulkan.stype_list: getCreateInfoStructureType;
+public import pukan.vulkan.stype_list: ResultType, getCreateInfoStructureType;
+import std.traits: PointerTarget;
 
-class VkObj(T...)
+private mixin template PrepareSettings(T...)
 {
-private
-{
-    enum findStr = "CreateInfo*";
+    enum findStings = ["CreateInfo", "AllocateInfo"];
 
-    template IsCreateInfo(T)
+    template IsCreateInfo(string findStr, T)
     {
         enum string typeName = T.stringof;
 
@@ -21,8 +20,14 @@ private
 
     static foreach(i, E; T)
     {
-        static if(IsCreateInfo!E)
-            enum createInfoIdx = i;
+        static foreach(findStr; findStings)
+        {
+            static if(IsCreateInfo!(findStr~"*", E))
+            {
+                enum createInfoIdx = i;
+                enum resultNameSuffix = findStr;
+            }
+        }
     }
 
     static assert(__traits(compiles, createInfoIdx), findStr~" argument not found");
@@ -37,13 +42,50 @@ private
         T[0] vkThis;
     }
 
-    enum string infoStructName = TCreateInfo.stringof;
-    enum resultingName = infoStructName[0 .. $ - ("CreateInfo".length + 1)];
-    mixin("alias BaseType = "~resultingName~";");
-    enum baseName = resultingName["Vk".length .. $];
-    enum ctorName = "vkCreate"~baseName;
-    enum dtorName = "vkDestroy"~baseName;
+    alias BaseType = ResultType!(PointerTarget!TCreateInfo);
+
+    enum _baseName = BaseType.stringof["Vk".length .. $-3];
+
+    // special case
+    static if(_baseName == "DeviceMemory")
+        enum baseName = "Memory";
+    else
+        enum baseName = _baseName;
+
+    static if(resultNameSuffix == "CreateInfo")
+    {
+        enum ctorName = "vkCreate"~baseName;
+        enum dtorName = "vkDestroy"~baseName;
+    }
+    else static if(resultNameSuffix == "AllocateInfo")
+    {
+        enum ctorName = "vkAllocate"~baseName;
+        enum dtorName = "vkFree"~baseName;
+    }
+    else
+        static assert(false, "Suffix not supported: "~resultNameSuffix);
 }
+
+void vkCall(T...)(T a)
+{
+    mixin PrepareSettings!T;
+
+    // Placed out of debug scope to check release code too
+    enum sTypeMustBe = getCreateInfoStructureType!TCreateInfo;
+
+    debug
+    {
+        auto ref createInfo = a[createInfoIdx];
+        createInfo.sType = sTypeMustBe;
+    }
+
+    mixin("VkResult r = "~ctorName~"(a);");
+    r.vkCheck(baseName~" creation failed");
+}
+
+class VkObj(T...)
+{
+    mixin PrepareSettings!T;
 
     VkAllocationCallbacks* allocator;
     BaseType vkObj;
@@ -65,8 +107,7 @@ private
 
         allocator = a[createInfoIdx + 1];
 
-        mixin("auto r = "~ctorName~"(a, &vkObj).vkCheck;");
-        r.vkCheck(resultingName~" creation failed");
+        vkCall(a, &vkObj);
     }
 
     this(BaseType o, VkAllocationCallbacks* alloc)

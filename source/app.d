@@ -195,6 +195,17 @@ void main() {
     scope renderPass = create(device.device, &renderPassInfo, vk.allocator);
     scope(exit) destroy(renderPass);
 
+    auto bindingDescriptions = [Vertex.getBindingDescription];
+    auto attributeDescriptions = Vertex.getAttributeDescriptions;
+
+    VkPipelineVertexInputStateCreateInfo vertexInputInfo = {
+        sType: VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
+        vertexBindingDescriptionCount: cast(uint) bindingDescriptions.length,
+        pVertexBindingDescriptions: bindingDescriptions.ptr,
+        vertexAttributeDescriptionCount: cast(uint) attributeDescriptions.length,
+        pVertexAttributeDescriptions: attributeDescriptions.ptr,
+    };
+
     VkGraphicsPipelineCreateInfo pipelineInfo;
     pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
     pipelineInfo.stageCount = cast(uint) shaderStages.length;
@@ -218,10 +229,40 @@ void main() {
 
     swapChain.initFramebuffers(renderPass);
 
-    cmdPool.initBuffs(1);
-    enforce(cmdPool.commandBuffers.length == 1, "commandBuffers.length="~cmdPool.commandBuffers.length.to!string);
+    cmdPool.initBuffs(2);
+    enforce(cmdPool.commandBuffers.length == 2, "commandBuffers.length="~cmdPool.commandBuffers.length.to!string);
 
-    cmdPool.recordCommandBuffer(swapChain, cmdPool.commandBuffers[0], renderPass, 0, graphicsPipelines.pipelines[0]);
+    // Vertex buff allocation
+
+    VkBufferCreateInfo stagingBufInfo = {
+        size: Vertex.sizeof * vertices.length,
+        usage: VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+        sharingMode: VK_SHARING_MODE_EXCLUSIVE,
+    };
+
+    auto stagingBuffer = device.create!MemoryBuffer(stagingBufInfo, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+    scope(exit) destroy(stagingBuffer);
+
+    VkBufferCreateInfo vertexBufInfo = {
+        size: Vertex.sizeof * vertices.length,
+        usage: VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+        sharingMode: VK_SHARING_MODE_EXCLUSIVE,
+    };
+
+    auto vertexBuffer = device.create!MemoryBuffer(vertexBufInfo, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+    scope(exit) destroy(vertexBuffer);
+
+    {
+        Vertex* data;
+        vkMapMemory(device.device, stagingBuffer.deviceMemory, 0 /*offset*/, stagingBufInfo.size, 0 /*flags*/, cast(void**) &data);
+        scope(exit) vkUnmapMemory(device.device, stagingBuffer.deviceMemory);
+
+        // Copy data to mapped memory
+        data[0 .. vertices.length] = vertices[0 .. $];
+
+        // Copy host RAM buffer to GPU RAM
+        vertexBuffer.copyBuffer(cmdPool.commandBuffers[1], stagingBuffer.buf, vertexBuffer.buf, stagingBufInfo.size);
+    }
 
     auto imageAvailable = device.createSemaphore;
     scope(exit) destroy(imageAvailable);
@@ -287,7 +328,7 @@ void main() {
         vkResetFences(device.device, 1, &inFlightFence.fence).vkCheck;
 
         cmdPool.resetBuffer(0);
-        cmdPool.recordCommandBuffer(swapChain, cmdPool.commandBuffers[0], renderPass, imageIndex, graphicsPipelines.pipelines[0]);
+        cmdPool.recordCommandBuffer(swapChain, cmdPool.commandBuffers[0], renderPass, imageIndex, vertexBuffer.buf, graphicsPipelines.pipelines[0]);
 
         {
             VkSubmitInfo submitInfo;
@@ -300,7 +341,7 @@ void main() {
             auto waitStages = cast(uint) VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
             submitInfo.pWaitDstStageMask = &waitStages;
 
-            submitInfo.commandBufferCount = cast(uint) cmdPool.commandBuffers.length;
+            submitInfo.commandBufferCount = 1;
             submitInfo.pCommandBuffers = &cmdPool.commandBuffers[0];
 
             auto signalSemaphores = [renderFinished.semaphore];
