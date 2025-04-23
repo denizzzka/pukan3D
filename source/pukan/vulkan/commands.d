@@ -3,6 +3,13 @@ module pukan.vulkan.commands;
 import pukan.vulkan;
 import pukan.vulkan.bindings;
 
+/**
+Command pools are externally synchronized, meaning that a command pool
+must not be used concurrently in multiple threads. That includes use
+via recording commands on any command buffers allocated from the pool,
+as well as operations that allocate, free, and reset command buffers or
+the pool itself.
+*/
 class CommandPool(LogicalDevice)
 {
     LogicalDevice device;
