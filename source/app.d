@@ -70,11 +70,11 @@ void main() {
     //~ vk.printAllDevices();
     //~ vk.printAllAvailableLayers();
 
-    debug auto dbg = vk.attachFlightRecorder();
-    debug scope(exit) destroy(dbg);
-
     auto device = vk.createLogicalDevice();
     scope(exit) destroy(device);
+
+    debug auto dbg = vk.attachFlightRecorder();
+    debug scope(exit) destroy(dbg);
 
     import pukan.vulkan.bindings: VkSurfaceKHR;
     static import glfw3.internal;
