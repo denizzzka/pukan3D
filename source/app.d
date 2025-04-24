@@ -111,10 +111,24 @@ void main() {
     auto fragShader = device.loadShader("frag.spv");
     scope(exit) destroy(fragShader);
 
-    auto frame = device.create!Frame(&createSwapChain, graphicsQueue, presentQueue);
+    auto swapChain = createSwapChain();
+    scope(exit) destroy(swapChain);
+
+    auto frame = device.create!Frame(swapChain.imageFormat, graphicsQueue, presentQueue);
     scope(exit) destroy(frame);
 
+    swapChain.initFramebuffers(frame.renderPass);
+
     import pukan.vulkan.bindings;
+
+    void recreateSwapChain()
+    {
+        vkDeviceWaitIdle(device.device);
+        destroy(swapChain);
+        swapChain = createSwapChain();
+        swapChain.initFramebuffers(frame.renderPass);
+    }
+
     import pukan.vulkan.helpers;
 
     auto shaderStages = [
@@ -127,14 +141,14 @@ void main() {
     VkViewport viewport;
     viewport.x = 0.0f;
     viewport.y = 0.0f;
-    viewport.width = frame.swapChain.imageExtent.width;
-    viewport.height = frame.swapChain.imageExtent.height;
+    viewport.width = swapChain.imageExtent.width;
+    viewport.height = swapChain.imageExtent.height;
     viewport.minDepth = 0.0f;
     viewport.maxDepth = 1.0f;
 
     VkRect2D scissor;
     scissor.offset = VkOffset2D(0, 0);
-    scissor.extent = frame.swapChain.imageExtent;
+    scissor.extent = swapChain.imageExtent;
 
     VkPipelineViewportStateCreateInfo viewportState;
     viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
@@ -224,7 +238,7 @@ void main() {
     auto inFlightFence = device.createFence;
     scope(exit) destroy(inFlightFence);
 
-    void recreateSwapChain()
+    void recreateSwapChainWithNewWindowSize()
     {
         int width;
         int height;
@@ -244,7 +258,7 @@ void main() {
             glfwWaitEvents();
         }
 
-        frame.recreateSwapChain();
+        recreateSwapChain();
     }
 
     import pukan.exceptions;
@@ -260,7 +274,7 @@ void main() {
         uint32_t imageIndex;
 
         {
-            auto ret = vkAcquireNextImageKHR(device.device, frame.swapChain.swapchain, ulong.max, imageAvailable.semaphore, null, &imageIndex);
+            auto ret = vkAcquireNextImageKHR(device.device, swapChain.swapchain, ulong.max, imageAvailable.semaphore, null, &imageIndex);
 
             if(ret == VK_ERROR_OUT_OF_DATE_KHR)
             {
@@ -277,7 +291,7 @@ void main() {
         vkResetFences(device.device, 1, &inFlightFence.fence).vkCheck;
 
         frame.commandPool.resetBuffer(0);
-        frame.commandPool.recordCommandBuffer(frame.swapChain, frame.commandPool.commandBuffers[0], frame.renderPass, imageIndex, vertexBuffer.buf, graphicsPipelines.pipelines[0]);
+        frame.commandPool.recordCommandBuffer(swapChain, frame.commandPool.commandBuffers[0], frame.renderPass, imageIndex, vertexBuffer.buf, graphicsPipelines.pipelines[0]);
 
         {
             VkSubmitInfo submitInfo;
@@ -305,7 +319,7 @@ void main() {
             presentInfo.waitSemaphoreCount = cast(uint) signalSemaphores.length;
             presentInfo.pWaitSemaphores = signalSemaphores.ptr;
 
-            auto swapChains = [frame.swapChain.swapchain];
+            auto swapChains = [swapChain.swapchain];
             presentInfo.swapchainCount = cast(uint) swapChains.length;
             presentInfo.pSwapchains = swapChains.ptr;
 
@@ -324,7 +338,7 @@ void main() {
                 if (ret == VK_ERROR_OUT_OF_DATE_KHR || ret == VK_SUBOPTIMAL_KHR || framebufferResized)
                 {
                     framebufferResized = false;
-                    recreateSwapChain();
+                    recreateSwapChainWithNewWindowSize();
                     continue;
                 }
                 else

@@ -8,31 +8,23 @@ import pukan.vulkan.helpers;
 //TODO: can LogicalDevice be alias to instanced object?
 class Frame(LogicalDevice)
 {
-    alias SwapChainFactoryDg = SwapChain!LogicalDevice delegate();
-
     LogicalDevice device;
-    SwapChainFactoryDg createSwapChain; //FIXME: move out from Frame
-    SwapChain!LogicalDevice swapChain;
     VkQueue graphicsQueue;
     VkQueue presentQueue;
     CommandPool!LogicalDevice commandPool;
     VkRenderPass renderPass;
     VkPipelineLayout pipelineLayout;
 
-    this(LogicalDevice dev, SwapChainFactoryDg scFactoryDg, VkQueue graphics, VkQueue present)
+    this(LogicalDevice dev, VkFormat imageFormat, VkQueue graphics, VkQueue present)
     {
         device = dev;
-        createSwapChain = scFactoryDg;
-        swapChain = createSwapChain();
         graphicsQueue = graphics;
         presentQueue = present;
 
         commandPool = device.createCommandPool();
         commandPool.initBuffs(1);
 
-        renderPass = createRenderPass(device, swapChain.imageFormat);
-
-        swapChain.initFramebuffers(renderPass);
+        renderPass = createRenderPass(device, imageFormat);
 
         // pipeline layout can be used to pass uniform vars into shaders
         VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = {
@@ -50,15 +42,6 @@ class Frame(LogicalDevice)
         vkDestroyPipelineLayout(device, pipelineLayout, device.backend.allocator);
         vkDestroyRenderPass(device, renderPass, device.backend.allocator);
         destroy(commandPool);
-        destroy(swapChain);
-    }
-
-    void recreateSwapChain()
-    {
-        vkDeviceWaitIdle(device.device);
-        destroy(swapChain);
-        swapChain = createSwapChain();
-        swapChain.initFramebuffers(renderPass);
     }
 
     //~ void resize
