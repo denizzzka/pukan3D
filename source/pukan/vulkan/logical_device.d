@@ -32,12 +32,18 @@ class LogicalDevice(Backend)
             pQueuePriorities: &queuePriority,
         };
 
+        VkPhysicalDeviceShaderObjectFeaturesEXT shaderObjectFeatures = {
+            sType: VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_OBJECT_FEATURES_EXT,
+            shaderObject: VK_TRUE,
+        };
+
         VkDeviceCreateInfo createInfo = {
             sType: VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
             queueCreateInfoCount: 1,
             pQueueCreateInfos: &queueCreateInfo,
             ppEnabledExtensionNames: extension_list.ptr,
             enabledExtensionCount: cast(uint) extension_list.length,
+            pNext: &shaderObjectFeatures,
         };
 
         vkCreateDevice(physicalDevice, &createInfo, b.allocator, &device).vkCheck;
