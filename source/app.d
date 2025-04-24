@@ -91,17 +91,8 @@ void main() {
     vk.printSurfaceFormats(vk.devices[vk.deviceIdx], surface);
     vk.printPresentModes(vk.devices[vk.deviceIdx], surface);
 
-    auto createSwapChain()
-    {
-        writeln("createSwapChain called");
-
-        const capab = vk.getSurfaceCapabilities(vk.devices[vk.deviceIdx], surface);
-        capab.toPrettyString.writeln;
-
-        enforce(capab.currentExtent.width != uint.max, "unsupported, see VkSurfaceCapabilitiesKHR(3) Manual Page");
-
-        return device.createSwapChain(capab);
-    }
+    auto swapChain = new SwapChain!(typeof(device))(device, surface);
+    scope(exit) destroy(swapChain);
 
     auto graphicsQueue = device.getQueue();
     auto presentQueue = device.getQueue();
@@ -110,9 +101,6 @@ void main() {
     scope(exit) destroy(vertShader);
     auto fragShader = device.loadShader("frag.spv");
     scope(exit) destroy(fragShader);
-
-    auto swapChain = createSwapChain();
-    scope(exit) destroy(swapChain);
 
     auto frame = device.create!Frame(swapChain.imageFormat, graphicsQueue, presentQueue);
     scope(exit) destroy(frame);
@@ -125,7 +113,7 @@ void main() {
     {
         vkDeviceWaitIdle(device.device);
         destroy(swapChain);
-        swapChain = createSwapChain();
+        swapChain = new SwapChain!(typeof(device))(device, surface);
         swapChain.initFramebuffers(frame.renderPass);
     }
 

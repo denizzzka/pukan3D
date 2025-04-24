@@ -63,27 +63,6 @@ class LogicalDevice(Backend)
         return ret;
     }
 
-    auto createSwapChain(in VkSurfaceCapabilitiesKHR capabilities)
-    {
-        VkSwapchainCreateInfoKHR cinf = {
-            sType: VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
-            surface: backend.surface,
-            imageFormat: VK_FORMAT_B8G8R8A8_SRGB,
-            imageColorSpace: VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
-            imageExtent: capabilities.currentExtent,
-            imageArrayLayers: 1, // number of views in a multiview/stereo surface. For non-stereoscopic-3D applications, this value is 1
-            imageUsage: VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, // specifies that the image can be used to create a VkImageView suitable for use as a color or resolve attachment in a VkFramebuffer
-            imageSharingMode: VK_SHARING_MODE_EXCLUSIVE,
-            presentMode: VkPresentModeKHR.VK_PRESENT_MODE_MAILBOX_KHR,
-            minImageCount: capabilities.minImageCount + 1,
-            preTransform: capabilities.currentTransform,
-            compositeAlpha: VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
-            clipped: VK_TRUE,
-        };
-
-        return new SwapChain!LogicalDevice(this, cinf);
-    }
-
     auto loadShader(string filename)
     {
         return new ShaderModule!LogicalDevice(this, filename);
