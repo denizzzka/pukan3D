@@ -158,17 +158,6 @@ void main() {
     dynamicState.dynamicStateCount = cast(uint) dynamicStates.length;
     dynamicState.pDynamicStates = dynamicStates.ptr;
 
-    // pipeline layout can be used to pass uniform vars into shaders
-
-    VkPipelineLayoutCreateInfo pipelineLayoutInfo;
-    pipelineLayoutInfo.setLayoutCount = 0; // Optional
-    pipelineLayoutInfo.pSetLayouts = null; // Optional
-    pipelineLayoutInfo.pushConstantRangeCount = 0; // Optional
-    pipelineLayoutInfo.pPushConstantRanges = null; // Optional
-
-    auto pipelineLayout = create(device.device, &pipelineLayoutInfo, vk.allocator);
-    scope(exit) destroy(pipelineLayout);
-
     auto bindingDescriptions = [Vertex.getBindingDescription];
     auto attributeDescriptions = Vertex.getAttributeDescriptions;
 
@@ -192,7 +181,7 @@ void main() {
     pipelineInfo.pDepthStencilState = null; // Optional
     pipelineInfo.pColorBlendState = &colorBlending;
     pipelineInfo.pDynamicState = &dynamicState;
-    pipelineInfo.layout = pipelineLayout;
+    pipelineInfo.layout = frame.pipelineLayout;
     pipelineInfo.renderPass = frame.renderPass;
     pipelineInfo.subpass = 0;
     pipelineInfo.basePipelineHandle = null; // Optional
