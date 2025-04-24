@@ -13,7 +13,6 @@ class Frame(LogicalDevice)
     VkQueue presentQueue;
     CommandPool!LogicalDevice commandPool;
     VkRenderPass renderPass;
-    VkPipelineLayout pipelineLayout;
 
     this(LogicalDevice dev, VkFormat imageFormat, VkQueue graphics, VkQueue present)
     {
@@ -25,21 +24,10 @@ class Frame(LogicalDevice)
         commandPool.initBuffs(1);
 
         renderPass = createRenderPass(device, imageFormat);
-
-        // pipeline layout can be used to pass uniform vars into shaders
-        VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = {
-            setLayoutCount: 0, // Optional
-            pSetLayouts: null, // Optional
-            pushConstantRangeCount: 0, // Optional
-            pPushConstantRanges: null, // Optional
-        };
-
-        vkCall(device, &pipelineLayoutCreateInfo, device.backend.allocator, &pipelineLayout);
     }
 
     ~this()
     {
-        vkDestroyPipelineLayout(device, pipelineLayout, device.backend.allocator);
         vkDestroyRenderPass(device, renderPass, device.backend.allocator);
         destroy(commandPool);
     }

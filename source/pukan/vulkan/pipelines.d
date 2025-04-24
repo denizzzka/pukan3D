@@ -43,3 +43,19 @@ class GraphicsPipelines(LogicalDevice) : Pipelines!LogicalDevice
         ).vkCheck;
     }
 }
+
+auto createPipelineLayout(LogicalDevice)(LogicalDevice device)
+{
+    // pipeline layout can be used to pass uniform vars into shaders
+    VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = {
+        setLayoutCount: 0, // Optional
+        pSetLayouts: null, // Optional
+        pushConstantRangeCount: 0, // Optional
+        pPushConstantRanges: null, // Optional
+    };
+
+    VkPipelineLayout pipelineLayout;
+    vkCall(device, &pipelineLayoutCreateInfo, device.backend.allocator, &pipelineLayout);
+
+    return pipelineLayout;
+}
