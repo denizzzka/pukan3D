@@ -165,6 +165,9 @@ void main() {
         pVertexAttributeDescriptions: attributeDescriptions.ptr,
     };
 
+    auto pipelineLayout = createPipelineLayout(device);
+    scope(exit) vkDestroyPipelineLayout(device, pipelineLayout, device.backend.allocator);
+
     VkGraphicsPipelineCreateInfo pipelineInfo;
     pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
     pipelineInfo.stageCount = cast(uint) shaderStages.length;
@@ -177,7 +180,7 @@ void main() {
     pipelineInfo.pDepthStencilState = null; // Optional
     pipelineInfo.pColorBlendState = &colorBlending;
     pipelineInfo.pDynamicState = &dynamicState;
-    pipelineInfo.layout = frame.pipelineLayout;
+    pipelineInfo.layout = pipelineLayout;
     pipelineInfo.renderPass = frame.renderPass;
     pipelineInfo.subpass = 0;
     pipelineInfo.basePipelineHandle = null; // Optional
