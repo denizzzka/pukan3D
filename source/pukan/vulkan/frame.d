@@ -15,16 +15,20 @@ struct FrameSettings
 //TODO: can LogicalDevice be alias to instanced object?
 class Frame(LogicalDevice)
 {
+    alias SwapChainFactoryDg = SwapChain!LogicalDevice delegate();
+
     LogicalDevice device;
+    SwapChainFactoryDg createSwapChain;
     SwapChain!LogicalDevice swapChain;
     VkQueue graphicsQueue;
     VkQueue presentQueue;
     CommandPool!LogicalDevice commandPool;
 
-    this(LogicalDevice dev, ref FrameSettings, SwapChain!LogicalDevice delegate() scFactoryDg, VkQueue graphics, VkQueue present)
+    this(LogicalDevice dev, ref FrameSettings, SwapChainFactoryDg scFactoryDg, VkQueue graphics, VkQueue present)
     {
         device = dev;
-        swapChain = scFactoryDg();
+        createSwapChain = scFactoryDg;
+        swapChain = createSwapChain();
         graphicsQueue = graphics;
         presentQueue = present;
 
@@ -36,6 +40,14 @@ class Frame(LogicalDevice)
     {
         destroy(commandPool);
         destroy(swapChain);
+    }
+
+    void recreateSwapChain()
+    {
+        vkDeviceWaitIdle(device.device);
+        destroy(swapChain);
+        swapChain = createSwapChain();
+        //~ swapChain.initFramebuffers(renderPass);
     }
 
     //~ void resize

@@ -103,9 +103,6 @@ void main() {
         return device.createSwapChain(capab);
     }
 
-    auto swapChain = createSwapChain();
-    scope(exit) destroy(swapChain);
-
     auto graphicsQueue = device.getQueue();
     auto presentQueue = device.getQueue();
 
@@ -117,7 +114,9 @@ void main() {
     auto cmdPool = device.createCommandPool();
     scope(exit) destroy(cmdPool);
 
-    FrameSettings frameSettings;
+    FrameSettings frameSettings = {
+    };
+
     auto frame = device.create!Frame(frameSettings, &createSwapChain, graphicsQueue, presentQueue);
     scope(exit) destroy(frame);
 
@@ -134,14 +133,14 @@ void main() {
     VkViewport viewport;
     viewport.x = 0.0f;
     viewport.y = 0.0f;
-    viewport.width = swapChain.imageExtent.width;
-    viewport.height = swapChain.imageExtent.height;
+    viewport.width = frame.swapChain.imageExtent.width;
+    viewport.height = frame.swapChain.imageExtent.height;
     viewport.minDepth = 0.0f;
     viewport.maxDepth = 1.0f;
 
     VkRect2D scissor;
     scissor.offset = VkOffset2D(0, 0);
-    scissor.extent = swapChain.imageExtent;
+    scissor.extent = frame.swapChain.imageExtent;
 
     VkPipelineViewportStateCreateInfo viewportState;
     viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
@@ -173,7 +172,7 @@ void main() {
     // ========= Create render pass: =========
 
     VkAttachmentDescription colorAttachment;
-    colorAttachment.format = swapChain.imageFormat;
+    colorAttachment.format = frame.swapChain.imageFormat;
     colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
     colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
     colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -232,7 +231,8 @@ void main() {
     auto graphicsPipelines = device.create!GraphicsPipelines([pipelineInfo]);
     scope(exit) destroy(graphicsPipelines);
 
-    swapChain.initFramebuffers(renderPass);
+    //TODO: move to Frame code
+    frame.swapChain.initFramebuffers(renderPass);
 
     cmdPool.initBuffs(2);
     enforce(cmdPool.commandBuffers.length == 2, "commandBuffers.length="~cmdPool.commandBuffers.length.to!string);
@@ -297,10 +297,10 @@ void main() {
             glfwWaitEvents();
         }
 
-        vkDeviceWaitIdle(device.device);
-        destroy(swapChain);
-        swapChain = createSwapChain();
-        swapChain.initFramebuffers(renderPass);
+        frame.recreateSwapChain();
+
+        //TODO: move to Frame.recreateSwapChain
+        frame.swapChain.initFramebuffers(renderPass);
     }
 
     import pukan.exceptions;
@@ -316,7 +316,7 @@ void main() {
         uint32_t imageIndex;
 
         {
-            auto ret = vkAcquireNextImageKHR(device.device, swapChain.swapchain, ulong.max, imageAvailable.semaphore, null, &imageIndex);
+            auto ret = vkAcquireNextImageKHR(device.device, frame.swapChain.swapchain, ulong.max, imageAvailable.semaphore, null, &imageIndex);
 
             if(ret == VK_ERROR_OUT_OF_DATE_KHR)
             {
@@ -333,7 +333,7 @@ void main() {
         vkResetFences(device.device, 1, &inFlightFence.fence).vkCheck;
 
         cmdPool.resetBuffer(0);
-        cmdPool.recordCommandBuffer(swapChain, cmdPool.commandBuffers[0], renderPass, imageIndex, vertexBuffer.buf, graphicsPipelines.pipelines[0]);
+        cmdPool.recordCommandBuffer(frame.swapChain, cmdPool.commandBuffers[0], renderPass, imageIndex, vertexBuffer.buf, graphicsPipelines.pipelines[0]);
 
         {
             VkSubmitInfo submitInfo;
@@ -361,7 +361,7 @@ void main() {
             presentInfo.waitSemaphoreCount = cast(uint) signalSemaphores.length;
             presentInfo.pWaitSemaphores = signalSemaphores.ptr;
 
-            auto swapChains = [swapChain.swapchain];
+            auto swapChains = [frame.swapChain.swapchain];
             presentInfo.swapchainCount = cast(uint) swapChains.length;
             presentInfo.pSwapchains = swapChains.ptr;
 
