@@ -323,13 +323,3 @@ class FlightRecorder(TBackend)
         throw new PukanException(pCallbackData.pMessage.to!string);
     }
 }
-
-class Frame
-{
-    //~ void resize
-    //~ draw(render_packet)
-}
-
-struct RenderPacket
-{
-}

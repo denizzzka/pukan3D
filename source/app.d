@@ -106,6 +106,7 @@ void main() {
     auto swapChain = createSwapChain();
     scope(exit) destroy(swapChain);
 
+    auto graphicsQueue = device.getQueue();
     auto presentQueue = device.getQueue();
 
     auto vertShader = device.loadShader("vert.spv");
@@ -115,6 +116,10 @@ void main() {
 
     auto cmdPool = device.createCommandPool();
     scope(exit) destroy(cmdPool);
+
+    FrameSettings frameSettings;
+    auto frame = device.create!Frame(frameSettings, swapChain, graphicsQueue, presentQueue);
+    scope(exit) destroy(frame);
 
     import pukan.vulkan.bindings;
     import pukan.vulkan.helpers;
