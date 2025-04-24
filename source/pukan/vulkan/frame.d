@@ -21,10 +21,10 @@ class Frame(LogicalDevice)
     VkQueue presentQueue;
     CommandPool!LogicalDevice commandPool;
 
-    this(LogicalDevice dev, ref FrameSettings, SwapChain!LogicalDevice sc, VkQueue graphics, VkQueue present)
+    this(LogicalDevice dev, ref FrameSettings, SwapChain!LogicalDevice delegate() scFactoryDg, VkQueue graphics, VkQueue present)
     {
         device = dev;
-        swapChain = sc;
+        swapChain = scFactoryDg();
         graphicsQueue = graphics;
         presentQueue = present;
 
