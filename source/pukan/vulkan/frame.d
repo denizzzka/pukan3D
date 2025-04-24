@@ -11,7 +11,7 @@ class Frame(LogicalDevice)
     alias SwapChainFactoryDg = SwapChain!LogicalDevice delegate();
 
     LogicalDevice device;
-    SwapChainFactoryDg createSwapChain;
+    SwapChainFactoryDg createSwapChain; //FIXME: move out from Frame
     SwapChain!LogicalDevice swapChain;
     VkQueue graphicsQueue;
     VkQueue presentQueue;
