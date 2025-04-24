@@ -39,6 +39,8 @@ class Frame(LogicalDevice)
 
         renderPass = createRenderPass(device, swapChain.imageFormat);
 
+        swapChain.initFramebuffers(renderPass);
+
         // pipeline layout can be used to pass uniform vars into shaders
         VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = {
             setLayoutCount: 0, // Optional

@@ -190,9 +190,6 @@ void main() {
     auto graphicsPipelines = device.create!GraphicsPipelines([pipelineInfo]);
     scope(exit) destroy(graphicsPipelines);
 
-    //TODO: move to Frame code
-    frame.swapChain.initFramebuffers(frame.renderPass);
-
     cmdPool.initBuffs(2);
     enforce(cmdPool.commandBuffers.length == 2, "commandBuffers.length="~cmdPool.commandBuffers.length.to!string);
 
