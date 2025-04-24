@@ -11,6 +11,7 @@ class LogicalDevice(Backend)
 {
     Backend backend; // TODO: rewrite to "Instance instance"
     VkDevice device;
+    alias this = device;
 
     const uint familyIdx;
 

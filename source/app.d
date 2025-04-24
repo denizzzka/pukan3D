@@ -268,9 +268,6 @@ void main() {
         }
 
         frame.recreateSwapChain();
-
-        //TODO: move to Frame.recreateSwapChain
-        frame.swapChain.initFramebuffers(frame.renderPass);
     }
 
     import pukan.exceptions;

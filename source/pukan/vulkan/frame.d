@@ -36,12 +36,12 @@ class Frame(LogicalDevice)
         commandPool = device.createCommandPool();
         commandPool.initBuffs(1);
 
-        renderPass = createRenderPass(swapChain);
+        renderPass = createRenderPass(device, swapChain.imageFormat);
     }
 
     ~this()
     {
-        vkDestroyRenderPass(device.device, renderPass, device.backend.allocator); //FIXME: wrong code
+        vkDestroyRenderPass(device, renderPass, device.backend.allocator);
         destroy(commandPool);
         destroy(swapChain);
     }
@@ -51,17 +51,17 @@ class Frame(LogicalDevice)
         vkDeviceWaitIdle(device.device);
         destroy(swapChain);
         swapChain = createSwapChain();
-        //~ swapChain.initFramebuffers(renderPass);
+        swapChain.initFramebuffers(renderPass);
     }
 
     //~ void resize
     //~ draw(render_packet)
 }
 
-VkRenderPass createRenderPass(S)(S swapChain)
+VkRenderPass createRenderPass(LogicalDevice)(LogicalDevice device, VkFormat imageFormat)
 {
     VkAttachmentDescription colorAttachment;
-    colorAttachment.format = swapChain.imageFormat;
+    colorAttachment.format = imageFormat;
     colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
     colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
     colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -85,5 +85,8 @@ VkRenderPass createRenderPass(S)(S swapChain)
     renderPassInfo.subpassCount = 1;
     renderPassInfo.pSubpasses = &subpass;
 
-    return create(swapChain.device.device, &renderPassInfo, swapChain.device.backend.allocator);
+    VkRenderPass ret;
+    vkCall(device.device, &renderPassInfo, device.backend.allocator, &ret);
+
+    return ret;
 }
