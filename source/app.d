@@ -111,9 +111,6 @@ void main() {
     auto fragShader = device.loadShader("frag.spv");
     scope(exit) destroy(fragShader);
 
-    auto cmdPool = device.createCommandPool();
-    scope(exit) destroy(cmdPool);
-
     auto frame = device.create!Frame(&createSwapChain, graphicsQueue, presentQueue);
     scope(exit) destroy(frame);
 
@@ -187,9 +184,6 @@ void main() {
     auto graphicsPipelines = device.create!GraphicsPipelines([pipelineInfo]);
     scope(exit) destroy(graphicsPipelines);
 
-    cmdPool.initBuffs(2);
-    enforce(cmdPool.commandBuffers.length == 2, "commandBuffers.length="~cmdPool.commandBuffers.length.to!string);
-
     // Vertex buff allocation
 
     VkBufferCreateInfo stagingBufInfo = {
@@ -219,7 +213,7 @@ void main() {
         data[0 .. vertices.length] = vertices[0 .. $];
 
         // Copy host RAM buffer to GPU RAM
-        vertexBuffer.copyBuffer(cmdPool.commandBuffers[1], stagingBuffer.buf, vertexBuffer.buf, stagingBufInfo.size);
+        vertexBuffer.copyBuffer(frame.commandPool.commandBuffers[0], stagingBuffer.buf, vertexBuffer.buf, stagingBufInfo.size);
     }
 
     auto imageAvailable = device.createSemaphore;
@@ -282,8 +276,8 @@ void main() {
 
         vkResetFences(device.device, 1, &inFlightFence.fence).vkCheck;
 
-        cmdPool.resetBuffer(0);
-        cmdPool.recordCommandBuffer(frame.swapChain, cmdPool.commandBuffers[0], frame.renderPass, imageIndex, vertexBuffer.buf, graphicsPipelines.pipelines[0]);
+        frame.commandPool.resetBuffer(0);
+        frame.commandPool.recordCommandBuffer(frame.swapChain, frame.commandPool.commandBuffers[0], frame.renderPass, imageIndex, vertexBuffer.buf, graphicsPipelines.pipelines[0]);
 
         {
             VkSubmitInfo submitInfo;
@@ -297,7 +291,7 @@ void main() {
             submitInfo.pWaitDstStageMask = &waitStages;
 
             submitInfo.commandBufferCount = 1;
-            submitInfo.pCommandBuffers = &cmdPool.commandBuffers[0];
+            submitInfo.pCommandBuffers = &frame.commandPool.commandBuffers[0];
 
             auto signalSemaphores = [renderFinished.semaphore];
             submitInfo.signalSemaphoreCount = cast(uint) signalSemaphores.length;
