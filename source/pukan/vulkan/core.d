@@ -60,8 +60,8 @@ class Instance(alias Logger)
         debug const value = VK_TRUE;
 
         debug auto settings = [
-            //~ VkLayerSettingEXT("VK_LAYER_KHRONOS_validation", "validate_best_practices", VK_LAYER_SETTING_TYPE_BOOL32_EXT, 1, &value),
-            VkLayerSettingEXT("VK_LAYER_KHRONOS_validation", "gpuav_reserve_binding_slot", VK_LAYER_SETTING_TYPE_BOOL32_EXT, 1, &value),
+            VkLayerSettingEXT("VK_LAYER_KHRONOS_validation", "validate_best_practices", VK_LAYER_SETTING_TYPE_BOOL32_EXT, 1, &value),
+            //~ VkLayerSettingEXT("VK_LAYER_KHRONOS_validation", "gpuav_reserve_binding_slot", VK_LAYER_SETTING_TYPE_BOOL32_EXT, 1, &value),
             //~ VkLayerSettingEXT("VK_LAYER_KHRONOS_validation", "gpuav_enable", VK_LAYER_SETTING_TYPE_BOOL32_EXT, 1, &value),
             //~ VkLayerSettingEXT("VK_LAYER_KHRONOS_validation", "printf_enable", VK_LAYER_SETTING_TYPE_BOOL32_EXT, 1, &value),
             //~ VkLayerSettingEXT("VK_LAYER_KHRONOS_validation", "validate_sync", VK_LAYER_SETTING_TYPE_BOOL32_EXT, 1, &value), //FIXME: enable and check
