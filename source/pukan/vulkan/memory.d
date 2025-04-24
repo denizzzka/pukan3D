@@ -35,8 +35,11 @@ class MemoryBuffer(LogicalDevice)
 
     ~this()
     {
-        vkFreeMemory(device.device, deviceMemory, device.backend.allocator);
+        // Buffer is bound, so it should be destroyed first to avoid complaints from validator like:
+        // vkFreeMemory(): VK Object VkBuffer [...] still has a reference to mem obj VkDeviceMemory [...]
+
         vkDestroyBuffer(device.device, buf, device.backend.allocator);
+        vkFreeMemory(device.device, deviceMemory, device.backend.allocator);
     }
 
     void copyBuffer(VkCommandBuffer cmdBuf, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
