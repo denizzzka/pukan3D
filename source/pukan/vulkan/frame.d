@@ -4,13 +4,6 @@ module pukan.vulkan.frame;
 import pukan.vulkan;
 import pukan.vulkan.bindings;
 import pukan.vulkan.helpers;
-//~ import pukan: toPrettyString;
-//~ import std.exception: enforce;
-//~ import std.string: toStringz;
-
-struct FrameSettings
-{
-}
 
 //TODO: can LogicalDevice be alias to instanced object?
 class Frame(LogicalDevice)
@@ -26,7 +19,7 @@ class Frame(LogicalDevice)
     VkRenderPass renderPass;
     VkPipelineLayout pipelineLayout;
 
-    this(LogicalDevice dev, ref FrameSettings, SwapChainFactoryDg scFactoryDg, VkQueue graphics, VkQueue present)
+    this(LogicalDevice dev, SwapChainFactoryDg scFactoryDg, VkQueue graphics, VkQueue present)
     {
         device = dev;
         createSwapChain = scFactoryDg;

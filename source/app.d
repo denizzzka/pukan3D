@@ -114,10 +114,7 @@ void main() {
     auto cmdPool = device.createCommandPool();
     scope(exit) destroy(cmdPool);
 
-    FrameSettings frameSettings = {
-    };
-
-    auto frame = device.create!Frame(frameSettings, &createSwapChain, graphicsQueue, presentQueue);
+    auto frame = device.create!Frame(&createSwapChain, graphicsQueue, presentQueue);
     scope(exit) destroy(frame);
 
     import pukan.vulkan.bindings;
