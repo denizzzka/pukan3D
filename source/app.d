@@ -108,8 +108,8 @@ void main() {
     vertShader.compileShader(VK_SHADER_STAGE_VERTEX_BIT);
     fragShader.compileShader(VK_SHADER_STAGE_FRAGMENT_BIT);
 
-    auto frame = device.create!Frame(swapChain.imageFormat, graphicsQueue, presentQueue);
-    scope(exit) destroy(frame);
+    auto frameBuilder = device.create!FrameBuilder(swapChain.imageFormat, graphicsQueue, presentQueue);
+    scope(exit) destroy(frameBuilder);
 
     import pukan.vulkan.helpers;
 
@@ -221,7 +221,7 @@ void main() {
         data[0 .. vertices.length] = vertices[0 .. $];
 
         // Copy host RAM buffer to GPU RAM
-        vertexBuffer.copyBuffer(frame.commandPool.commandBuffers[0], stagingBuffer.buf, vertexBuffer.buf, stagingBufInfo.size);
+        vertexBuffer.copyBuffer(frameBuilder.commandPool.commandBuffers[0], stagingBuffer.buf, vertexBuffer.buf, stagingBufInfo.size);
     }
 
     auto imageAvailable = device.createSemaphore;
@@ -284,8 +284,8 @@ void main() {
 
         vkResetFences(device.device, 1, &inFlightFence.fence).vkCheck;
 
-        frame.commandPool.resetBuffer(0);
-        frame.commandPool.recordCommandBuffer(swapChain, frame.commandPool.commandBuffers[0], graphicsPipelines.renderPass, imageIndex, vertexBuffer.buf, graphicsPipelines.pipelines[0]);
+        frameBuilder.commandPool.resetBuffer(0);
+        frameBuilder.commandPool.recordCommandBuffer(swapChain, frameBuilder.commandPool.commandBuffers[0], graphicsPipelines.renderPass, imageIndex, vertexBuffer.buf, graphicsPipelines.pipelines[0]);
 
         {
             VkSubmitInfo submitInfo;
@@ -299,7 +299,7 @@ void main() {
             submitInfo.pWaitDstStageMask = &waitStages;
 
             submitInfo.commandBufferCount = 1;
-            submitInfo.pCommandBuffers = &frame.commandPool.commandBuffers[0];
+            submitInfo.pCommandBuffers = &frameBuilder.commandPool.commandBuffers[0];
 
             auto signalSemaphores = [renderFinished.semaphore];
             submitInfo.signalSemaphoreCount = cast(uint) signalSemaphores.length;
