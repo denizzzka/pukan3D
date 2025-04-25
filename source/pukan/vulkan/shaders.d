@@ -10,12 +10,14 @@ class ShaderModule(LogicalDevice)
 {
     LogicalDevice device;
     VkShaderModule shaderModule;
+    VkShaderEXT ext; /// Used by VK_EXT_shader_object
+    private void[] data;
 
     this(LogicalDevice dev, string filename)
     {
         device = dev;
 
-        const data = read(filename);
+        data = read(filename);
 
         enforce!PukanException(data.length % 4 == 0, "SPIR-V code size must be a multiple of 4");
 
@@ -30,8 +32,30 @@ class ShaderModule(LogicalDevice)
         vkCreateShaderModule(dev.device, &cinf, dev.backend.allocator, &shaderModule).vkCheck;
     }
 
+    /// VK_EXT_shader_object extension
+    void compileShader(VkShaderStageFlagBits stage)
+    {
+        auto vkCreateShadersEXT = cast(PFN_vkCreateShadersEXT) vkGetInstanceProcAddr(device.backend.instance, "vkCreateShadersEXT");
+
+        const code = cast(uint[]) data;
+
+        VkShaderCreateInfoEXT createInfoEXT = {
+            sType: VK_STRUCTURE_TYPE_SHADER_CREATE_INFO_EXT,
+            codeType: VK_SHADER_CODE_TYPE_SPIRV_EXT,
+            codeSize: data.length,
+            pCode: code.ptr,
+            pName: "main",
+            stage: stage,
+        };
+
+        vkCreateShadersEXT(device, 1, &createInfoEXT, device.backend.allocator, &ext).vkCheck;
+    }
+
     ~this()
     {
+        auto vkDestroyShaderEXT = cast(PFN_vkDestroyShaderEXT) vkGetInstanceProcAddr(device.backend.instance, "vkDestroyShaderEXT");
+        vkDestroyShaderEXT(device, ext, device.backend.allocator);
+
         vkDestroyShaderModule(device.device, shaderModule, device.backend.allocator);
     }
 

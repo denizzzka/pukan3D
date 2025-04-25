@@ -102,12 +102,16 @@ void main() {
     auto fragShader = device.loadShader("frag.spv");
     scope(exit) destroy(fragShader);
 
+    import pukan.vulkan.bindings;
+
+    // Not used, just for testing:
+    vertShader.compileShader(VK_SHADER_STAGE_VERTEX_BIT);
+    fragShader.compileShader(VK_SHADER_STAGE_FRAGMENT_BIT);
+
     auto frame = device.create!Frame(swapChain.imageFormat, graphicsQueue, presentQueue);
     scope(exit) destroy(frame);
 
     swapChain.initFramebuffers(frame.renderPass);
-
-    import pukan.vulkan.bindings;
 
     void recreateSwapChain()
     {

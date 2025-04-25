@@ -66,8 +66,10 @@ class Instance(alias Logger)
             //~ VkLayerSettingEXT("VK_LAYER_KHRONOS_validation", "printf_enable", VK_LAYER_SETTING_TYPE_BOOL32_EXT, 1, &value),
             //~ VkLayerSettingEXT("VK_LAYER_KHRONOS_validation", "validate_sync", VK_LAYER_SETTING_TYPE_BOOL32_EXT, 1, &value), //FIXME: enable and check
         ];
+        else
+            VkLayerSettingEXT[] settings;
 
-        debug VkLayerSettingsCreateInfoEXT layersSettings = {
+        VkLayerSettingsCreateInfoEXT layersSettings = {
                 sType: VK_STRUCTURE_TYPE_LAYER_SETTINGS_CREATE_INFO_EXT,
                 pSettings: settings.ptr,
                 settingCount: cast(uint) settings.length,
@@ -174,6 +176,7 @@ class Instance(alias Logger)
         log_info(features.toPrettyString);
     }
 
+    /// Must be called after logical device creation, otherwise mutex deadlock occurs
     debug scope attachFlightRecorder()
     {
         auto d = new FlightRecorder!Instance(this);
@@ -233,6 +236,8 @@ class Instance(alias Logger)
         //TODO: get extension_list from arguments
         const(char*)[] extension_list = [
             VK_KHR_SWAPCHAIN_EXTENSION_NAME.ptr,
+            VK_EXT_SHADER_OBJECT_EXTENSION_NAME.ptr,
+            VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME.ptr,
         ];
 
         return new LogicalDevice!Instance(this, d, extension_list);
