@@ -12,7 +12,6 @@ class Frame(LogicalDevice)
     VkQueue graphicsQueue;
     VkQueue presentQueue;
     CommandPool!LogicalDevice commandPool;
-    VkRenderPass renderPass;
 
     this(LogicalDevice dev, VkFormat imageFormat, VkQueue graphics, VkQueue present)
     {
@@ -22,49 +21,10 @@ class Frame(LogicalDevice)
 
         commandPool = device.createCommandPool();
         commandPool.initBuffs(1);
-
-        renderPass = createRenderPass(device, imageFormat);
     }
 
     ~this()
     {
-        vkDestroyRenderPass(device, renderPass, device.backend.allocator);
         destroy(commandPool);
     }
-
-    //~ void resize
-    //~ draw(render_packet)
-}
-
-VkRenderPass createRenderPass(LogicalDevice)(LogicalDevice device, VkFormat imageFormat)
-{
-    VkAttachmentDescription colorAttachment;
-    colorAttachment.format = imageFormat;
-    colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
-    colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-    colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-    colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-    colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-    colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-
-    VkAttachmentReference colorAttachmentRef;
-    colorAttachmentRef.attachment = 0;
-    colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
-    VkSubpassDescription subpass;
-    subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-    subpass.colorAttachmentCount = 1;
-    subpass.pColorAttachments = &colorAttachmentRef;
-
-    VkRenderPassCreateInfo renderPassInfo;
-    renderPassInfo.attachmentCount = 1;
-    renderPassInfo.pAttachments = &colorAttachment;
-    renderPassInfo.subpassCount = 1;
-    renderPassInfo.pSubpasses = &subpass;
-
-    VkRenderPass ret;
-    vkCall(device.device, &renderPassInfo, device.backend.allocator, &ret);
-
-    return ret;
 }

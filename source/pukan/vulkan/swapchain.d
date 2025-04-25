@@ -86,6 +86,7 @@ class SwapChain(LogicalDevice)
     void initFramebuffers(VkRenderPass renderPass)
     {
         assert(imageViews.length == images.length);
+        assert(renderPass !is null);
 
         frameBuffers.length = images.length;
 

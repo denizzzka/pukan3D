@@ -111,16 +111,6 @@ void main() {
     auto frame = device.create!Frame(swapChain.imageFormat, graphicsQueue, presentQueue);
     scope(exit) destroy(frame);
 
-    swapChain.initFramebuffers(frame.renderPass);
-
-    void recreateSwapChain()
-    {
-        vkDeviceWaitIdle(device.device);
-        destroy(swapChain);
-        swapChain = new SwapChain!(typeof(device))(device, surface);
-        swapChain.initFramebuffers(frame.renderPass);
-    }
-
     import pukan.vulkan.helpers;
 
     auto shaderStages = [
@@ -185,13 +175,22 @@ void main() {
     pipelineInfo.pColorBlendState = &colorBlending;
     pipelineInfo.pDynamicState = &dynamicState;
     pipelineInfo.layout = pipelineLayout;
-    pipelineInfo.renderPass = frame.renderPass;
     pipelineInfo.subpass = 0;
     pipelineInfo.basePipelineHandle = null; // Optional
     pipelineInfo.basePipelineIndex = -1; // Optional
 
-    auto graphicsPipelines = device.create!GraphicsPipelines([pipelineInfo]);
+    auto graphicsPipelines = device.create!GraphicsPipelines([pipelineInfo], swapChain.imageFormat);
     scope(exit) destroy(graphicsPipelines);
+
+    swapChain.initFramebuffers(graphicsPipelines.renderPass);
+
+    void recreateSwapChain()
+    {
+        vkDeviceWaitIdle(device.device);
+        destroy(swapChain);
+        swapChain = new SwapChain!(typeof(device))(device, surface);
+        swapChain.initFramebuffers(graphicsPipelines.renderPass);
+    }
 
     // Vertex buff allocation
 
@@ -286,7 +285,7 @@ void main() {
         vkResetFences(device.device, 1, &inFlightFence.fence).vkCheck;
 
         frame.commandPool.resetBuffer(0);
-        frame.commandPool.recordCommandBuffer(swapChain, frame.commandPool.commandBuffers[0], frame.renderPass, imageIndex, vertexBuffer.buf, graphicsPipelines.pipelines[0]);
+        frame.commandPool.recordCommandBuffer(swapChain, frame.commandPool.commandBuffers[0], graphicsPipelines.renderPass, imageIndex, vertexBuffer.buf, graphicsPipelines.pipelines[0]);
 
         {
             VkSubmitInfo submitInfo;

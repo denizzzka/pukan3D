@@ -27,9 +27,16 @@ abstract class Pipelines(LogicalDevice)
 
 class GraphicsPipelines(LogicalDevice) : Pipelines!LogicalDevice
 {
-    this(LogicalDevice dev, VkGraphicsPipelineCreateInfo[] infos)
+    VkRenderPass renderPass;
+
+    this(LogicalDevice dev, VkGraphicsPipelineCreateInfo[] infos, VkFormat imageFormat)
     {
         super(dev);
+
+        renderPass = createRenderPass(device, imageFormat);
+
+        foreach(ref inf; infos)
+            inf.renderPass = renderPass;
 
         pipelines.length = infos.length;
 
@@ -41,6 +48,11 @@ class GraphicsPipelines(LogicalDevice) : Pipelines!LogicalDevice
             device.backend.allocator,
             pipelines.ptr
         ).vkCheck;
+    }
+
+    ~this()
+    {
+        vkDestroyRenderPass(device, renderPass, device.backend.allocator);
     }
 }
 
@@ -58,4 +70,37 @@ auto createPipelineLayout(LogicalDevice)(LogicalDevice device)
     vkCall(device, &pipelineLayoutCreateInfo, device.backend.allocator, &pipelineLayout);
 
     return pipelineLayout;
+}
+
+VkRenderPass createRenderPass(LogicalDevice)(LogicalDevice device, VkFormat imageFormat)
+{
+    VkAttachmentDescription colorAttachment;
+    colorAttachment.format = imageFormat;
+    colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+    colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+    colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+    colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+    colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+    colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+
+    VkAttachmentReference colorAttachmentRef;
+    colorAttachmentRef.attachment = 0;
+    colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+    VkSubpassDescription subpass;
+    subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+    subpass.colorAttachmentCount = 1;
+    subpass.pColorAttachments = &colorAttachmentRef;
+
+    VkRenderPassCreateInfo renderPassInfo;
+    renderPassInfo.attachmentCount = 1;
+    renderPassInfo.pAttachments = &colorAttachment;
+    renderPassInfo.subpassCount = 1;
+    renderPassInfo.pSubpasses = &subpass;
+
+    VkRenderPass ret;
+    vkCall(device.device, &renderPassInfo, device.backend.allocator, &ret);
+
+    return ret;
 }
