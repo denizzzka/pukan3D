@@ -62,7 +62,16 @@ class CommandPool(LogicalDevice)
         vkEndCommandBuffer(commandBuffer).vkCheck;
     }
 
-    void recordCommandBuffer(SwapChain!LogicalDevice swapChain, VkCommandBuffer commandBuffer, VkRenderPass renderPass, uint imageIndex, VkBuffer vertexBuffer, ref VkPipeline graphicsPipeline)
+    void recordCommandBuffer(
+        SwapChain!LogicalDevice swapChain,
+        VkCommandBuffer commandBuffer,
+        VkRenderPass renderPass,
+        uint imageIndex,
+        VkBuffer vertexBuffer,
+        VkBuffer indexBuffer,
+        uint indexCount,
+        ref VkPipeline graphicsPipeline
+    )
     {
         VkCommandBufferBeginInfo beginInfo;
         beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -104,8 +113,9 @@ class CommandPool(LogicalDevice)
             auto vertexBuffers = [vertexBuffer];
             VkDeviceSize[] offsets = [VkDeviceSize(0)];
             vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers.ptr, offsets.ptr);
+            vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT16);
 
-            vkCmdDraw(commandBuffer, 3, 1, 0, 0);
+            vkCmdDrawIndexed(commandBuffer, indexCount, 1, 0, 0, 0);
         }
 
         vkCmdEndRenderPass(commandBuffer);

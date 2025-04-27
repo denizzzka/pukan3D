@@ -203,6 +203,7 @@ void main() {
     indicesBuffer.localBuf[0..$] = cast(void[]) indices;
 
     vertexBuffer.upload(frameBuilder.commandPool);
+    indicesBuffer.upload(frameBuilder.commandPool);
 
     auto imageAvailable = device.createSemaphore;
     scope(exit) destroy(imageAvailable);
@@ -265,7 +266,16 @@ void main() {
         vkResetFences(device.device, 1, &inFlightFence.fence).vkCheck;
 
         frameBuilder.commandPool.resetBuffer(0);
-        frameBuilder.commandPool.recordCommandBuffer(swapChain, frameBuilder.commandPool.commandBuffers[0], graphicsPipelines.renderPass, imageIndex, vertexBuffer.gpuBuffer.buf, graphicsPipelines.pipelines[0]);
+        frameBuilder.commandPool.recordCommandBuffer(
+            swapChain,
+            frameBuilder.commandPool.commandBuffers[0],
+            graphicsPipelines.renderPass,
+            imageIndex,
+            vertexBuffer.gpuBuffer.buf,
+            indicesBuffer.gpuBuffer.buf,
+            cast(uint) indices.length,
+            graphicsPipelines.pipelines[0]
+        );
 
         {
             VkSubmitInfo submitInfo;
