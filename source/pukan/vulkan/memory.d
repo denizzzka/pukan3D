@@ -75,3 +75,51 @@ class MemoryBuffer(LogicalDevice)
         vkResetCommandBuffer(cmdBuf, 0 /*VkCommandBufferResetFlagBits*/).vkCheck;
     }
 }
+
+/// Ability to transfer data into GPU
+class TransferBuffer(LogicalDevice)
+{
+    LogicalDevice device;
+    void[] localBuf;
+    MemoryBuffer!LogicalDevice cpuBuffer;
+    MemoryBuffer!LogicalDevice gpuBuffer;
+
+    this(LogicalDevice device, size_t size)
+    {
+        this.device = device;
+
+        VkBufferCreateInfo srcBufInfo = {
+            size: size,
+            usage: VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+            sharingMode: VK_SHARING_MODE_EXCLUSIVE,
+        };
+
+        cpuBuffer = device.create!MemoryBuffer(srcBufInfo, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+
+        VkBufferCreateInfo dstBufInfo = {
+            size: size,
+            usage: VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+            sharingMode: VK_SHARING_MODE_EXCLUSIVE,
+        };
+
+        gpuBuffer = device.create!MemoryBuffer(dstBufInfo, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+
+        void* createdBuf;
+        vkMapMemory(device, cpuBuffer.deviceMemory, 0 /*offset*/, srcBufInfo.size, 0 /*flags*/, cast(void**) &createdBuf).vkCheck;
+
+        localBuf = createdBuf[0 .. size];
+    }
+
+    ~this()
+    {
+        vkUnmapMemory(device, cpuBuffer.deviceMemory);
+        destroy(gpuBuffer);
+        destroy(cpuBuffer);
+    }
+
+    void upload(CommandPool)(CommandPool commandPool)
+    {
+        // Copy host RAM buffer to GPU RAM
+        gpuBuffer.copyBuffer(commandPool.commandBuffers[0], cpuBuffer.buf, gpuBuffer.buf, localBuf.length);
+    }
+}

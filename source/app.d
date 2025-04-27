@@ -192,37 +192,13 @@ void main() {
         swapChain.initFramebuffers(graphicsPipelines.renderPass);
     }
 
-    // Vertex buff allocation
-
-    VkBufferCreateInfo stagingBufInfo = {
-        size: Vertex.sizeof * vertices.length,
-        usage: VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-        sharingMode: VK_SHARING_MODE_EXCLUSIVE,
-    };
-
-    auto stagingBuffer = device.create!MemoryBuffer(stagingBufInfo, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-    scope(exit) destroy(stagingBuffer);
-
-    VkBufferCreateInfo vertexBufInfo = {
-        size: Vertex.sizeof * vertices.length,
-        usage: VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-        sharingMode: VK_SHARING_MODE_EXCLUSIVE,
-    };
-
-    auto vertexBuffer = device.create!MemoryBuffer(vertexBufInfo, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+    auto vertexBuffer = device.create!TransferBuffer(Vertex.sizeof * vertices.length);
     scope(exit) destroy(vertexBuffer);
 
-    {
-        Vertex* data;
-        vkMapMemory(device.device, stagingBuffer.deviceMemory, 0 /*offset*/, stagingBufInfo.size, 0 /*flags*/, cast(void**) &data);
-        scope(exit) vkUnmapMemory(device.device, stagingBuffer.deviceMemory);
+    // Copy vertices to mapped memory
+    vertexBuffer.localBuf[0..$] = cast(void[]) vertices;
 
-        // Copy data to mapped memory
-        data[0 .. vertices.length] = vertices[0 .. $];
-
-        // Copy host RAM buffer to GPU RAM
-        vertexBuffer.copyBuffer(frameBuilder.commandPool.commandBuffers[0], stagingBuffer.buf, vertexBuffer.buf, stagingBufInfo.size);
-    }
+    vertexBuffer.upload(frameBuilder.commandPool);
 
     auto imageAvailable = device.createSemaphore;
     scope(exit) destroy(imageAvailable);
@@ -285,7 +261,7 @@ void main() {
         vkResetFences(device.device, 1, &inFlightFence.fence).vkCheck;
 
         frameBuilder.commandPool.resetBuffer(0);
-        frameBuilder.commandPool.recordCommandBuffer(swapChain, frameBuilder.commandPool.commandBuffers[0], graphicsPipelines.renderPass, imageIndex, vertexBuffer.buf, graphicsPipelines.pipelines[0]);
+        frameBuilder.commandPool.recordCommandBuffer(swapChain, frameBuilder.commandPool.commandBuffers[0], graphicsPipelines.renderPass, imageIndex, vertexBuffer.gpuBuffer.buf, graphicsPipelines.pipelines[0]);
 
         {
             VkSubmitInfo submitInfo;
