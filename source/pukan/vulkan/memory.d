@@ -84,7 +84,7 @@ class TransferBuffer(LogicalDevice)
     MemoryBuffer!LogicalDevice cpuBuffer;
     MemoryBuffer!LogicalDevice gpuBuffer;
 
-    this(LogicalDevice device, size_t size)
+    this(LogicalDevice device, size_t size, VkBufferUsageFlags mergeUsageFlags)
     {
         this.device = device;
 
@@ -98,7 +98,7 @@ class TransferBuffer(LogicalDevice)
 
         VkBufferCreateInfo dstBufInfo = {
             size: size,
-            usage: VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+            usage: VK_BUFFER_USAGE_TRANSFER_DST_BIT | mergeUsageFlags,
             sharingMode: VK_SHARING_MODE_EXCLUSIVE,
         };
 

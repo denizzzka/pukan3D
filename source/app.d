@@ -192,11 +192,15 @@ void main() {
         swapChain.initFramebuffers(graphicsPipelines.renderPass);
     }
 
-    auto vertexBuffer = device.create!TransferBuffer(Vertex.sizeof * vertices.length);
+    auto vertexBuffer = device.create!TransferBuffer(Vertex.sizeof * vertices.length, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
     scope(exit) destroy(vertexBuffer);
+
+    auto indicesBuffer = device.create!TransferBuffer(ushort.sizeof * indices.length, VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
+    scope(exit) destroy(indicesBuffer);
 
     // Copy vertices to mapped memory
     vertexBuffer.localBuf[0..$] = cast(void[]) vertices;
+    indicesBuffer.localBuf[0..$] = cast(void[]) indices;
 
     vertexBuffer.upload(frameBuilder.commandPool);
 
