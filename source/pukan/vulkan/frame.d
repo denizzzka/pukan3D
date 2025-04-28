@@ -20,7 +20,6 @@ class FrameBuilder(LogicalDevice)
         presentQueue = present;
 
         commandPool = device.createCommandPool();
-        commandPool.initBuffs(1);
     }
 
     ~this()

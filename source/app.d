@@ -268,7 +268,7 @@ void main() {
         frameBuilder.commandPool.resetBuffer(0);
         frameBuilder.commandPool.recordCommandBuffer(
             swapChain,
-            frameBuilder.commandPool.commandBuffers[0],
+            frameBuilder.commandPool.buf,
             graphicsPipelines.renderPass,
             imageIndex,
             vertexBuffer.gpuBuffer.buf,
@@ -288,8 +288,8 @@ void main() {
             auto waitStages = cast(uint) VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
             submitInfo.pWaitDstStageMask = &waitStages;
 
-            submitInfo.commandBufferCount = 1;
-            submitInfo.pCommandBuffers = &frameBuilder.commandPool.commandBuffers[0];
+            submitInfo.commandBufferCount = cast(uint) frameBuilder.commandPool.commandBuffers.length;
+            submitInfo.pCommandBuffers = frameBuilder.commandPool.commandBuffers.ptr;
 
             auto signalSemaphores = [renderFinished.semaphore];
             submitInfo.signalSemaphoreCount = cast(uint) signalSemaphores.length;

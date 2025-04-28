@@ -27,6 +27,8 @@ class CommandPool(LogicalDevice)
         cinf.queueFamilyIndex = queueFamilyIndex;
 
         vkCreateCommandPool(device.device, &cinf, device.backend.allocator, &commandPool).vkCheck;
+
+        initBuffs(1);
     }
 
     ~this()
@@ -34,7 +36,7 @@ class CommandPool(LogicalDevice)
         vkDestroyCommandPool(device.device, commandPool, device.backend.allocator);
     }
 
-    void initBuffs(uint count)
+    private void initBuffs(uint count)
     {
         commandBuffers.length = count;
 
@@ -48,6 +50,11 @@ class CommandPool(LogicalDevice)
 
             vkAllocateCommandBuffers(device.device, &allocInfo, &buf).vkCheck;
         }
+    }
+
+    auto ref buf()
+    {
+        return commandBuffers[0];
     }
 
     static void recordBegin(ref VkCommandBuffer commandBuffer, VkCommandBufferBeginInfo beginInfo)

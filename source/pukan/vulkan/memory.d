@@ -120,6 +120,6 @@ class TransferBuffer(LogicalDevice)
     void upload(CommandPool)(CommandPool commandPool)
     {
         // Copy host RAM buffer to GPU RAM
-        gpuBuffer.copyBuffer(commandPool.commandBuffers[0], cpuBuffer.buf, gpuBuffer.buf, localBuf.length);
+        gpuBuffer.copyBuffer(commandPool.buf, cpuBuffer.buf, gpuBuffer.buf, localBuf.length);
     }
 }
