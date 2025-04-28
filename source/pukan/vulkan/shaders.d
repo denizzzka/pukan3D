@@ -1,5 +1,6 @@
 module pukan.vulkan.shaders;
 
+import dlib.math;
 import pukan.vulkan;
 import pukan.vulkan.bindings;
 import pukan.exceptions;
@@ -73,8 +74,6 @@ class ShaderModule(LogicalDevice)
     }
 }
 
-import dlib.math.vector;
-
 struct Vertex {
     Vector2f pos;
     Vector3f color;
@@ -111,11 +110,18 @@ struct Vertex {
     }
 };
 
+struct UniformBufferObject
+{
+    Matrix4f model; /// model to World
+    Matrix4f view; /// World to view (to camera)
+    Matrix4f proj; /// view to projection (to projective/homogeneous coordinates)
+}
+
 const Vertex[] vertices = [
-    Vertex(Vector2f(-0.5f, -0.5f), Vector3f(1.0f, 0.0f, 0.0f)),
-    Vertex(Vector2f(0.5f, -0.5f), Vector3f(0.0f, 1.0f, 0.0f)),
-    Vertex(Vector2f(0.5f, 0.5f), Vector3f(0.0f, 0.0f, 1.0f)),
-    Vertex(Vector2f(-0.5f, 0.5f), Vector3f(1.0f, 1.0f, 1.0f)),
+    Vertex(Vector2f(-0.5, -0.35), Vector3f(1.0f, 0.0f, 0.0f)),
+    Vertex(Vector2f(0.5, -0.15), Vector3f(0.0f, 1.0f, 0.0f)),
+    Vertex(Vector2f(0.5, 0.15), Vector3f(0.0f, 0.0f, 1.0f)),
+    Vertex(Vector2f(-0.5, 0.35), Vector3f(1.0f, 1.0f, 1.0f)),
 ];
 
 const ushort[] indices = [

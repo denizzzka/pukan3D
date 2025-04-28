@@ -19,6 +19,8 @@ alias sType_list = AliasSeq!(
     Entry!(VkPipelineLayoutCreateInfo,  VkPipelineLayout,   ST.VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO),
     Entry!(VkBufferCreateInfo,          VkBuffer,           ST.VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO),
     Entry!(VkMemoryAllocateInfo,        VkDeviceMemory,     ST.VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO),
+    Entry!(VkDescriptorSetLayoutCreateInfo, VkDescriptorSetLayout,  ST.VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO),
+    Entry!(VkDescriptorPoolCreateInfo,  VkDescriptorPool,   ST.VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO),
 );
 
 template getEntry(InfoT)

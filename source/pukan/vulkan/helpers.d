@@ -83,6 +83,7 @@ void vkCall(T...)(T a)
     r.vkCheck(baseName~" creation failed");
 }
 
+/// RAII VK object wrapper
 class VkObj(T...)
 {
     mixin PrepareSettings!T;
@@ -123,6 +124,7 @@ class VkObj(T...)
     }
 }
 
+/// Create RAII VK object
 auto create(T...)(T s)
 {
     return new VkObj!T(s);

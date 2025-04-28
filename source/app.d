@@ -1,6 +1,7 @@
 import pukan;
 import glfw3.api;
 import std.conv: to;
+import std.datetime.stopwatch;
 import std.exception;
 import std.logger;
 import std.stdio;
@@ -105,13 +106,29 @@ void main() {
     import pukan.vulkan.bindings;
 
     // Not used, just for testing:
-    vertShader.compileShader(VK_SHADER_STAGE_VERTEX_BIT);
-    fragShader.compileShader(VK_SHADER_STAGE_FRAGMENT_BIT);
+    //TODO: fix compilation
+    //~ vertShader.compileShader(VK_SHADER_STAGE_VERTEX_BIT);
+    //~ fragShader.compileShader(VK_SHADER_STAGE_FRAGMENT_BIT);
 
     auto frameBuilder = device.create!FrameBuilder(swapChain.imageFormat, graphicsQueue, presentQueue);
     scope(exit) destroy(frameBuilder);
 
     import pukan.vulkan.helpers;
+
+    VkDescriptorSetLayoutBinding uboLayoutBinding = {
+        binding: 0,
+        descriptorType: VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+        descriptorCount: 1,
+        stageFlags: VK_SHADER_STAGE_VERTEX_BIT,
+    };
+
+    VkDescriptorSetLayoutCreateInfo descrLayoutCreateInfo = {
+        bindingCount: 1,
+        pBindings: &uboLayoutBinding,
+    };
+
+    scope descriptorSetLayout = create(device.device, &descrLayoutCreateInfo, vk.allocator);
+    scope(exit) destroy(descriptorSetLayout);
 
     auto shaderStages = [
         vertShader.createShaderStageInfo(VK_SHADER_STAGE_VERTEX_BIT),
@@ -159,7 +176,7 @@ void main() {
         pVertexAttributeDescriptions: attributeDescriptions.ptr,
     };
 
-    auto pipelineLayout = createPipelineLayout(device);
+    auto pipelineLayout = createPipelineLayout(device, descriptorSetLayout);
     scope(exit) vkDestroyPipelineLayout(device, pipelineLayout, device.backend.allocator);
 
     VkGraphicsPipelineCreateInfo pipelineInfo;
@@ -236,7 +253,57 @@ void main() {
         recreateSwapChain();
     }
 
+    VkDescriptorPoolSize poolSize = {
+        type: VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+        descriptorCount: 1, // one per frame
+    };
+
+    VkDescriptorPoolCreateInfo descriptorPoolInfo = {
+        poolSizeCount: 1,
+        pPoolSizes: &poolSize,
+        maxSets: 1,
+    };
+
+    auto descriptorPool = create(device.device, &descriptorPoolInfo, vk.allocator);
+    scope(exit) destroy(descriptorPool);
+
+    VkDescriptorSetLayout[] layouts = [
+        descriptorSetLayout.vkObj,
+    ];
+    VkDescriptorSetAllocateInfo descriptorSetAllocateInfo = {
+        sType: VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
+        descriptorPool: descriptorPool,
+        descriptorSetCount: cast(uint) layouts.length,
+        pSetLayouts: layouts.ptr,
+    };
+
+    VkDescriptorSet[] descriptorSets;
+    descriptorSets.length = 1;
+    vkAllocateDescriptorSets(device.device, &descriptorSetAllocateInfo, descriptorSets.ptr).vkCheck;
+
+    VkDescriptorBufferInfo bufferInfo = {
+        buffer: frameBuilder.uniformBuffer.gpuBuffer,
+        offset: 0,
+        range: UniformBufferObject.sizeof,
+    };
+
+    VkWriteDescriptorSet descriptorWrite;
+
+    {
+        descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrite.dstSet = descriptorSets[0];
+        descriptorWrite.dstBinding = 0;
+        descriptorWrite.dstArrayElement = 0;
+        descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        descriptorWrite.descriptorCount = 1;
+        descriptorWrite.pBufferInfo = &bufferInfo;
+    }
+
+    vkUpdateDescriptorSets(device, 1, &descriptorWrite, 0, null);
+
     import pukan.exceptions;
+
+    auto sw = StopWatch(AutoStart.yes);
 
     // Main loop
     while (!glfwWindowShouldClose(window))
@@ -265,17 +332,35 @@ void main() {
 
         vkResetFences(device.device, 1, &inFlightFence.fence).vkCheck;
 
+        updateUniformBuffer(frameBuilder, sw, swapChain.imageExtent);
+
+        auto ref commandBuffer = frameBuilder.commandPool.buf;
+
+        {
         frameBuilder.commandPool.resetBuffer(0);
+
+        VkCommandBufferBeginInfo beginInfo;
+        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+
+        vkBeginCommandBuffer(commandBuffer, &beginInfo).vkCheck;
+
+        frameBuilder.uniformBuffer.recordUpload(frameBuilder.commandPool);
+
         frameBuilder.commandPool.recordCommandBuffer(
             swapChain,
-            frameBuilder.commandPool.buf,
+            commandBuffer,
             graphicsPipelines.renderPass,
             imageIndex,
             vertexBuffer.gpuBuffer.buf,
             indicesBuffer.gpuBuffer.buf,
             cast(uint) indices.length,
+            descriptorSets,
+            pipelineLayout,
             graphicsPipelines.pipelines[0]
         );
+
+        vkEndCommandBuffer(commandBuffer).vkCheck("failed to record command buffer");
+        }
 
         {
             VkSubmitInfo submitInfo;
@@ -335,4 +420,38 @@ void main() {
     }
 
     vkDeviceWaitIdle(device.device);
+}
+
+void updateUniformBuffer(T, V)(T frameBuilder, ref StopWatch sw, V imageExtent)
+{
+    const curr = sw.peek.total!"msecs" * 0.001;
+
+    import dlib.math;
+
+    auto rotation = rotationQuaternion(Vector3f(0, 0, 1), 90f.degtorad * curr);
+
+    import std.stdio;
+    writeln("rotateion=", rotation);
+
+    static union U {
+        UniformBufferObject ubo;
+        ubyte[UniformBufferObject.sizeof] binary;
+    }
+
+    U u;
+    u.ubo.model = rotation.toMatrix4x4;
+    u.ubo.view = lookAtMatrix(
+        Vector3f(2, 2, 2), // camera position
+        Vector3f(0, 0, 0), // point at which the camera is looking
+        Vector3f(0, 0, -1), // upward direction in World coordinates
+    );
+    u.ubo.proj = perspectiveMatrix(
+        45.0f /* FOV */,
+        cast(float) imageExtent.width / imageExtent.height,
+        0.1f /* zNear */, 10.0f /* zFar */
+    );
+
+    //TODO: place struct in localBuf directly, as pointer
+    assert(frameBuilder.uniformBuffer.localBuf.length == u.binary.length);
+    frameBuilder.uniformBuffer.localBuf[0 .. $] = u.binary;
 }

@@ -12,6 +12,7 @@ class MemoryBuffer(LogicalDevice)
 {
     LogicalDevice device;
     VkBuffer buf;
+    alias this = buf;
     VkDeviceMemory deviceMemory;
 
     this(LogicalDevice dev, ref VkBufferCreateInfo createInfo, VkMemoryPropertyFlags propFlags)
@@ -42,6 +43,15 @@ class MemoryBuffer(LogicalDevice)
         vkFreeMemory(device.device, deviceMemory, device.backend.allocator);
     }
 
+    void recordCopyBuffer(VkCommandBuffer cmdBuf, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
+    {
+        VkBufferCopy copyRegion = {
+            size: size,
+        };
+
+        vkCmdCopyBuffer(cmdBuf, srcBuffer, dstBuffer, 1, &copyRegion);
+    }
+
     void copyBuffer(VkCommandBuffer cmdBuf, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
     {
         VkCommandBufferBeginInfo oneTime = {
@@ -50,11 +60,7 @@ class MemoryBuffer(LogicalDevice)
 
         CommandPool!LogicalDevice.recordBegin(cmdBuf, oneTime);
 
-        VkBufferCopy copyRegion = {
-            size: size,
-        };
-
-        vkCmdCopyBuffer(cmdBuf, srcBuffer, dstBuffer, 1, &copyRegion);
+        recordCopyBuffer(cmdBuf, srcBuffer, dstBuffer, size);
 
         CommandPool!LogicalDevice.recordEnd(cmdBuf);
 
@@ -121,5 +127,10 @@ class TransferBuffer(LogicalDevice)
     {
         // Copy host RAM buffer to GPU RAM
         gpuBuffer.copyBuffer(commandPool.buf, cpuBuffer.buf, gpuBuffer.buf, localBuf.length);
+    }
+
+    void recordUpload(CommandPool)(CommandPool commandPool)
+    {
+        gpuBuffer.recordCopyBuffer(commandPool.buf, cpuBuffer.buf, gpuBuffer.buf, localBuf.length);
     }
 }

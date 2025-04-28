@@ -71,20 +71,17 @@ class CommandPool(LogicalDevice)
 
     void recordCommandBuffer(
         SwapChain!LogicalDevice swapChain,
-        VkCommandBuffer commandBuffer,
+        ref VkCommandBuffer commandBuffer,
         VkRenderPass renderPass,
         uint imageIndex,
         VkBuffer vertexBuffer,
         VkBuffer indexBuffer,
         uint indexCount,
+        VkDescriptorSet[] descriptorSets,
+        VkPipelineLayout pipelineLayout,
         ref VkPipeline graphicsPipeline
     )
     {
-        VkCommandBufferBeginInfo beginInfo;
-        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-
-        vkBeginCommandBuffer(commandBuffer, &beginInfo).vkCheck;
-
         VkRenderPassBeginInfo renderPassInfo;
         renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
         renderPassInfo.renderPass = renderPass;
@@ -121,13 +118,12 @@ class CommandPool(LogicalDevice)
             VkDeviceSize[] offsets = [VkDeviceSize(0)];
             vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers.ptr, offsets.ptr);
             vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT16);
+            vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, cast(uint) descriptorSets.length, descriptorSets.ptr, 0, null);
 
-            vkCmdDrawIndexed(commandBuffer, indexCount, 1, 0, 0, 0);
+            vkCmdDrawIndexed(commandBuffer, cast(uint) indices.length, 1, 0, 0, 0);
         }
 
         vkCmdEndRenderPass(commandBuffer);
-
-        vkEndCommandBuffer(commandBuffer).vkCheck("failed to record command buffer");
     }
 
     void resetBuffer(uint buffIdx)
