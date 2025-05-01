@@ -69,6 +69,34 @@ class CommandPool(LogicalDevice)
         vkEndCommandBuffer(commandBuffer).vkCheck;
     }
 
+    void oneTimeBufferRun(void delegate() dg)
+    {
+        VkCommandBufferBeginInfo beginInfo = {
+            sType: VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+            flags: VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
+        };
+
+        vkBeginCommandBuffer(buf, &beginInfo).vkCheck;
+
+        dg();
+
+        vkEndCommandBuffer(buf).vkCheck("failed to record command buffer");
+
+        submitAll();
+    }
+
+    void submitAll()
+    {
+        VkSubmitInfo submitInfo = {
+            sType: VK_STRUCTURE_TYPE_SUBMIT_INFO,
+            commandBufferCount: cast(uint) commandBuffers.length,
+            pCommandBuffers: commandBuffers.ptr,
+        };
+
+        vkQueueSubmit(device.getQueue(), 1, &submitInfo, null).vkCheck;
+        vkQueueWaitIdle(device.getQueue());
+    }
+
     void recordCommandBuffer(
         SwapChain!LogicalDevice swapChain,
         ref VkCommandBuffer commandBuffer,

@@ -9,3 +9,4 @@ public import pukan.vulkan.pipelines;
 public import pukan.vulkan.surface;
 public import pukan.vulkan.shaders;
 public import pukan.vulkan.swapchain;
+public import pukan.vulkan.textures;

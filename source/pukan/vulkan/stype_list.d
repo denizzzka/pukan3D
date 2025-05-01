@@ -21,6 +21,8 @@ alias sType_list = AliasSeq!(
     Entry!(VkMemoryAllocateInfo,        VkDeviceMemory,     ST.VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO),
     Entry!(VkDescriptorSetLayoutCreateInfo, VkDescriptorSetLayout,  ST.VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO),
     Entry!(VkDescriptorPoolCreateInfo,  VkDescriptorPool,   ST.VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO),
+    Entry!(VkImageCreateInfo,           VkImage,            ST.VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO),
+    Entry!(VkSamplerCreateInfo,         VkSampler,          ST.VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO),
 );
 
 template getEntry(InfoT)

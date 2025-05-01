@@ -74,7 +74,7 @@ class SwapChain(LogicalDevice)
         imageViews.length = images.length;
 
         foreach(i, ref view; imageViews)
-            createImageView(view, this, images[i]);
+            createImageView(view, device, imageFormat, images[i]);
     }
 
     void destroyImageViews()
@@ -106,12 +106,12 @@ class SwapChain(LogicalDevice)
     }
 }
 
-void createImageView(SwapChain)(ref VkImageView imgView, SwapChain sc, VkImage img)
+void createImageView(LogicalDevice)(ref VkImageView imgView, LogicalDevice device, VkFormat imageFormat, VkImage img)
 {
     VkImageViewCreateInfo cinf = {
         sType: VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
         viewType: VK_IMAGE_VIEW_TYPE_2D,
-        format: sc.imageFormat,
+        format: imageFormat,
         components: VkComponentMapping(
             r: VK_COMPONENT_SWIZZLE_IDENTITY,
             g: VK_COMPONENT_SWIZZLE_IDENTITY,
@@ -128,5 +128,5 @@ void createImageView(SwapChain)(ref VkImageView imgView, SwapChain sc, VkImage i
         image: img,
     };
 
-    vkCreateImageView(sc.device.device, &cinf, sc.device.backend.allocator, &imgView).vkCheck;
+    vkCreateImageView(device.device, &cinf, device.backend.allocator, &imgView).vkCheck;
 }

@@ -19,6 +19,9 @@ class LogicalDevice(Backend)
     {
         backend = b;
 
+        VkPhysicalDeviceFeatures supportedFeatures;
+        vkGetPhysicalDeviceFeatures(physicalDevice, &supportedFeatures);
+
         const fqIdxs = b.findSuitableQueueFamilies();
         enforce(fqIdxs.length > 0);
         familyIdx = cast(uint) fqIdxs[0];
@@ -32,6 +35,11 @@ class LogicalDevice(Backend)
             pQueuePriorities: &queuePriority,
         };
 
+        enforce!PukanException(supportedFeatures.samplerAnisotropy == true);
+        VkPhysicalDeviceFeatures deviceFeatures = {
+            samplerAnisotropy: VK_TRUE,
+        };
+
         VkPhysicalDeviceShaderObjectFeaturesEXT shaderObjectFeatures = {
             sType: VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_OBJECT_FEATURES_EXT,
             shaderObject: VK_TRUE,
@@ -41,6 +49,7 @@ class LogicalDevice(Backend)
             sType: VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
             queueCreateInfoCount: 1,
             pQueueCreateInfos: &queueCreateInfo,
+            pEnabledFeatures: &deviceFeatures,
             ppEnabledExtensionNames: extension_list.ptr,
             enabledExtensionCount: cast(uint) extension_list.length,
             pNext: &shaderObjectFeatures,
