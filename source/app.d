@@ -110,7 +110,7 @@ void main() {
     //~ vertShader.compileShader(VK_SHADER_STAGE_VERTEX_BIT);
     //~ fragShader.compileShader(VK_SHADER_STAGE_FRAGMENT_BIT);
 
-    auto frameBuilder = device.create!FrameBuilder(swapChain.imageFormat, graphicsQueue, presentQueue);
+    auto frameBuilder = device.create!FrameBuilder(swapChain.imageFormat, graphicsQueue, presentQueue, swapChain.imageExtent);
     scope(exit) destroy(frameBuilder);
 
     import pukan.vulkan.helpers;
