@@ -479,7 +479,7 @@ void updateUniformBuffer(T, V)(T frameBuilder, ref StopWatch sw, V imageExtent)
     U u;
     u.ubo.model = rotation.toMatrix4x4;
     u.ubo.view = lookAtMatrix(
-        Vector3f(2, 2, 2), // camera position
+        Vector3f(1, 1, 1), // camera position
         Vector3f(0, 0, 0), // point at which the camera is looking
         Vector3f(0, 0, -1), // upward direction in World coordinates
     );
