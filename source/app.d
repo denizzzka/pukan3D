@@ -476,7 +476,9 @@ void updateUniformBuffer(T, V)(T frameBuilder, ref StopWatch sw, V imageExtent)
         ubyte[UniformBufferObject.sizeof] binary;
     }
 
-    U u;
+    assert(frameBuilder.uniformBuffer.cpuBuf.length == UniformBufferObject.sizeof);
+
+    U* u = cast(U*) frameBuilder.uniformBuffer.cpuBuf.ptr;
     u.ubo.model = rotation.toMatrix4x4;
     u.ubo.view = lookAtMatrix(
         Vector3f(1, 1, 1), // camera position
@@ -488,8 +490,4 @@ void updateUniformBuffer(T, V)(T frameBuilder, ref StopWatch sw, V imageExtent)
         cast(float) imageExtent.width / imageExtent.height,
         0.1f /* zNear */, 10.0f /* zFar */
     );
-
-    //TODO: place struct in localBuf directly, as pointer
-    assert(frameBuilder.uniformBuffer.cpuBuf.length == u.binary.length);
-    frameBuilder.uniformBuffer.cpuBuf[0 .. $] = u.binary;
 }
