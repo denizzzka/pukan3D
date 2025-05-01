@@ -255,17 +255,16 @@ class TransferBuffer(LogicalDevice)
         destroy(cpuBuffer);
     }
 
-    //TODO: remove
-    auto ref localBuf() => cpuBuffer.cpuBuf;
+    auto ref cpuBuf() => cpuBuffer.cpuBuf;
 
     void upload(CommandPool)(CommandPool commandPool)
     {
         // Copy host RAM buffer to GPU RAM
-        gpuBuffer.copyBuffer(commandPool.buf, cpuBuffer.buf, gpuBuffer.buf, localBuf.length);
+        gpuBuffer.copyBuffer(commandPool.buf, cpuBuffer.buf, gpuBuffer.buf, cpuBuf.length);
     }
 
     void recordUpload(CommandPool)(CommandPool commandPool)
     {
-        gpuBuffer.recordCopyBuffer(commandPool.buf, cpuBuffer.buf, gpuBuffer.buf, localBuf.length);
+        gpuBuffer.recordCopyBuffer(commandPool.buf, cpuBuffer.buf, gpuBuffer.buf, cpuBuf.length);
     }
 }

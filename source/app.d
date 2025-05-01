@@ -228,8 +228,8 @@ void main() {
     scope(exit) destroy(indicesBuffer);
 
     // Copy vertices to mapped memory
-    vertexBuffer.localBuf[0..$] = cast(void[]) vertices;
-    indicesBuffer.localBuf[0..$] = cast(void[]) indices;
+    vertexBuffer.cpuBuf[0..$] = cast(void[]) vertices;
+    indicesBuffer.cpuBuf[0..$] = cast(void[]) indices;
 
     vertexBuffer.upload(frameBuilder.commandPool);
     indicesBuffer.upload(frameBuilder.commandPool);
@@ -490,6 +490,6 @@ void updateUniformBuffer(T, V)(T frameBuilder, ref StopWatch sw, V imageExtent)
     );
 
     //TODO: place struct in localBuf directly, as pointer
-    assert(frameBuilder.uniformBuffer.localBuf.length == u.binary.length);
-    frameBuilder.uniformBuffer.localBuf[0 .. $] = u.binary;
+    assert(frameBuilder.uniformBuffer.cpuBuf.length == u.binary.length);
+    frameBuilder.uniformBuffer.cpuBuf[0 .. $] = u.binary;
 }

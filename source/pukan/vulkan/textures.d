@@ -31,10 +31,10 @@ class Texture(LogicalDevice)
         VkDeviceSize imageSize = image.width * image.height * 4 /* rgba */;
 
         //FIXME: TransferBuffer is used only as src buffer
-        scope buf = device.create!TransferBuffer(imageSize);
+        scope buf = device.create!MemoryBufferMappedToCPU(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
         scope(exit) destroy(buf);
 
-        buf.localBuf[0 .. $] = image.allPixelsAtOnce;
+        buf.cpuBuf[0 .. $] = image.allPixelsAtOnce;
 
         {
             VkImageCreateInfo imageInfo = {
@@ -59,7 +59,7 @@ class Texture(LogicalDevice)
             textureImageMemory = device.create!ImageMemory(imageInfo, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
         }
 
-        textureImageMemory.copyFromBuffer(commandPool, buf.cpuBuffer.buf);
+        textureImageMemory.copyFromBuffer(commandPool, buf.buf);
 
         createImageView(imageView, device, VK_FORMAT_R8G8B8A8_SRGB, textureImageMemory.image);
 
