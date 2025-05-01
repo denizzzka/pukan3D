@@ -114,7 +114,33 @@ class ImageMemory(LogicalDevice) : MemoryBufferBase!LogicalDevice
     }
 }
 
-//TODO: Incorporate into LogicalDevice by using mixin template
+class MemoryBufferMappedToCPU(LogicalDevice) : MemoryBuffer!LogicalDevice
+{
+    void[] cpuBuf; /// CPU-mapped memory buffer
+
+    this(LogicalDevice device, size_t size, VkBufferUsageFlags usageFlags)
+    {
+        VkBufferCreateInfo createInfo = {
+            size: size,
+            usage: usageFlags,
+            sharingMode: VK_SHARING_MODE_EXCLUSIVE,
+        };
+
+        super(device, createInfo, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+
+        void* createdBuf;
+        vkMapMemory(device, deviceMemory, 0 /*offset*/, size, 0 /*flags*/, cast(void**) &createdBuf).vkCheck;
+
+        cpuBuf = createdBuf[0 .. size];
+    }
+
+    ~this()
+    {
+        vkUnmapMemory(device, deviceMemory);
+    }
+}
+
+//TODO: Incorporate into LogicalDevice by using mixin template?
 class MemoryBuffer(LogicalDevice) : MemoryBufferBase!LogicalDevice
 {
     VkBuffer buf;
@@ -205,21 +231,14 @@ class MemoryBufferBase(LogicalDevice)
 class TransferBuffer(LogicalDevice)
 {
     LogicalDevice device;
-    void[] localBuf;
-    MemoryBuffer!LogicalDevice cpuBuffer;
+    MemoryBufferMappedToCPU!LogicalDevice cpuBuffer;
     MemoryBuffer!LogicalDevice gpuBuffer;
 
     this(LogicalDevice device, size_t size, VkBufferUsageFlags mergeUsageFlags = VK_BUFFER_USAGE_TRANSFER_DST_BIT)
     {
         this.device = device;
 
-        VkBufferCreateInfo srcBufInfo = {
-            size: size,
-            usage: VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-            sharingMode: VK_SHARING_MODE_EXCLUSIVE,
-        };
-
-        cpuBuffer = device.create!MemoryBuffer(srcBufInfo, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+        cpuBuffer = device.create!MemoryBufferMappedToCPU(size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,);
 
         VkBufferCreateInfo dstBufInfo = {
             size: size,
@@ -228,19 +247,16 @@ class TransferBuffer(LogicalDevice)
         };
 
         gpuBuffer = device.create!MemoryBuffer(dstBufInfo, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-
-        void* createdBuf;
-        vkMapMemory(device, cpuBuffer.deviceMemory, 0 /*offset*/, srcBufInfo.size, 0 /*flags*/, cast(void**) &createdBuf).vkCheck;
-
-        localBuf = createdBuf[0 .. size];
     }
 
     ~this()
     {
-        vkUnmapMemory(device, cpuBuffer.deviceMemory);
         destroy(gpuBuffer);
         destroy(cpuBuffer);
     }
+
+    //TODO: remove
+    auto ref localBuf() => cpuBuffer.cpuBuf;
 
     void upload(CommandPool)(CommandPool commandPool)
     {

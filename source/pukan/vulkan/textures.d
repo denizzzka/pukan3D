@@ -35,7 +35,6 @@ class Texture(LogicalDevice)
         scope(exit) destroy(buf);
 
         buf.localBuf[0 .. $] = image.allPixelsAtOnce;
-        buf.upload(commandPool);
 
         {
             VkImageCreateInfo imageInfo = {
@@ -60,7 +59,7 @@ class Texture(LogicalDevice)
             textureImageMemory = device.create!ImageMemory(imageInfo, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
         }
 
-        textureImageMemory.copyFromBuffer(commandPool, buf.cpuBuffer);
+        textureImageMemory.copyFromBuffer(commandPool, buf.cpuBuffer.buf);
 
         createImageView(imageView, device, VK_FORMAT_R8G8B8A8_SRGB, textureImageMemory.image);
 
