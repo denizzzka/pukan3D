@@ -434,11 +434,6 @@ void main() {
 
             bool framebufferResized; // unused
 
-            glfwWaitEventsTimeout(0.3);
-            static size_t frameNum;
-            frameNum++;
-            writeln("frame: ", frameNum);
-
             {
                 auto ret = vkQueuePresentKHR(presentQueue, &presentInfo);
 
@@ -454,6 +449,36 @@ void main() {
                         throw new PukanExceptionWithCode(ret, "failed to acquire swap chain image");
                 }
             }
+        }
+
+        {
+            import core.thread.osthread: Thread;
+            import core.time;
+
+            static size_t frameNum;
+            static size_t fps;
+
+            frameNum++;
+            writeln("FPS: ", fps, " frame: ", frameNum);
+
+            enum targetFPS = 80;
+            enum frameDuration = dur!"nsecs"(1_000_000_000 / targetFPS);
+            static Duration prevTime;
+            const curr = sw.peek;
+
+            if(prevTime.split!"seconds" != curr.split!"seconds")
+            {
+                static size_t prevSecondFrameNum;
+                fps = frameNum - prevSecondFrameNum;
+                prevSecondFrameNum = frameNum;
+            }
+
+            auto remaining = frameDuration - (curr - prevTime);
+
+            if(!remaining.isNegative)
+                Thread.sleep(remaining);
+
+            prevTime = curr;
         }
     }
 
