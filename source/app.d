@@ -191,6 +191,16 @@ void main() {
     auto pipelineLayout = createPipelineLayout(device, descriptorSetLayout);
     scope(exit) vkDestroyPipelineLayout(device, pipelineLayout, device.backend.allocator);
 
+    VkPipelineDepthStencilStateCreateInfo depthStencil;
+    {
+        depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+        depthStencil.depthTestEnable = VK_TRUE;
+        depthStencil.depthWriteEnable = VK_TRUE;
+        depthStencil.depthCompareOp = VK_COMPARE_OP_LESS;
+        depthStencil.depthBoundsTestEnable = VK_FALSE;
+        depthStencil.stencilTestEnable = VK_FALSE;
+    }
+
     VkGraphicsPipelineCreateInfo pipelineInfo;
     pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
     pipelineInfo.stageCount = cast(uint) shaderStages.length;
@@ -200,7 +210,8 @@ void main() {
     pipelineInfo.pViewportState = &viewportState;
     pipelineInfo.pRasterizationState = &rasterizer;
     pipelineInfo.pMultisampleState = &multisampling;
-    pipelineInfo.pDepthStencilState = null; // Optional
+    pipelineInfo.pDepthStencilState = &depthStencil;
+
     pipelineInfo.pColorBlendState = &colorBlending;
     pipelineInfo.pDynamicState = &dynamicState;
     pipelineInfo.layout = pipelineLayout;
@@ -211,14 +222,14 @@ void main() {
     auto graphicsPipelines = device.create!GraphicsPipelines([pipelineInfo], swapChain.imageFormat, frameBuilder.depth.format);
     scope(exit) destroy(graphicsPipelines);
 
-    swapChain.initFramebuffers(graphicsPipelines.renderPass);
+    swapChain.initFramebuffers(graphicsPipelines.renderPass, frameBuilder.depth.depthView);
 
     void recreateSwapChain()
     {
         vkDeviceWaitIdle(device.device);
         destroy(swapChain);
         swapChain = new SwapChain!(typeof(device))(device, surface);
-        swapChain.initFramebuffers(graphicsPipelines.renderPass);
+        swapChain.initFramebuffers(graphicsPipelines.renderPass, frameBuilder.depth.depthView);
     }
 
     auto vertexBuffer = device.create!TransferBuffer(Vertex.sizeof * vertices.length, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
