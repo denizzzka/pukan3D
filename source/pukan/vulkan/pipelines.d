@@ -25,18 +25,18 @@ abstract class Pipelines(LogicalDevice)
 class GraphicsPipelines(LogicalDevice) : Pipelines!LogicalDevice
 {
     //TODO: make it replaceable
-    RenderPass!LogicalDevice vkRenderPass;
+    RenderPass renderPass;
     //TODO: remove?
-    alias this = vkRenderPass;
+    alias this = renderPass;
 
     this(LogicalDevice dev, VkGraphicsPipelineCreateInfo[] infos, VkFormat imageFormat, VkFormat depthFormat)
     {
         super(dev);
 
-        vkRenderPass = new RenderPass!LogicalDevice(device, imageFormat, depthFormat);
+        renderPass = new DefaultRenderPass!LogicalDevice(device, imageFormat, depthFormat);
 
         foreach(ref inf; infos)
-            inf.renderPass = renderPass;
+            inf.renderPass = renderPass.vkRenderPass;
 
         pipelines.length = infos.length;
 
@@ -52,7 +52,7 @@ class GraphicsPipelines(LogicalDevice) : Pipelines!LogicalDevice
 
     ~this()
     {
-        scope(exit) destroy(vkRenderPass);
+        scope(exit) destroy(renderPass);
     }
 }
 
