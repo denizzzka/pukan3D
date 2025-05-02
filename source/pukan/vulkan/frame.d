@@ -14,7 +14,7 @@ class FrameBuilder(LogicalDevice)
     CommandPool!LogicalDevice commandPool;
     TransferBuffer!LogicalDevice uniformBuffer;
 
-    this(LogicalDevice dev, VkFormat imageFormat, VkQueue graphics, VkQueue present, VkExtent2D imageExtent)
+    this(LogicalDevice dev, VkQueue graphics, VkQueue present)
     {
         device = dev;
         graphicsQueue = graphics;
