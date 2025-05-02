@@ -208,7 +208,7 @@ void main() {
     pipelineInfo.basePipelineHandle = null; // Optional
     pipelineInfo.basePipelineIndex = -1; // Optional
 
-    auto graphicsPipelines = device.create!GraphicsPipelines([pipelineInfo], swapChain.imageFormat);
+    auto graphicsPipelines = device.create!GraphicsPipelines([pipelineInfo], swapChain.imageFormat, frameBuilder.depth.format);
     scope(exit) destroy(graphicsPipelines);
 
     swapChain.initFramebuffers(graphicsPipelines.renderPass);

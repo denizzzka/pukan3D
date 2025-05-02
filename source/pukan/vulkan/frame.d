@@ -42,13 +42,12 @@ struct Depth(LogicalDevice)
     LogicalDevice device;
     ImageMemory!LogicalDevice depthImage;
     VkImageView depthView;
+    //TODO: autodetection need
+    enum format = VK_FORMAT_D24_UNORM_S8_UINT;
 
     this(LogicalDevice dev, VkExtent2D imageExtent)
     {
         device = dev;
-
-        //TODO: autodetection need
-        enum format = VK_FORMAT_D24_UNORM_S8_UINT;
 
         VkImageCreateInfo imageInfo = {
             imageType: VK_IMAGE_TYPE_2D,
