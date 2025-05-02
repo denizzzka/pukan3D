@@ -117,11 +117,17 @@ class CommandPool(LogicalDevice)
         renderPassInfo.renderArea.offset = VkOffset2D(0, 0);
         renderPassInfo.renderArea.extent = swapChain.imageExtent;
 
-        VkClearValue clearColor = {
-            color: VkClearColorValue(float32: [0.0f, 0.0f, 0.0f, 1.0f])
-        };
-        renderPassInfo.pClearValues = &clearColor;
-        renderPassInfo.clearValueCount = 1;
+        auto clearValues = [
+            VkClearValue(
+                color: VkClearColorValue(float32: [0.0f, 0.0f, 0.0f, 1.0f]),
+            ),
+            VkClearValue(
+                depthStencil: VkClearDepthStencilValue(1, 0),
+            ),
+        ];
+
+        renderPassInfo.pClearValues = clearValues.ptr;
+        renderPassInfo.clearValueCount = cast(uint) clearValues.length;
 
         vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 

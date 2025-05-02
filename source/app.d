@@ -39,7 +39,7 @@ void main() {
         registerMemoryAssertHandler();
     }
 
-    immutable name = "D/pukan3D/Raylib project";
+    immutable name = "D/pukan3D/GLFW project";
 
     enforce(glfwInit());
     scope(exit) glfwTerminate();
@@ -110,7 +110,7 @@ void main() {
     //~ vertShader.compileShader(VK_SHADER_STAGE_VERTEX_BIT);
     //~ fragShader.compileShader(VK_SHADER_STAGE_FRAGMENT_BIT);
 
-    auto frameBuilder = device.create!FrameBuilder(swapChain.imageFormat, graphicsQueue, presentQueue);
+    auto frameBuilder = device.create!FrameBuilder(swapChain.imageFormat, graphicsQueue, presentQueue, swapChain.imageExtent);
     scope(exit) destroy(frameBuilder);
 
     import pukan.vulkan.helpers;
@@ -191,6 +191,16 @@ void main() {
     auto pipelineLayout = createPipelineLayout(device, descriptorSetLayout);
     scope(exit) vkDestroyPipelineLayout(device, pipelineLayout, device.backend.allocator);
 
+    VkPipelineDepthStencilStateCreateInfo depthStencil;
+    {
+        depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+        depthStencil.depthTestEnable = VK_TRUE;
+        depthStencil.depthWriteEnable = VK_TRUE;
+        depthStencil.depthCompareOp = VK_COMPARE_OP_LESS;
+        depthStencil.depthBoundsTestEnable = VK_FALSE;
+        depthStencil.stencilTestEnable = VK_FALSE;
+    }
+
     VkGraphicsPipelineCreateInfo pipelineInfo;
     pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
     pipelineInfo.stageCount = cast(uint) shaderStages.length;
@@ -200,7 +210,8 @@ void main() {
     pipelineInfo.pViewportState = &viewportState;
     pipelineInfo.pRasterizationState = &rasterizer;
     pipelineInfo.pMultisampleState = &multisampling;
-    pipelineInfo.pDepthStencilState = null; // Optional
+    pipelineInfo.pDepthStencilState = &depthStencil;
+
     pipelineInfo.pColorBlendState = &colorBlending;
     pipelineInfo.pDynamicState = &dynamicState;
     pipelineInfo.layout = pipelineLayout;
@@ -208,17 +219,21 @@ void main() {
     pipelineInfo.basePipelineHandle = null; // Optional
     pipelineInfo.basePipelineIndex = -1; // Optional
 
-    auto graphicsPipelines = device.create!GraphicsPipelines([pipelineInfo], swapChain.imageFormat);
+    auto graphicsPipelines = device.create!GraphicsPipelines([pipelineInfo], swapChain.imageFormat, frameBuilder.depth.format);
     scope(exit) destroy(graphicsPipelines);
 
-    swapChain.initFramebuffers(graphicsPipelines.renderPass);
+    swapChain.initFramebuffers(graphicsPipelines.renderPass, frameBuilder.depth.depthView);
 
     void recreateSwapChain()
     {
         vkDeviceWaitIdle(device.device);
         destroy(swapChain);
         swapChain = new SwapChain!(typeof(device))(device, surface);
-        swapChain.initFramebuffers(graphicsPipelines.renderPass);
+
+        //FIXME: dirty hack
+        frameBuilder.depth = frameBuilder.depth.createNew(device, swapChain.imageExtent);
+
+        swapChain.initFramebuffers(graphicsPipelines.renderPass, frameBuilder.depth.depthView);
     }
 
     auto vertexBuffer = device.create!TransferBuffer(Vertex.sizeof * vertices.length, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
@@ -434,11 +449,6 @@ void main() {
 
             bool framebufferResized; // unused
 
-            glfwWaitEventsTimeout(0.3);
-            static size_t frameNum;
-            frameNum++;
-            writeln("frame: ", frameNum);
-
             {
                 auto ret = vkQueuePresentKHR(presentQueue, &presentInfo);
 
@@ -454,6 +464,36 @@ void main() {
                         throw new PukanExceptionWithCode(ret, "failed to acquire swap chain image");
                 }
             }
+        }
+
+        {
+            import core.thread.osthread: Thread;
+            import core.time;
+
+            static size_t frameNum;
+            static size_t fps;
+
+            frameNum++;
+            writeln("FPS: ", fps, " frame: ", frameNum);
+
+            enum targetFPS = 80;
+            enum frameDuration = dur!"nsecs"(1_000_000_000 / targetFPS);
+            static Duration prevTime;
+            const curr = sw.peek;
+
+            if(prevTime.split!"seconds" != curr.split!"seconds")
+            {
+                static size_t prevSecondFrameNum;
+                fps = frameNum - prevSecondFrameNum;
+                prevSecondFrameNum = frameNum;
+            }
+
+            auto remaining = frameDuration - (curr - prevTime);
+
+            if(!remaining.isNegative)
+                Thread.sleep(remaining);
+
+            prevTime = curr;
         }
     }
 
@@ -476,7 +516,9 @@ void updateUniformBuffer(T, V)(T frameBuilder, ref StopWatch sw, V imageExtent)
         ubyte[UniformBufferObject.sizeof] binary;
     }
 
-    U u;
+    assert(frameBuilder.uniformBuffer.cpuBuf.length == UniformBufferObject.sizeof);
+
+    U* u = cast(U*) frameBuilder.uniformBuffer.cpuBuf.ptr;
     u.ubo.model = rotation.toMatrix4x4;
     u.ubo.view = lookAtMatrix(
         Vector3f(1, 1, 1), // camera position
@@ -488,8 +530,4 @@ void updateUniformBuffer(T, V)(T frameBuilder, ref StopWatch sw, V imageExtent)
         cast(float) imageExtent.width / imageExtent.height,
         0.1f /* zNear */, 10.0f /* zFar */
     );
-
-    //TODO: place struct in localBuf directly, as pointer
-    assert(frameBuilder.uniformBuffer.cpuBuf.length == u.binary.length);
-    frameBuilder.uniformBuffer.cpuBuf[0 .. $] = u.binary;
 }

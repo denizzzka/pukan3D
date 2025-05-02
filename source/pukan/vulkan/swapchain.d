@@ -83,7 +83,8 @@ class SwapChain(LogicalDevice)
             vkDestroyImageView(device.device, iv, device.backend.allocator);
     }
 
-    void initFramebuffers(VkRenderPass renderPass)
+    //TODO: move to FrameBuffer struct (frame module)
+    void initFramebuffers(VkRenderPass renderPass, VkImageView depthView)
     {
         assert(imageViews.length == images.length);
         assert(renderPass !is null);
@@ -92,11 +93,16 @@ class SwapChain(LogicalDevice)
 
         foreach(i, ref fb; frameBuffers)
         {
+            VkImageView[2] attachments = [
+                imageViews[i],
+                depthView, //FIXME: imageViews and depthView must be referenced from FrameBuilder
+            ];
+
             VkFramebufferCreateInfo framebufferInfo;
             framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
             framebufferInfo.renderPass = renderPass;
-            framebufferInfo.attachmentCount = 1;
-            framebufferInfo.pAttachments = &imageViews[i];
+            framebufferInfo.attachmentCount = cast(uint) attachments.length;
+            framebufferInfo.pAttachments = attachments.ptr;
             framebufferInfo.width = imageExtent.width;
             framebufferInfo.height = imageExtent.height;
             framebufferInfo.layers = 1;

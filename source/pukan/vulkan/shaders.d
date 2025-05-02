@@ -75,7 +75,7 @@ class ShaderModule(LogicalDevice)
 }
 
 struct Vertex {
-    Vector2f pos;
+    Vector3f pos;
     Vector3f color;
     Vector2f texCoord;
 
@@ -96,7 +96,7 @@ struct Vertex {
         ad[0] = VkVertexInputAttributeDescription(
             binding: 0,
             location: 0,
-            format: VK_FORMAT_R32G32_SFLOAT,
+            format: VK_FORMAT_R32G32B32_SFLOAT,
             offset: pos.offsetof,
         );
 
@@ -126,12 +126,18 @@ struct UniformBufferObject
 }
 
 const Vertex[] vertices = [
-    Vertex(Vector2f(-0.5, -0.35), Vector3f(1.0f, 0.0f, 0.0f), Vector2f(1, 0)),
-    Vertex(Vector2f(0.5, -0.15), Vector3f(0.0f, 1.0f, 0.0f), Vector2f(0, 0)),
-    Vertex(Vector2f(0.5, 0.15), Vector3f(0.0f, 0.0f, 1.0f), Vector2f(0, 1)),
-    Vertex(Vector2f(-0.5, 0.35), Vector3f(1.0f, 1.0f, 1.0f), Vector2f(1, 1)),
+    Vertex(Vector3f(-0.5, -0.5, 0), Vector3f(1.0f, 0.0f, 0.0f), Vector2f(1, 0)),
+    Vertex(Vector3f(0.5, -0.5, 0), Vector3f(0.0f, 1.0f, 0.0f), Vector2f(0, 0)),
+    Vertex(Vector3f(0.5, 0.5, 0), Vector3f(0.0f, 0.0f, 1.0f), Vector2f(0, 1)),
+    Vertex(Vector3f(-0.5, 0.5, 0), Vector3f(1.0f, 1.0f, 1.0f), Vector2f(1, 1)),
+
+    Vertex(Vector3f(-0.5, -0.35, -0.5), Vector3f(1.0f, 0.0f, 0.0f), Vector2f(1, 0)),
+    Vertex(Vector3f(0.5, -0.15, -0.5), Vector3f(0.0f, 1.0f, 0.0f), Vector2f(0, 0)),
+    Vertex(Vector3f(0.5, 0.15, -0.5), Vector3f(0.0f, 0.0f, 1.0f), Vector2f(0, 1)),
+    Vertex(Vector3f(-0.5, 0.35, -0.5), Vector3f(1.0f, 1.0f, 1.0f), Vector2f(1, 1)),
 ];
 
 const ushort[] indices = [
-    0, 1, 2, 2, 3, 0
+    0, 1, 2, 2, 3, 0,
+    4, 5, 6, 6, 7, 4,
 ];
