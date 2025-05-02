@@ -37,6 +37,89 @@ class FrameBuilder(LogicalDevice)
     }
 }
 
+//TODO: rename to default render pass and add interface
+class RenderPass(LogicalDevice)
+{
+    LogicalDevice device;
+    VkRenderPass renderPass;
+
+    this(LogicalDevice dev, VkFormat imageFormat, VkFormat depthFormat)
+    {
+        device = dev;
+
+        VkAttachmentDescription colorAttachment = defaultColorAttachment;
+        colorAttachment.format = imageFormat;
+
+        VkAttachmentReference colorAttachmentRef = {
+            attachment: 0,
+            layout: VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+        };
+
+        VkAttachmentDescription depthAttachment;
+        {
+            depthAttachment.format = depthFormat;
+            depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+            depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+            depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+            depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+            depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+            depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+            depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+        }
+
+        VkAttachmentReference depthAttachmentRef = {
+            layout: VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+            attachment: 1,
+        };
+
+        auto attachments = [
+            colorAttachment,
+            depthAttachment,
+        ];
+
+        VkSubpassDescription subpass;
+        subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+        subpass.colorAttachmentCount = 1;
+        subpass.pColorAttachments = &colorAttachmentRef;
+        subpass.pDepthStencilAttachment = &depthAttachmentRef;
+
+        VkSubpassDependency dependency;
+        {
+            dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+            dependency.dstSubpass = 0;
+            dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+            dependency.srcAccessMask = 0;
+            dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+            dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+        }
+
+        VkRenderPassCreateInfo renderPassInfo;
+        renderPassInfo.attachmentCount = cast(uint) attachments.length;
+        renderPassInfo.pAttachments = attachments.ptr;
+        renderPassInfo.subpassCount = 1;
+        renderPassInfo.pSubpasses = &subpass;
+        renderPassInfo.dependencyCount = 1;
+        renderPassInfo.pDependencies = &dependency;
+
+        vkCall(device, &renderPassInfo, device.backend.allocator, &renderPass);
+    }
+
+    ~this()
+    {
+        vkDestroyRenderPass(device, renderPass, device.backend.allocator);
+    }
+
+    enum VkAttachmentDescription defaultColorAttachment = {
+        samples: VK_SAMPLE_COUNT_1_BIT,
+        loadOp: VK_ATTACHMENT_LOAD_OP_CLEAR,
+        storeOp: VK_ATTACHMENT_STORE_OP_STORE,
+        stencilLoadOp: VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+        stencilStoreOp: VK_ATTACHMENT_STORE_OP_DONT_CARE,
+        initialLayout: VK_IMAGE_LAYOUT_UNDEFINED,
+        finalLayout: VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+    };
+}
+
 struct Depth(LogicalDevice)
 {
     LogicalDevice device;
