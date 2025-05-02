@@ -9,6 +9,7 @@ class SwapChain(LogicalDevice)
     LogicalDevice device;
     VkSwapchainKHR swapchain;
     VkImage[] images;
+    enum defaultImageFormat = VK_FORMAT_B8G8R8A8_SRGB;
     VkFormat imageFormat;
     VkExtent2D imageExtent;
     VkFramebuffer[] frameBuffers;
@@ -30,7 +31,7 @@ class SwapChain(LogicalDevice)
         VkSwapchainCreateInfoKHR cinf = {
             sType: VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
             surface: device.backend.surface,
-            imageFormat: VK_FORMAT_B8G8R8A8_SRGB,
+            imageFormat: defaultImageFormat,
             imageColorSpace: VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
             imageExtent: capabilities.currentExtent,
             imageArrayLayers: 1, // number of views in a multiview/stereo surface. For non-stereoscopic-3D applications, this value is 1
