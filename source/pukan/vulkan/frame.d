@@ -148,12 +148,6 @@ struct Depth(LogicalDevice)
         vkDestroyImageView(device, depthView, device.backend.allocator);
         destroy(depthImage);
     }
-
-    //TODO: remove
-    static auto createNew(LogicalDevice d, VkExtent2D ie)
-    {
-        return Depth!LogicalDevice(d, ie);
-    }
 }
 
 abstract class RenderPass
