@@ -25,8 +25,6 @@ abstract class Pipelines(LogicalDevice)
 class GraphicsPipelines(LogicalDevice) : Pipelines!LogicalDevice
 {
     RenderPass renderPass;
-    //TODO: remove?
-    alias this = renderPass;
 
     this(LogicalDevice dev, VkGraphicsPipelineCreateInfo[] infos, VkFormat imageFormat, VkFormat depthFormat)
     {
