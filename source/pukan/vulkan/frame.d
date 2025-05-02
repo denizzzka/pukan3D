@@ -68,12 +68,6 @@ struct Depth(LogicalDevice)
             sType: VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
             viewType: VK_IMAGE_VIEW_TYPE_2D,
             format: format,
-            components: VkComponentMapping(
-                r: VK_COMPONENT_SWIZZLE_IDENTITY,
-                g: VK_COMPONENT_SWIZZLE_IDENTITY,
-                b: VK_COMPONENT_SWIZZLE_IDENTITY,
-                a: VK_COMPONENT_SWIZZLE_IDENTITY,
-            ),
             subresourceRange: VkImageSubresourceRange(
                 aspectMask: VK_IMAGE_ASPECT_DEPTH_BIT,
                 baseMipLevel: 0,
