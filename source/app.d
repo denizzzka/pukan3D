@@ -229,6 +229,10 @@ void main() {
         vkDeviceWaitIdle(device.device);
         destroy(swapChain);
         swapChain = new SwapChain!(typeof(device))(device, surface);
+
+        //FIXME: dirty hack
+        frameBuilder.depth = frameBuilder.depth.createNew(device, swapChain.imageExtent);
+
         swapChain.initFramebuffers(graphicsPipelines.renderPass, frameBuilder.depth.depthView);
     }
 

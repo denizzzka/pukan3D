@@ -83,6 +83,7 @@ class SwapChain(LogicalDevice)
             vkDestroyImageView(device.device, iv, device.backend.allocator);
     }
 
+    //TODO: move to FrameBuffer struct (frame module)
     void initFramebuffers(VkRenderPass renderPass, VkImageView depthView)
     {
         assert(imageViews.length == images.length);
