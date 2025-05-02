@@ -11,7 +11,8 @@ class SwapChain(LogicalDevice)
     VkImage[] images;
     VkFormat imageFormat;
     VkExtent2D imageExtent;
-    Frame!LogicalDevice[] frames;
+    alias FrameIns = Frame!(LogicalDevice, device);
+    FrameIns[] frames;
 
     this(LogicalDevice device, VkSurfaceKHR surface, RenderPass renderPass)
     {
@@ -58,7 +59,7 @@ class SwapChain(LogicalDevice)
         frames.length = images.length;
 
         foreach(i, ref frame; frames)
-            frame = new Frame!LogicalDevice(device, images[i], imageExtent, imageFormat, renderPass);
+            frame = new FrameIns(images[i], imageExtent, imageFormat, renderPass);
     }
 
     ~this()

@@ -34,17 +34,14 @@ class FrameBuilder(LogicalDevice)
     }
 }
 
-class Frame(LogicalDevice)
+class Frame(LogicalDevice, alias device)
 {
-    LogicalDevice device; //TODO: remove
     VkImageView imageView;
     Depth!LogicalDevice depthBuf;
     VkFramebuffer frameBuffer;
 
-    this(LogicalDevice dev, VkImage image, VkExtent2D imageExtent, VkFormat imageFormat, VkRenderPass renderPass)
+    this(VkImage image, VkExtent2D imageExtent, VkFormat imageFormat, VkRenderPass renderPass)
     {
-        device = dev;
-
         createImageView(imageView, device, imageFormat, image);
         depthBuf = Depth!LogicalDevice(device, imageExtent);
 
