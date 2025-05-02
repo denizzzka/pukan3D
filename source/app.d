@@ -92,6 +92,11 @@ void main() {
     vk.printSurfaceFormats(vk.devices[vk.deviceIdx], surface);
     vk.printPresentModes(vk.devices[vk.deviceIdx], surface);
 
+    import pukan.vulkan.bindings;
+
+    RenderPass renderPass = device.create!DefaultRenderPass(VK_FORMAT_B8G8R8A8_SRGB, VK_FORMAT_D24_UNORM_S8_UINT);
+    scope(exit) destroy(renderPass);
+
     auto swapChain = new SwapChain!(typeof(device))(device, surface);
     scope(exit) destroy(swapChain);
 
@@ -102,8 +107,6 @@ void main() {
     scope(exit) destroy(vertShader);
     auto fragShader = device.loadShader("frag.spv");
     scope(exit) destroy(fragShader);
-
-    import pukan.vulkan.bindings;
 
     // Not used, just for testing:
     //TODO: fix compilation
@@ -219,7 +222,7 @@ void main() {
     pipelineInfo.basePipelineHandle = null; // Optional
     pipelineInfo.basePipelineIndex = -1; // Optional
 
-    auto graphicsPipelines = device.create!GraphicsPipelines([pipelineInfo], swapChain.imageFormat, swapChain.frames[0].depthBuf.format);
+    auto graphicsPipelines = device.create!GraphicsPipelines([pipelineInfo], renderPass);
     scope(exit) destroy(graphicsPipelines);
 
     //TODO: remove

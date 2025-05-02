@@ -26,12 +26,9 @@ class GraphicsPipelines(LogicalDevice) : Pipelines!LogicalDevice
 {
     RenderPass renderPass;
 
-    this(LogicalDevice dev, VkGraphicsPipelineCreateInfo[] infos, VkFormat imageFormat, VkFormat depthFormat)
+    this(LogicalDevice dev, VkGraphicsPipelineCreateInfo[] infos, RenderPass renderPass)
     {
         super(dev);
-
-        //TODO: make DefaultRenderPass replaceable
-        renderPass = new DefaultRenderPass!LogicalDevice(device, imageFormat, depthFormat);
 
         foreach(ref inf; infos)
             inf.renderPass = renderPass.vkRenderPass;
@@ -46,11 +43,6 @@ class GraphicsPipelines(LogicalDevice) : Pipelines!LogicalDevice
             device.backend.allocator,
             pipelines.ptr
         ).vkCheck;
-    }
-
-    ~this()
-    {
-        scope(exit) destroy(renderPass);
     }
 }
 
