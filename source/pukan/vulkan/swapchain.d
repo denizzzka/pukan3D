@@ -9,29 +9,27 @@ class SwapChain(LogicalDevice)
     LogicalDevice device;
     VkSwapchainKHR swapchain;
     VkImage[] images;
-    enum defaultImageFormat = VK_FORMAT_B8G8R8A8_SRGB;
     VkFormat imageFormat;
     VkExtent2D imageExtent;
-    VkFramebuffer[] frameBuffers;
     Frame!LogicalDevice[] frames;
 
-    this(LogicalDevice device, VkSurfaceKHR surface)
+    this(LogicalDevice device, VkSurfaceKHR surface, RenderPass renderPass)
     {
         auto ref ins = device.backend;
 
         const capab = ins.getSurfaceCapabilities(ins.devices[ins.deviceIdx], surface);
 
-        this(device, capab);
+        this(device, capab, renderPass);
     }
 
-    this(LogicalDevice device, VkSurfaceCapabilitiesKHR capabilities)
+    this(LogicalDevice device, VkSurfaceCapabilitiesKHR capabilities, RenderPass renderPass)
     {
         enforce(capabilities.currentExtent.width != uint.max, "unsupported, see VkSurfaceCapabilitiesKHR(3) Manual Page");
 
         VkSwapchainCreateInfoKHR cinf = {
             sType: VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
             surface: device.backend.surface,
-            imageFormat: defaultImageFormat,
+            imageFormat: renderPass.imageFormat,
             imageColorSpace: VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
             imageExtent: capabilities.currentExtent,
             imageArrayLayers: 1, // number of views in a multiview/stereo surface. For non-stereoscopic-3D applications, this value is 1
@@ -44,10 +42,10 @@ class SwapChain(LogicalDevice)
             clipped: VK_TRUE,
         };
 
-        this(device, cinf);
+        this(device, cinf, renderPass);
     }
 
-    this(LogicalDevice d, VkSwapchainCreateInfoKHR cinf)
+    this(LogicalDevice d, VkSwapchainCreateInfoKHR cinf, RenderPass renderPass)
     {
         device = d;
         imageFormat = cinf.imageFormat;
@@ -60,7 +58,7 @@ class SwapChain(LogicalDevice)
         frames.length = images.length;
 
         foreach(i, ref frame; frames)
-            frame = new Frame!LogicalDevice(device, images[i], imageExtent, imageFormat);
+            frame = new Frame!LogicalDevice(device, images[i], imageExtent, imageFormat, renderPass);
     }
 
     ~this()
@@ -68,37 +66,6 @@ class SwapChain(LogicalDevice)
         foreach(ref frame; frames)
             destroy(frame);
 
-        foreach(ref fb; frameBuffers)
-            vkDestroyFramebuffer(device.device, fb, device.backend.allocator);
-
         vkDestroySwapchainKHR(device.device, swapchain, device.backend.allocator);
-    }
-
-    //TODO: move to FrameBuffer struct (frame module)
-    void initFramebuffers(VkRenderPass renderPass, VkImageView depthView)
-    {
-        assert(frames.length == images.length);
-        assert(renderPass !is null);
-
-        frameBuffers.length = frames.length;
-
-        foreach(i, ref fb; frameBuffers)
-        {
-            VkImageView[2] attachments = [
-                frames[i].imageView,
-                depthView, //FIXME: imageViews and depthView must be referenced from FrameBuilder
-            ];
-
-            VkFramebufferCreateInfo framebufferInfo;
-            framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-            framebufferInfo.renderPass = renderPass;
-            framebufferInfo.attachmentCount = cast(uint) attachments.length;
-            framebufferInfo.pAttachments = attachments.ptr;
-            framebufferInfo.width = imageExtent.width;
-            framebufferInfo.height = imageExtent.height;
-            framebufferInfo.layers = 1;
-
-            vkCreateFramebuffer(device.device, &framebufferInfo, device.backend.allocator, &fb).vkCheck;
-        }
     }
 }

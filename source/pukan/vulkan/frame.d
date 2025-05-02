@@ -39,19 +39,38 @@ class Frame(LogicalDevice)
     LogicalDevice device; //TODO: remove
     VkImageView imageView;
     Depth!LogicalDevice depthBuf;
-    //~ VkFramebuffer frameBuffer;
+    VkFramebuffer frameBuffer;
 
-    this(LogicalDevice dev, VkImage image, VkExtent2D imageExtent, VkFormat imageFormat)
+    this(LogicalDevice dev, VkImage image, VkExtent2D imageExtent, VkFormat imageFormat, VkRenderPass renderPass)
     {
         device = dev;
 
         createImageView(imageView, device, imageFormat, image);
         depthBuf = Depth!LogicalDevice(device, imageExtent);
+
+        {
+            VkImageView[2] attachments = [
+                imageView,
+                depthBuf.depthView,
+            ];
+
+            VkFramebufferCreateInfo frameBufferInfo = {
+                sType: VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
+                renderPass: renderPass,
+                attachmentCount: cast(uint) attachments.length,
+                pAttachments: attachments.ptr,
+                width: imageExtent.width,
+                height: imageExtent.height,
+                layers: 1,
+            };
+
+            vkCreateFramebuffer(device, &frameBufferInfo, device.backend.allocator, &frameBuffer).vkCheck;
+        }
     }
 
     ~this()
     {
-        //~ vkDestroyFramebuffer(device, frameBuffer, device.backend.allocator);
+        vkDestroyFramebuffer(device, frameBuffer, device.backend.allocator);
         vkDestroyImageView(device, imageView, device.backend.allocator);
     }
 }
@@ -144,15 +163,19 @@ abstract class RenderPass
 {
     VkRenderPass vkRenderPass;
     alias this = vkRenderPass;
+
+    VkFormat imageFormat;
 }
 
 class DefaultRenderPass(LogicalDevice) : RenderPass
 {
     LogicalDevice device;
+    enum VkFormat depthFormat = Depth!LogicalDevice.format;
 
-    this(LogicalDevice dev, VkFormat imageFormat, VkFormat depthFormat)
+    this(LogicalDevice dev, VkFormat imageFormat)
     {
         device = dev;
+        this.imageFormat = imageFormat;
 
         VkAttachmentDescription colorAttachment = defaultColorAttachment;
         colorAttachment.format = imageFormat;

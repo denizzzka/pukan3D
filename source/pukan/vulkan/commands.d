@@ -113,7 +113,7 @@ class CommandPool(LogicalDevice)
         VkRenderPassBeginInfo renderPassInfo;
         renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
         renderPassInfo.renderPass = renderPass;
-        renderPassInfo.framebuffer = swapChain.frameBuffers[imageIndex];
+        renderPassInfo.framebuffer = swapChain.frames[imageIndex].frameBuffer;
         renderPassInfo.renderArea.offset = VkOffset2D(0, 0);
         renderPassInfo.renderArea.extent = swapChain.imageExtent;
 

@@ -30,6 +30,8 @@ class GraphicsPipelines(LogicalDevice) : Pipelines!LogicalDevice
     {
         super(dev);
 
+        this.renderPass = renderPass;
+
         foreach(ref inf; infos)
             inf.renderPass = renderPass.vkRenderPass;
 

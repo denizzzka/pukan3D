@@ -94,10 +94,11 @@ void main() {
 
     import pukan.vulkan.bindings;
 
-    RenderPass renderPass = device.create!DefaultRenderPass(VK_FORMAT_B8G8R8A8_SRGB, VK_FORMAT_D24_UNORM_S8_UINT);
+    RenderPass renderPass = device.create!DefaultRenderPass(VK_FORMAT_B8G8R8A8_SRGB);
     scope(exit) destroy(renderPass);
 
-    auto swapChain = new SwapChain!(typeof(device))(device, surface);
+    alias SwapChainImpl = SwapChain!(typeof(device));
+    auto swapChain = new SwapChainImpl(device, surface, renderPass);
     scope(exit) destroy(swapChain);
 
     auto graphicsQueue = device.getQueue();
@@ -225,19 +226,11 @@ void main() {
     auto graphicsPipelines = device.create!GraphicsPipelines([pipelineInfo], renderPass);
     scope(exit) destroy(graphicsPipelines);
 
-    //TODO: remove
-    swapChain.initFramebuffers(graphicsPipelines.renderPass, swapChain.frames[0].depthBuf.depthView);
-
     void recreateSwapChain()
     {
         vkDeviceWaitIdle(device.device);
         destroy(swapChain);
-        swapChain = new SwapChain!(typeof(device))(device, surface);
-
-        //FIXME: dirty hack
-        swapChain.frames[0].depthBuf = swapChain.frames[0].depthBuf.createNew(device, swapChain.imageExtent);
-
-        swapChain.initFramebuffers(graphicsPipelines.renderPass, swapChain.frames[0].depthBuf.depthView);
+        swapChain = new SwapChain!(typeof(device))(device, surface, renderPass);
     }
 
     auto vertexBuffer = device.create!TransferBuffer(Vertex.sizeof * vertices.length, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
