@@ -13,7 +13,6 @@ class FrameBuilder(LogicalDevice)
     VkQueue presentQueue;
     CommandPool!LogicalDevice commandPool;
     TransferBuffer!LogicalDevice uniformBuffer;
-    Depth!LogicalDevice depth;
 
     this(LogicalDevice dev, VkFormat imageFormat, VkQueue graphics, VkQueue present, VkExtent2D imageExtent)
     {
@@ -26,8 +25,6 @@ class FrameBuilder(LogicalDevice)
         // FIXME: bad idea to allocate a memory buffer only for one uniform buffer,
         // need to allocate more memory then divide it into pieces
         uniformBuffer = device.create!TransferBuffer(UniformBufferObject.sizeof, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
-
-        depth = Depth!LogicalDevice(device, imageExtent);
     }
 
     ~this()
@@ -44,11 +41,12 @@ class Frame(LogicalDevice)
     Depth!LogicalDevice depthBuf;
     //~ VkFramebuffer frameBuffer;
 
-    this(LogicalDevice dev, VkImage image, VkFormat imageFormat)
+    this(LogicalDevice dev, VkImage image, VkExtent2D imageExtent, VkFormat imageFormat)
     {
         device = dev;
 
         createImageView(imageView, device, imageFormat, image);
+        depthBuf = Depth!LogicalDevice(device, imageExtent);
     }
 
     ~this()

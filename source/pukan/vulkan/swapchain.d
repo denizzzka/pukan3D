@@ -59,7 +59,7 @@ class SwapChain(LogicalDevice)
         frames.length = images.length;
 
         foreach(i, ref frame; frames)
-            frame = new Frame!LogicalDevice(device, images[i], imageFormat);
+            frame = new Frame!LogicalDevice(device, images[i], imageExtent, imageFormat);
     }
 
     ~this()

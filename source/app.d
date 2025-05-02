@@ -219,10 +219,11 @@ void main() {
     pipelineInfo.basePipelineHandle = null; // Optional
     pipelineInfo.basePipelineIndex = -1; // Optional
 
-    auto graphicsPipelines = device.create!GraphicsPipelines([pipelineInfo], swapChain.imageFormat, frameBuilder.depth.format);
+    auto graphicsPipelines = device.create!GraphicsPipelines([pipelineInfo], swapChain.imageFormat, swapChain.frames[0].depthBuf.format);
     scope(exit) destroy(graphicsPipelines);
 
-    swapChain.initFramebuffers(graphicsPipelines.renderPass, frameBuilder.depth.depthView);
+    //TODO: remove
+    swapChain.initFramebuffers(graphicsPipelines.renderPass, swapChain.frames[0].depthBuf.depthView);
 
     void recreateSwapChain()
     {
@@ -231,9 +232,9 @@ void main() {
         swapChain = new SwapChain!(typeof(device))(device, surface);
 
         //FIXME: dirty hack
-        frameBuilder.depth = frameBuilder.depth.createNew(device, swapChain.imageExtent);
+        swapChain.frames[0].depthBuf = swapChain.frames[0].depthBuf.createNew(device, swapChain.imageExtent);
 
-        swapChain.initFramebuffers(graphicsPipelines.renderPass, frameBuilder.depth.depthView);
+        swapChain.initFramebuffers(graphicsPipelines.renderPass, swapChain.frames[0].depthBuf.depthView);
     }
 
     auto vertexBuffer = device.create!TransferBuffer(Vertex.sizeof * vertices.length, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
