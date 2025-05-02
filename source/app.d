@@ -39,7 +39,7 @@ void main() {
         registerMemoryAssertHandler();
     }
 
-    immutable name = "D/pukan3D/Raylib project";
+    immutable name = "D/pukan3D/GLFW project";
 
     enforce(glfwInit());
     scope(exit) glfwTerminate();
