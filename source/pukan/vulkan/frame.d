@@ -37,6 +37,52 @@ class FrameBuilder(LogicalDevice)
     }
 }
 
+class Frame(LogicalDevice)
+{
+    LogicalDevice device; //TODO: remove
+    VkImageView imageView;
+    Depth!LogicalDevice depthBuf;
+    //~ VkFramebuffer frameBuffer;
+
+    this(LogicalDevice dev, VkImage image, VkFormat imageFormat)
+    {
+        device = dev;
+
+        createImageView(imageView, device, imageFormat, image);
+    }
+
+    ~this()
+    {
+        //~ vkDestroyFramebuffer(device, frameBuffer, device.backend.allocator);
+        vkDestroyImageView(device, imageView, device.backend.allocator);
+    }
+}
+
+void createImageView(LogicalDevice)(ref VkImageView imgView, LogicalDevice device, VkFormat imageFormat, VkImage image)
+{
+    VkImageViewCreateInfo cinf = {
+        sType: VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+        viewType: VK_IMAGE_VIEW_TYPE_2D,
+        format: imageFormat,
+        components: VkComponentMapping(
+            r: VK_COMPONENT_SWIZZLE_IDENTITY,
+            g: VK_COMPONENT_SWIZZLE_IDENTITY,
+            b: VK_COMPONENT_SWIZZLE_IDENTITY,
+            a: VK_COMPONENT_SWIZZLE_IDENTITY,
+        ),
+        subresourceRange: VkImageSubresourceRange(
+            aspectMask: VK_IMAGE_ASPECT_COLOR_BIT,
+            baseMipLevel: 0,
+            levelCount: 1,
+            baseArrayLayer: 0,
+            layerCount: 1,
+        ),
+        image: image,
+    };
+
+    vkCreateImageView(device, &cinf, device.backend.allocator, &imgView).vkCheck;
+}
+
 struct Depth(LogicalDevice)
 {
     LogicalDevice device;
@@ -83,6 +129,8 @@ struct Depth(LogicalDevice)
 
     ~this()
     {
+        if(device is null) return;
+
         vkDestroyImageView(device, depthView, device.backend.allocator);
         destroy(depthImage);
     }

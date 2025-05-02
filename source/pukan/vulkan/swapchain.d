@@ -12,7 +12,7 @@ class SwapChain(LogicalDevice)
     VkFormat imageFormat;
     VkExtent2D imageExtent;
     VkFramebuffer[] frameBuffers;
-    VkImageView[] imageViews;
+    Frame!LogicalDevice[] frames;
 
     this(LogicalDevice device, VkSurfaceKHR surface)
     {
@@ -56,45 +56,35 @@ class SwapChain(LogicalDevice)
 
         images = getArrayFrom!vkGetSwapchainImagesKHR(device.device, swapchain);
 
-        createImageViews();
+        frames.length = images.length;
+
+        foreach(i, ref frame; frames)
+            frame = new Frame!LogicalDevice(device, images[i], imageFormat);
     }
 
     ~this()
     {
+        foreach(ref frame; frames)
+            destroy(frame);
+
         foreach(ref fb; frameBuffers)
             vkDestroyFramebuffer(device.device, fb, device.backend.allocator);
 
-        destroyImageViews();
-
         vkDestroySwapchainKHR(device.device, swapchain, device.backend.allocator);
-    }
-
-    void createImageViews()
-    {
-        imageViews.length = images.length;
-
-        foreach(i, ref view; imageViews)
-            createImageView(view, device, imageFormat, images[i]);
-    }
-
-    void destroyImageViews()
-    {
-        foreach(ref iv; imageViews)
-            vkDestroyImageView(device.device, iv, device.backend.allocator);
     }
 
     //TODO: move to FrameBuffer struct (frame module)
     void initFramebuffers(VkRenderPass renderPass, VkImageView depthView)
     {
-        assert(imageViews.length == images.length);
+        assert(frames.length == images.length);
         assert(renderPass !is null);
 
-        frameBuffers.length = images.length;
+        frameBuffers.length = frames.length;
 
         foreach(i, ref fb; frameBuffers)
         {
             VkImageView[2] attachments = [
-                imageViews[i],
+                frames[i].imageView,
                 depthView, //FIXME: imageViews and depthView must be referenced from FrameBuilder
             ];
 
@@ -110,29 +100,4 @@ class SwapChain(LogicalDevice)
             vkCreateFramebuffer(device.device, &framebufferInfo, device.backend.allocator, &fb).vkCheck;
         }
     }
-}
-
-void createImageView(LogicalDevice)(ref VkImageView imgView, LogicalDevice device, VkFormat imageFormat, VkImage img)
-{
-    VkImageViewCreateInfo cinf = {
-        sType: VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
-        viewType: VK_IMAGE_VIEW_TYPE_2D,
-        format: imageFormat,
-        components: VkComponentMapping(
-            r: VK_COMPONENT_SWIZZLE_IDENTITY,
-            g: VK_COMPONENT_SWIZZLE_IDENTITY,
-            b: VK_COMPONENT_SWIZZLE_IDENTITY,
-            a: VK_COMPONENT_SWIZZLE_IDENTITY,
-        ),
-        subresourceRange: VkImageSubresourceRange(
-            aspectMask: VK_IMAGE_ASPECT_COLOR_BIT,
-            baseMipLevel: 0,
-            levelCount: 1,
-            baseArrayLayer: 0,
-            layerCount: 1,
-        ),
-        image: img,
-    };
-
-    vkCreateImageView(device.device, &cinf, device.backend.allocator, &imgView).vkCheck;
 }
