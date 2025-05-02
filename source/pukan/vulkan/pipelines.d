@@ -24,7 +24,6 @@ abstract class Pipelines(LogicalDevice)
 
 class GraphicsPipelines(LogicalDevice) : Pipelines!LogicalDevice
 {
-    //TODO: make it replaceable
     RenderPass renderPass;
     //TODO: remove?
     alias this = renderPass;
@@ -33,6 +32,7 @@ class GraphicsPipelines(LogicalDevice) : Pipelines!LogicalDevice
     {
         super(dev);
 
+        //TODO: make DefaultRenderPass replaceable
         renderPass = new DefaultRenderPass!LogicalDevice(device, imageFormat, depthFormat);
 
         foreach(ref inf; infos)
