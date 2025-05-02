@@ -37,7 +37,7 @@ class FrameBuilder(LogicalDevice)
     }
 }
 
-//TODO: rename to default render pass and add interface
+//TODO: rename to DefaultRenderPass and add interface without ctor
 class RenderPass(LogicalDevice)
 {
     LogicalDevice device;
@@ -68,11 +68,12 @@ class RenderPass(LogicalDevice)
             depthAttachment,
         ];
 
-        VkSubpassDescription subpass;
-        subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-        subpass.colorAttachmentCount = 1;
-        subpass.pColorAttachments = &colorAttachmentRef;
-        subpass.pDepthStencilAttachment = &depthAttachmentRef;
+        VkSubpassDescription subpass = {
+            pipelineBindPoint: VK_PIPELINE_BIND_POINT_GRAPHICS,
+            colorAttachmentCount: 1,
+            pColorAttachments: &colorAttachmentRef,
+            pDepthStencilAttachment: &depthAttachmentRef,
+        };
 
         VkSubpassDependency dependency = defaultSubpassDependency;
 
