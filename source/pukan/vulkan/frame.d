@@ -14,6 +14,10 @@ class FrameBuilder(LogicalDevice)
     CommandPool!LogicalDevice commandPool;
     TransferBuffer!LogicalDevice uniformBuffer;
 
+    Semaphore!LogicalDevice imageAvailable;
+    Semaphore!LogicalDevice renderFinished;
+    Fence!LogicalDevice inFlightFence;
+
     this(LogicalDevice dev, VkQueue graphics, VkQueue present)
     {
         device = dev;
@@ -25,10 +29,17 @@ class FrameBuilder(LogicalDevice)
         // FIXME: bad idea to allocate a memory buffer only for one uniform buffer,
         // need to allocate more memory then divide it into pieces
         uniformBuffer = device.create!TransferBuffer(UniformBufferObject.sizeof, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
+
+        imageAvailable = device.createSemaphore;
+        renderFinished = device.createSemaphore;
+        inFlightFence = device.createFence;
     }
 
     ~this()
     {
+        destroy(inFlightFence);
+        destroy(renderFinished);
+        destroy(imageAvailable);
         destroy(uniformBuffer);
         destroy(commandPool);
     }

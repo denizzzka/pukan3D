@@ -246,14 +246,6 @@ void main() {
     vertexBuffer.upload(frameBuilder.commandPool);
     indicesBuffer.upload(frameBuilder.commandPool);
 
-    auto imageAvailable = device.createSemaphore;
-    scope(exit) destroy(imageAvailable);
-    auto renderFinished = device.createSemaphore;
-    scope(exit) destroy(renderFinished);
-
-    auto inFlightFence = device.createFence;
-    scope(exit) destroy(inFlightFence);
-
     void recreateSwapChainWithNewWindowSize()
     {
         int width;
@@ -360,12 +352,12 @@ void main() {
         glfwPollEvents();
 
         // Draw frame:
-        vkWaitForFences(device.device, 1, &inFlightFence.fence, VK_TRUE, uint.max).vkCheck;
+        vkWaitForFences(device.device, 1, &frameBuilder.inFlightFence.fence, VK_TRUE, uint.max).vkCheck;
 
         uint32_t imageIndex;
 
         {
-            auto ret = vkAcquireNextImageKHR(device.device, swapChain.swapchain, ulong.max, imageAvailable.semaphore, null, &imageIndex);
+            auto ret = vkAcquireNextImageKHR(device.device, swapChain.swapchain, ulong.max, frameBuilder.imageAvailable.semaphore, null, &imageIndex);
 
             if(ret == VK_ERROR_OUT_OF_DATE_KHR)
             {
@@ -379,7 +371,7 @@ void main() {
             }
         }
 
-        vkResetFences(device.device, 1, &inFlightFence.fence).vkCheck;
+        vkResetFences(device.device, 1, &frameBuilder.inFlightFence.fence).vkCheck;
 
         updateUniformBuffer(frameBuilder, sw, swapChain.imageExtent);
 
@@ -403,7 +395,7 @@ void main() {
             VkSubmitInfo submitInfo;
             submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
-            auto waitSemaphores = [imageAvailable.semaphore];
+            auto waitSemaphores = [frameBuilder.imageAvailable.semaphore];
             submitInfo.waitSemaphoreCount = cast(uint) waitSemaphores.length;
             submitInfo.pWaitSemaphores = waitSemaphores.ptr;
 
@@ -413,11 +405,11 @@ void main() {
             submitInfo.commandBufferCount = cast(uint) frameBuilder.commandPool.commandBuffers.length;
             submitInfo.pCommandBuffers = frameBuilder.commandPool.commandBuffers.ptr;
 
-            auto signalSemaphores = [renderFinished.semaphore];
+            auto signalSemaphores = [frameBuilder.renderFinished.semaphore];
             submitInfo.signalSemaphoreCount = cast(uint) signalSemaphores.length;
             submitInfo.pSignalSemaphores = signalSemaphores.ptr;
 
-            vkQueueSubmit(device.getQueue(), 1, &submitInfo, inFlightFence.fence).vkCheck("failed to submit draw command buffer");
+            vkQueueSubmit(device.getQueue(), 1, &submitInfo, frameBuilder.inFlightFence.fence).vkCheck("failed to submit draw command buffer");
 
             VkPresentInfoKHR presentInfo;
             presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
