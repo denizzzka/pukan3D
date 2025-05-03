@@ -383,11 +383,7 @@ void main() {
 
         updateUniformBuffer(frameBuilder, sw, swapChain.imageExtent);
 
-        auto ref commandBuffer = frameBuilder.commandPool.buf;
-
-        {
         frameBuilder.commandPool.resetBuffer(0);
-
 
         frameBuilder.commandPool.recordCommands((commandBuffer) {
             frameBuilder.uniformBuffer.recordUpload(commandBuffer);
@@ -404,8 +400,6 @@ void main() {
 
             renderPass.recordCommandBuffer(commandBuffer);
         });
-
-        }
 
         {
             VkSubmitInfo submitInfo;
