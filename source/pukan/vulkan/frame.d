@@ -37,13 +37,13 @@ class FrameBuilder(LogicalDevice)
 class Frame(LogicalDevice, alias device)
 {
     VkImageView imageView;
-    Depth!LogicalDevice depthBuf;
+    DepthBuf!LogicalDevice depthBuf;
     VkFramebuffer frameBuffer;
 
     this(VkImage image, VkExtent2D imageExtent, VkFormat imageFormat, VkRenderPass renderPass)
     {
         createImageView(imageView, device, imageFormat, image);
-        depthBuf = Depth!LogicalDevice(device, imageExtent);
+        depthBuf = DepthBuf!LogicalDevice(device, imageExtent);
 
         {
             VkImageView[2] attachments = [
@@ -97,7 +97,7 @@ void createImageView(LogicalDevice)(ref VkImageView imgView, LogicalDevice devic
     vkCreateImageView(device, &cinf, device.backend.allocator, &imgView).vkCheck;
 }
 
-struct Depth(LogicalDevice)
+struct DepthBuf(LogicalDevice)
 {
     LogicalDevice device;
     ImageMemory!LogicalDevice depthImage;
@@ -161,7 +161,7 @@ abstract class RenderPass
 class DefaultRenderPass(LogicalDevice) : RenderPass
 {
     LogicalDevice device;
-    enum VkFormat depthFormat = Depth!LogicalDevice.format;
+    enum VkFormat depthFormat = DepthBuf!LogicalDevice.format;
 
     this(LogicalDevice dev, VkFormat imageFormat)
     {
