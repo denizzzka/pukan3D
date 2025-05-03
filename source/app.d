@@ -114,7 +114,7 @@ void main() {
     //~ vertShader.compileShader(VK_SHADER_STAGE_VERTEX_BIT);
     //~ fragShader.compileShader(VK_SHADER_STAGE_FRAGMENT_BIT);
 
-    auto frameBuilder = device.create!FrameBuilder(graphicsQueue, presentQueue);
+    auto frameBuilder = device.create!FrameBuilder(graphicsQueue, presentQueue, [swapChain.swapchain]);
     scope(exit) destroy(frameBuilder);
 
     import pukan.vulkan.helpers;
@@ -415,9 +415,8 @@ void main() {
             presentInfo.waitSemaphoreCount = cast(uint) frameBuilder.signalSemaphores.length;
             presentInfo.pWaitSemaphores = frameBuilder.signalSemaphores.ptr;
 
-            auto swapChains = [swapChain.swapchain];
-            presentInfo.swapchainCount = cast(uint) swapChains.length;
-            presentInfo.pSwapchains = swapChains.ptr;
+            presentInfo.swapchainCount = cast(uint) frameBuilder.swapChains.length;
+            presentInfo.pSwapchains = frameBuilder.swapChains.ptr;
 
             presentInfo.pImageIndices = &imageIndex;
 

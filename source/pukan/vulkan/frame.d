@@ -20,10 +20,12 @@ class FrameBuilder(LogicalDevice)
 
     VkSemaphore[] waitSemaphores;
     VkSemaphore[] signalSemaphores;
+    VkSwapchainKHR[] swapChains;
 
-    this(LogicalDevice dev, VkQueue graphics, VkQueue present)
+    this(LogicalDevice dev, VkQueue graphics, VkQueue present, VkSwapchainKHR[] swp_chains)
     {
         device = dev;
+        swapChains = swp_chains;
         graphicsQueue = graphics;
         presentQueue = present;
 
