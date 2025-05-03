@@ -94,7 +94,7 @@ void main() {
 
     import pukan.vulkan.bindings;
 
-    RenderPass renderPass = device.create!DefaultRenderPass(VK_FORMAT_B8G8R8A8_SRGB);
+    /*FIXME: RenderPass*/ auto renderPass = device.create!DefaultRenderPass(VK_FORMAT_B8G8R8A8_SRGB);
     scope(exit) destroy(renderPass);
 
     alias SwapChainImpl = SwapChain!(typeof(device));
@@ -392,7 +392,7 @@ void main() {
         frameBuilder.commandPool.recordCommands((commandBuffer) {
             frameBuilder.uniformBuffer.recordUpload(commandBuffer);
 
-            frameBuilder.commandPool.recordCommandBuffer(
+            renderPass.recordCommandBuffer(
                 swapChain,
                 commandBuffer,
                 graphicsPipelines.renderPass,

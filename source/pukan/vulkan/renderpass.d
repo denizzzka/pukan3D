@@ -96,4 +96,67 @@ class DefaultRenderPass(LogicalDevice) : RenderPass
         dstStageMask: VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
         dstAccessMask: VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
     };
+
+    static void recordCommandBuffer(
+        SwapChain!LogicalDevice swapChain,
+        ref VkCommandBuffer commandBuffer,
+        VkRenderPass renderPass,
+        uint imageIndex,
+        VkBuffer vertexBuffer,
+        VkBuffer indexBuffer,
+        uint indexCount,
+        VkDescriptorSet[] descriptorSets,
+        VkPipelineLayout pipelineLayout,
+        ref VkPipeline graphicsPipeline
+    )
+    {
+        VkRenderPassBeginInfo renderPassInfo;
+        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        renderPassInfo.renderPass = renderPass;
+        renderPassInfo.framebuffer = swapChain.frames[imageIndex].frameBuffer;
+        renderPassInfo.renderArea.offset = VkOffset2D(0, 0);
+        renderPassInfo.renderArea.extent = swapChain.imageExtent;
+
+        auto clearValues = [
+            VkClearValue(
+                color: VkClearColorValue(float32: [0.0f, 0.0f, 0.0f, 1.0f]),
+            ),
+            VkClearValue(
+                depthStencil: VkClearDepthStencilValue(1, 0),
+            ),
+        ];
+
+        renderPassInfo.pClearValues = clearValues.ptr;
+        renderPassInfo.clearValueCount = cast(uint) clearValues.length;
+
+        vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
+
+        {
+            VkViewport viewport;
+            viewport.x = 0.0f;
+            viewport.y = 0.0f;
+            viewport.width = cast(float) swapChain.imageExtent.width;
+            viewport.height = cast(float) swapChain.imageExtent.height;
+            viewport.minDepth = 0.0f;
+            viewport.maxDepth = 1.0f;
+            vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+
+            VkRect2D scissor;
+            scissor.offset = VkOffset2D(0, 0);
+            scissor.extent = swapChain.imageExtent;
+            vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+
+            auto vertexBuffers = [vertexBuffer];
+            VkDeviceSize[] offsets = [VkDeviceSize(0)];
+            vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers.ptr, offsets.ptr);
+            vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT16);
+            vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, cast(uint) descriptorSets.length, descriptorSets.ptr, 0, null);
+
+            vkCmdDrawIndexed(commandBuffer, cast(uint) indices.length, 1, 0, 0, 0);
+        }
+
+        vkCmdEndRenderPass(commandBuffer);
+    }
 }
