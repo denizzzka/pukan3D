@@ -395,7 +395,6 @@ void main() {
             renderPass.recordCommandBuffer(
                 swapChain,
                 commandBuffer,
-                graphicsPipelines.renderPass,
                 imageIndex,
                 vertexBuffer.gpuBuffer.buf,
                 indicesBuffer.gpuBuffer.buf,

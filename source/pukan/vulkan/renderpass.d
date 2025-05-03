@@ -97,10 +97,9 @@ class DefaultRenderPass(LogicalDevice) : RenderPass
         dstAccessMask: VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
     };
 
-    static void recordCommandBuffer(
+    void recordCommandBuffer(
         SwapChain!LogicalDevice swapChain,
         ref VkCommandBuffer commandBuffer,
-        VkRenderPass renderPass,
         uint imageIndex,
         VkBuffer vertexBuffer,
         VkBuffer indexBuffer,
@@ -112,7 +111,7 @@ class DefaultRenderPass(LogicalDevice) : RenderPass
     {
         VkRenderPassBeginInfo renderPassInfo;
         renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-        renderPassInfo.renderPass = renderPass;
+        renderPassInfo.renderPass = vkRenderPass;
         renderPassInfo.framebuffer = swapChain.frames[imageIndex].frameBuffer;
         renderPassInfo.renderArea.offset = VkOffset2D(0, 0);
         renderPassInfo.renderArea.extent = swapChain.imageExtent;
