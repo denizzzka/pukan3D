@@ -17,13 +17,16 @@ class CommandPool(LogicalDevice)
     VkCommandPool commandPool;
     VkCommandBuffer[] commandBuffers;
 
+    enum VkCommandPoolCreateInfo defaultCreateInfo = {
+        sType: VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
+        flags: VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
+    };
+
     this(LogicalDevice dev, uint queueFamilyIndex)
     {
         device = dev;
 
-        VkCommandPoolCreateInfo cinf;
-        cinf.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-        cinf.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+        auto cinf = defaultCreateInfo;
         cinf.queueFamilyIndex = queueFamilyIndex;
 
         vkCreateCommandPool(device.device, &cinf, device.backend.allocator, &commandPool).vkCheck;
