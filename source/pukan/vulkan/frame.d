@@ -51,6 +51,28 @@ class FrameBuilder(LogicalDevice)
         destroy(uniformBuffer);
         destroy(commandPool);
     }
+
+    void queueSubmit()
+    {
+        auto waitStages = cast(uint) VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+
+        VkSubmitInfo submitInfo = {
+            sType: VK_STRUCTURE_TYPE_SUBMIT_INFO,
+
+            pWaitDstStageMask: &waitStages,
+
+            waitSemaphoreCount: cast(uint) waitSemaphores.length,
+            pWaitSemaphores: waitSemaphores.ptr,
+
+            commandBufferCount: cast(uint) commandPool.commandBuffers.length,
+            pCommandBuffers: commandPool.commandBuffers.ptr,
+
+            signalSemaphoreCount: cast(uint) signalSemaphores.length,
+            pSignalSemaphores: signalSemaphores.ptr,
+        };
+
+        vkQueueSubmit(device.getQueue(), 1, &submitInfo, inFlightFence.fence).vkCheck("failed to submit draw command buffer");
+    }
 }
 
 class Frame(LogicalDevice, alias device)

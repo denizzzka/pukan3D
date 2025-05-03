@@ -391,24 +391,9 @@ void main() {
             renderPass.recordCommandBuffer(commandBuffer);
         });
 
+        frameBuilder.queueSubmit();
+
         {
-            VkSubmitInfo submitInfo;
-            submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-
-            submitInfo.waitSemaphoreCount = cast(uint) frameBuilder.waitSemaphores.length;
-            submitInfo.pWaitSemaphores = frameBuilder.waitSemaphores.ptr;
-
-            auto waitStages = cast(uint) VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-            submitInfo.pWaitDstStageMask = &waitStages;
-
-            submitInfo.commandBufferCount = cast(uint) frameBuilder.commandPool.commandBuffers.length;
-            submitInfo.pCommandBuffers = frameBuilder.commandPool.commandBuffers.ptr;
-
-            submitInfo.signalSemaphoreCount = cast(uint) frameBuilder.signalSemaphores.length;
-            submitInfo.pSignalSemaphores = frameBuilder.signalSemaphores.ptr;
-
-            vkQueueSubmit(device.getQueue(), 1, &submitInfo, frameBuilder.inFlightFence.fence).vkCheck("failed to submit draw command buffer");
-
             VkPresentInfoKHR presentInfo;
             presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 
