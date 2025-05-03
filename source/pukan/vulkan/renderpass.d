@@ -119,6 +119,18 @@ class DefaultRenderPass(LogicalDevice) : RenderPass
         vkCmdSetScissor(buf, 0, 1, &scissor);
     }
 
+    void drawIndexed(VkCommandBuffer buf, VkBuffer vertexBuffer, VkBuffer indexBuffer, VkDescriptorSet[] descriptorSets, VkPipelineLayout pipelineLayout)
+    {
+        auto vertexBuffers = [vertexBuffer];
+        VkDeviceSize[] offsets = [VkDeviceSize(0)];
+
+        vkCmdBindVertexBuffers(buf, 0, 1, vertexBuffers.ptr, offsets.ptr);
+        vkCmdBindIndexBuffer(buf, indexBuffer, 0, VK_INDEX_TYPE_UINT16);
+        vkCmdBindDescriptorSets(buf, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, cast(uint) descriptorSets.length, descriptorSets.ptr, 0, null);
+
+        vkCmdDrawIndexed(buf, cast(uint) indices.length, 1, 0, 0, 0);
+    }
+
     void recordCommandBuffer(
         VkExtent2D imageExtent,
         ref VkCommandBuffer commandBuffer,
@@ -155,16 +167,7 @@ class DefaultRenderPass(LogicalDevice) : RenderPass
 
         setViewport(commandBuffer, imageExtent);
         setScissor(commandBuffer, imageExtent);
-
-        {
-            auto vertexBuffers = [vertexBuffer];
-            VkDeviceSize[] offsets = [VkDeviceSize(0)];
-            vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers.ptr, offsets.ptr);
-            vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT16);
-            vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, cast(uint) descriptorSets.length, descriptorSets.ptr, 0, null);
-
-            vkCmdDrawIndexed(commandBuffer, cast(uint) indices.length, 1, 0, 0, 0);
-        }
+        drawIndexed(commandBuffer, vertexBuffer, indexBuffer, descriptorSets, pipelineLayout);
 
         vkCmdEndRenderPass(commandBuffer);
     }
