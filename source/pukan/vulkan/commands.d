@@ -72,6 +72,13 @@ class CommandPool(LogicalDevice)
         return commandBuffers[0];
     }
 
+    void recordCommands(VkCommandBufferBeginInfo beginInfo, void delegate(VkCommandBuffer) dg)
+    {
+        vkBeginCommandBuffer(buf, &beginInfo).vkCheck;
+        dg(buf);
+        vkEndCommandBuffer(buf).vkCheck("failed to record command buffer");
+    }
+
     static void recordBegin(ref VkCommandBuffer commandBuffer, VkCommandBufferBeginInfo beginInfo)
     {
         debug beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
