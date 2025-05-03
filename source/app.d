@@ -388,28 +388,24 @@ void main() {
         {
         frameBuilder.commandPool.resetBuffer(0);
 
-        VkCommandBufferBeginInfo beginInfo = {
-            sType: VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
-        };
 
-        vkBeginCommandBuffer(commandBuffer, &beginInfo).vkCheck;
+        frameBuilder.commandPool.recordCommands((commandBuffer) {
+            frameBuilder.uniformBuffer.recordUpload(commandBuffer);
 
-        frameBuilder.uniformBuffer.recordUpload(frameBuilder.commandPool);
+            frameBuilder.commandPool.recordCommandBuffer(
+                swapChain,
+                commandBuffer,
+                graphicsPipelines.renderPass,
+                imageIndex,
+                vertexBuffer.gpuBuffer.buf,
+                indicesBuffer.gpuBuffer.buf,
+                cast(uint) indices.length,
+                descriptorSets,
+                pipelineLayout,
+                graphicsPipelines.pipelines[0]
+            );
+        });
 
-        frameBuilder.commandPool.recordCommandBuffer(
-            swapChain,
-            commandBuffer,
-            graphicsPipelines.renderPass,
-            imageIndex,
-            vertexBuffer.gpuBuffer.buf,
-            indicesBuffer.gpuBuffer.buf,
-            cast(uint) indices.length,
-            descriptorSets,
-            pipelineLayout,
-            graphicsPipelines.pipelines[0]
-        );
-
-        vkEndCommandBuffer(commandBuffer).vkCheck("failed to record command buffer");
         }
 
         {

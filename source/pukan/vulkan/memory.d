@@ -133,8 +133,8 @@ class TransferBuffer(LogicalDevice)
         gpuBuffer.copyBuffer(commandPool, cpuBuffer.buf, gpuBuffer.buf, cpuBuf.length);
     }
 
-    void recordUpload(CommandPool)(CommandPool commandPool)
+    void recordUpload(VkCommandBuffer buf)
     {
-        gpuBuffer.recordCopyBuffer(commandPool.buf, cpuBuffer.buf, gpuBuffer.buf, cpuBuf.length);
+        gpuBuffer.recordCopyBuffer(buf, cpuBuffer.buf, gpuBuffer.buf, cpuBuf.length);
     }
 }

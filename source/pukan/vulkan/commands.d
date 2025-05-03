@@ -79,6 +79,12 @@ class CommandPool(LogicalDevice)
         vkEndCommandBuffer(buf).vkCheck("failed to record command buffer");
     }
 
+    void recordCommands(void delegate(VkCommandBuffer) dg)
+    {
+        auto cinf = defaultBufferBeginInfo;
+        recordCommands(cinf, dg);
+    }
+
     void recordOneTime(void delegate(VkCommandBuffer) dg)
     {
         auto cinf = defaultOneTimeBufferBeginInfo;
@@ -117,7 +123,7 @@ class CommandPool(LogicalDevice)
         vkResetCommandBuffer(buf, 0 /*VkCommandBufferResetFlagBits*/).vkCheck;
     }
 
-    void recordCommandBuffer(
+    static void recordCommandBuffer(
         SwapChain!LogicalDevice swapChain,
         ref VkCommandBuffer commandBuffer,
         VkRenderPass renderPass,
