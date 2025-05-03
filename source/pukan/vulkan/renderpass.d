@@ -10,6 +10,7 @@ abstract class RenderPass
     alias this = vkRenderPass;
 
     VkFormat imageFormat;
+    void recordCommandBuffer(VkCommandBuffer commandBuffer);
 }
 
 class DefaultRenderPass(LogicalDevice) : RenderPass
@@ -149,7 +150,7 @@ class DefaultRenderPass(LogicalDevice) : RenderPass
         vkCmdDrawIndexed(buf, cast(uint) indices.length, 1, 0, 0, 0);
     }
 
-    void recordCommandBuffer(VkCommandBuffer commandBuffer)
+    override void recordCommandBuffer(VkCommandBuffer commandBuffer)
     {
         VkRenderPassBeginInfo renderPassInfo;
         renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
