@@ -97,6 +97,18 @@ class DefaultRenderPass(LogicalDevice) : RenderPass
         dstAccessMask: VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
     };
 
+    void setViewport(VkCommandBuffer buf, VkExtent2D imageExtent)
+    {
+        VkViewport viewport;
+        viewport.x = 0.0f;
+        viewport.y = 0.0f;
+        viewport.width = cast(float) imageExtent.width;
+        viewport.height = cast(float) imageExtent.height;
+        viewport.minDepth = 0.0f;
+        viewport.maxDepth = 1.0f;
+        vkCmdSetViewport(buf, 0, 1, &viewport);
+    }
+
     void recordCommandBuffer(
         VkExtent2D imageExtent,
         ref VkCommandBuffer commandBuffer,
@@ -131,16 +143,9 @@ class DefaultRenderPass(LogicalDevice) : RenderPass
 
         vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
 
-        {
-            VkViewport viewport;
-            viewport.x = 0.0f;
-            viewport.y = 0.0f;
-            viewport.width = cast(float) imageExtent.width;
-            viewport.height = cast(float) imageExtent.height;
-            viewport.minDepth = 0.0f;
-            viewport.maxDepth = 1.0f;
-            vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+        setViewport(commandBuffer, imageExtent);
 
+        {
             VkRect2D scissor;
             scissor.offset = VkOffset2D(0, 0);
             scissor.extent = imageExtent;
