@@ -17,16 +17,21 @@ class CommandPool(LogicalDevice)
     VkCommandPool commandPool;
     VkCommandBuffer[] commandBuffers;
 
-    enum VkCommandPoolCreateInfo defaultCreateInfo = {
+    enum VkCommandPoolCreateInfo defaultPoolCreateInfo = {
         sType: VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
         flags: VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
+    };
+
+    enum VkCommandBufferAllocateInfo defaultBufferAllocateInfo = {
+        sType: VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+        level: VK_COMMAND_BUFFER_LEVEL_PRIMARY,
     };
 
     this(LogicalDevice dev, uint queueFamilyIndex)
     {
         device = dev;
 
-        auto cinf = defaultCreateInfo;
+        auto cinf = defaultPoolCreateInfo;
         cinf.queueFamilyIndex = queueFamilyIndex;
 
         vkCreateCommandPool(device.device, &cinf, device.backend.allocator, &commandPool).vkCheck;
@@ -45,10 +50,8 @@ class CommandPool(LogicalDevice)
 
         foreach(i, ref buf; commandBuffers)
         {
-            VkCommandBufferAllocateInfo allocInfo;
-            allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+            auto allocInfo = defaultBufferAllocateInfo;
             allocInfo.commandPool = commandPool;
-            allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
             allocInfo.commandBufferCount = cast(uint) commandBuffers.length;
 
             vkAllocateCommandBuffers(device.device, &allocInfo, &buf).vkCheck;
