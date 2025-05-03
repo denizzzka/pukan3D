@@ -27,6 +27,15 @@ class CommandPool(LogicalDevice)
         level: VK_COMMAND_BUFFER_LEVEL_PRIMARY,
     };
 
+    enum VkCommandBufferBeginInfo defaultBufferBeginInfo = {
+        sType: VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+    };
+
+    enum VkCommandBufferBeginInfo defaultOneTimeBufferBeginInfo = {
+        sType: VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+        flags: VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
+    };
+
     this(LogicalDevice dev, uint queueFamilyIndex)
     {
         device = dev;
@@ -77,10 +86,7 @@ class CommandPool(LogicalDevice)
 
     void oneTimeBufferRun(void delegate() dg)
     {
-        VkCommandBufferBeginInfo beginInfo = {
-            sType: VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
-            flags: VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
-        };
+        VkCommandBufferBeginInfo beginInfo = defaultOneTimeBufferBeginInfo;
 
         vkBeginCommandBuffer(buf, &beginInfo).vkCheck;
 
