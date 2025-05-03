@@ -153,6 +153,7 @@ void main() {
 
     import pukan.vulkan.defaults;
 
+    //FIXME: move to pipelines and remove viewport from renderpass module!
     VkViewport viewport;
     viewport.x = 0.0f;
     viewport.y = 0.0f;
