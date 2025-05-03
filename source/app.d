@@ -114,7 +114,7 @@ void main() {
     //~ vertShader.compileShader(VK_SHADER_STAGE_VERTEX_BIT);
     //~ fragShader.compileShader(VK_SHADER_STAGE_FRAGMENT_BIT);
 
-    auto frameBuilder = device.create!FrameBuilder(graphicsQueue, presentQueue);
+    auto frameBuilder = device.create!FrameBuilder(graphicsQueue, presentQueue, swapChain.swapchain);
     scope(exit) destroy(frameBuilder);
 
     import pukan.vulkan.helpers;
@@ -246,14 +246,6 @@ void main() {
     vertexBuffer.upload(frameBuilder.commandPool);
     indicesBuffer.upload(frameBuilder.commandPool);
 
-    auto imageAvailable = device.createSemaphore;
-    scope(exit) destroy(imageAvailable);
-    auto renderFinished = device.createSemaphore;
-    scope(exit) destroy(renderFinished);
-
-    auto inFlightFence = device.createFence;
-    scope(exit) destroy(inFlightFence);
-
     void recreateSwapChainWithNewWindowSize()
     {
         int width;
@@ -360,12 +352,10 @@ void main() {
         glfwPollEvents();
 
         // Draw frame:
-        vkWaitForFences(device.device, 1, &inFlightFence.fence, VK_TRUE, uint.max).vkCheck;
-
-        uint32_t imageIndex;
+        frameBuilder.inFlightFence.wait();
 
         {
-            auto ret = vkAcquireNextImageKHR(device.device, swapChain.swapchain, ulong.max, imageAvailable.semaphore, null, &imageIndex);
+            auto ret = frameBuilder.acquireNextImage();
 
             if(ret == VK_ERROR_OUT_OF_DATE_KHR)
             {
@@ -379,7 +369,7 @@ void main() {
             }
         }
 
-        vkResetFences(device.device, 1, &inFlightFence.fence).vkCheck;
+        frameBuilder.inFlightFence.reset();
 
         updateUniformBuffer(frameBuilder, sw, swapChain.imageExtent);
 
@@ -388,7 +378,7 @@ void main() {
 
             renderPass.updateData(renderPass.VariableData(
                 swapChain.imageExtent,
-                swapChain.frames[imageIndex].frameBuffer,
+                swapChain.frames[frameBuilder.imageIndex].frameBuffer,
                 vertexBuffer.gpuBuffer.buf,
                 indicesBuffer.gpuBuffer.buf,
                 descriptorSets,
@@ -400,53 +390,18 @@ void main() {
         });
 
         {
-            VkSubmitInfo submitInfo;
-            submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+            frameBuilder.queueSubmit();
+            auto ret = frameBuilder.queueImageForPresentation();
 
-            auto waitSemaphores = [imageAvailable.semaphore];
-            submitInfo.waitSemaphoreCount = cast(uint) waitSemaphores.length;
-            submitInfo.pWaitSemaphores = waitSemaphores.ptr;
-
-            auto waitStages = cast(uint) VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-            submitInfo.pWaitDstStageMask = &waitStages;
-
-            submitInfo.commandBufferCount = cast(uint) frameBuilder.commandPool.commandBuffers.length;
-            submitInfo.pCommandBuffers = frameBuilder.commandPool.commandBuffers.ptr;
-
-            auto signalSemaphores = [renderFinished.semaphore];
-            submitInfo.signalSemaphoreCount = cast(uint) signalSemaphores.length;
-            submitInfo.pSignalSemaphores = signalSemaphores.ptr;
-
-            vkQueueSubmit(device.getQueue(), 1, &submitInfo, inFlightFence.fence).vkCheck("failed to submit draw command buffer");
-
-            VkPresentInfoKHR presentInfo;
-            presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-
-            presentInfo.waitSemaphoreCount = cast(uint) signalSemaphores.length;
-            presentInfo.pWaitSemaphores = signalSemaphores.ptr;
-
-            auto swapChains = [swapChain.swapchain];
-            presentInfo.swapchainCount = cast(uint) swapChains.length;
-            presentInfo.pSwapchains = swapChains.ptr;
-
-            presentInfo.pImageIndices = &imageIndex;
-
-            bool framebufferResized; // unused
-
+            if (ret == VK_ERROR_OUT_OF_DATE_KHR || ret == VK_SUBOPTIMAL_KHR)
             {
-                auto ret = vkQueuePresentKHR(presentQueue, &presentInfo);
-
-                if (ret == VK_ERROR_OUT_OF_DATE_KHR || ret == VK_SUBOPTIMAL_KHR || framebufferResized)
-                {
-                    framebufferResized = false;
-                    recreateSwapChainWithNewWindowSize();
-                    continue;
-                }
-                else
-                {
-                    if(ret != VK_SUCCESS)
-                        throw new PukanExceptionWithCode(ret, "failed to acquire swap chain image");
-                }
+                recreateSwapChainWithNewWindowSize();
+                continue;
+            }
+            else
+            {
+                if(ret != VK_SUCCESS)
+                    throw new PukanExceptionWithCode(ret, "failed to acquire swap chain image");
             }
         }
 

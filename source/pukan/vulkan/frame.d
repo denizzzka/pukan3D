@@ -13,10 +13,20 @@ class FrameBuilder(LogicalDevice)
     VkQueue presentQueue;
     CommandPool!LogicalDevice commandPool;
     TransferBuffer!LogicalDevice uniformBuffer;
+    uint imageIndex;
 
-    this(LogicalDevice dev, VkQueue graphics, VkQueue present)
+    Semaphore!LogicalDevice imageAvailable;
+    Semaphore!LogicalDevice renderFinished;
+    Fence!LogicalDevice inFlightFence;
+
+    VkSemaphore[] waitSemaphores;
+    VkSemaphore[] signalSemaphores;
+    VkSwapchainKHR swapChain;
+
+    this(LogicalDevice dev, VkQueue graphics, VkQueue present, VkSwapchainKHR swp_chain)
     {
         device = dev;
+        swapChain = swp_chain;
         graphicsQueue = graphics;
         presentQueue = present;
 
@@ -25,12 +35,68 @@ class FrameBuilder(LogicalDevice)
         // FIXME: bad idea to allocate a memory buffer only for one uniform buffer,
         // need to allocate more memory then divide it into pieces
         uniformBuffer = device.create!TransferBuffer(UniformBufferObject.sizeof, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
+
+        imageAvailable = device.create!Semaphore;
+        renderFinished = device.create!Semaphore;
+        inFlightFence = device.create!Fence;
+
+        waitSemaphores = [imageAvailable.semaphore];
+        signalSemaphores = [renderFinished.semaphore];
     }
 
     ~this()
     {
+        destroy(inFlightFence);
+        destroy(renderFinished);
+        destroy(imageAvailable);
         destroy(uniformBuffer);
         destroy(commandPool);
+    }
+
+    VkResult acquireNextImage()
+    {
+        return vkAcquireNextImageKHR(device, swapChain, ulong.max /* timeout */, imageAvailable, null /* fence */, &imageIndex);
+    }
+
+    void queueSubmit()
+    {
+        auto waitStages = cast(uint) VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+
+        VkSubmitInfo submitInfo = {
+            sType: VK_STRUCTURE_TYPE_SUBMIT_INFO,
+
+            pWaitDstStageMask: &waitStages,
+
+            waitSemaphoreCount: cast(uint) waitSemaphores.length,
+            pWaitSemaphores: waitSemaphores.ptr,
+
+            commandBufferCount: cast(uint) commandPool.commandBuffers.length,
+            pCommandBuffers: commandPool.commandBuffers.ptr,
+
+            signalSemaphoreCount: cast(uint) signalSemaphores.length,
+            pSignalSemaphores: signalSemaphores.ptr,
+        };
+
+        vkQueueSubmit(device.getQueue(), 1, &submitInfo, inFlightFence.fence).vkCheck;
+    }
+
+    VkResult queueImageForPresentation()
+    {
+        VkSwapchainKHR[1] swapChains = [swapChain];
+
+        VkPresentInfoKHR presentInfo = {
+            sType: VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
+
+            pImageIndices: &imageIndex,
+
+            waitSemaphoreCount: cast(uint) signalSemaphores.length,
+            pWaitSemaphores: signalSemaphores.ptr,
+
+            swapchainCount: cast(uint) swapChains.length,
+            pSwapchains: swapChains.ptr,
+        };
+
+        return vkQueuePresentKHR(presentQueue, &presentInfo);
     }
 }
 

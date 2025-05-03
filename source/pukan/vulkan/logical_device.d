@@ -108,6 +108,7 @@ class Semaphore(LogicalDevice)
 {
     LogicalDevice device;
     VkSemaphore semaphore;
+    alias this = semaphore;
 
     this(LogicalDevice dev)
     {
@@ -147,5 +148,15 @@ class Fence(LogicalDevice)
     ~this()
     {
         vkDestroyFence(device.device, fence, device.backend.allocator);
+    }
+
+    void wait()
+    {
+        vkWaitForFences(device, 1, &fence, VK_TRUE, uint.max).vkCheck;
+    }
+
+    void reset()
+    {
+        vkResetFences(device, 1, &fence).vkCheck;
     }
 }
