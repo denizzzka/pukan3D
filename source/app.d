@@ -447,9 +447,6 @@ void updateUniformBuffer(T, V)(T frameBuilder, ref StopWatch sw, V imageExtent)
 
     auto rotation = rotationQuaternion(Vector3f(0, 0, 1), 90f.degtorad * curr);
 
-    import std.stdio;
-    writeln("rotateion=", rotation);
-
     static union U {
         UniformBufferObject ubo;
         ubyte[UniformBufferObject.sizeof] binary;
