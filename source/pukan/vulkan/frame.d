@@ -82,17 +82,19 @@ class FrameBuilder(LogicalDevice)
 
     VkResult queueImageForPresentation()
     {
-        VkPresentInfoKHR presentInfo;
-        presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-
-        presentInfo.waitSemaphoreCount = cast(uint) signalSemaphores.length;
-        presentInfo.pWaitSemaphores = signalSemaphores.ptr;
-
         VkSwapchainKHR[1] swapChains = [swapChain];
-        presentInfo.swapchainCount = cast(uint) swapChains.length;
-        presentInfo.pSwapchains = swapChains.ptr;
 
-        presentInfo.pImageIndices = &imageIndex;
+        VkPresentInfoKHR presentInfo = {
+            sType: VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
+
+            pImageIndices: &imageIndex,
+
+            waitSemaphoreCount: cast(uint) signalSemaphores.length,
+            pWaitSemaphores: signalSemaphores.ptr,
+
+            swapchainCount: cast(uint) swapChains.length,
+            pSwapchains: swapChains.ptr,
+        };
 
         return vkQueuePresentKHR(presentQueue, &presentInfo);
     }
