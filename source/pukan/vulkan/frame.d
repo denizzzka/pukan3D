@@ -18,6 +18,9 @@ class FrameBuilder(LogicalDevice)
     Semaphore!LogicalDevice renderFinished;
     Fence!LogicalDevice inFlightFence;
 
+    VkSemaphore[] waitSemaphores;
+    VkSemaphore[] signalSemaphores;
+
     this(LogicalDevice dev, VkQueue graphics, VkQueue present)
     {
         device = dev;
@@ -30,9 +33,12 @@ class FrameBuilder(LogicalDevice)
         // need to allocate more memory then divide it into pieces
         uniformBuffer = device.create!TransferBuffer(UniformBufferObject.sizeof, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
 
-        imageAvailable = device.createSemaphore;
-        renderFinished = device.createSemaphore;
-        inFlightFence = device.createFence;
+        imageAvailable = device.create!Semaphore;
+        renderFinished = device.create!Semaphore;
+        inFlightFence = device.create!Fence;
+
+        waitSemaphores = [imageAvailable.semaphore];
+        signalSemaphores = [renderFinished.semaphore];
     }
 
     ~this()

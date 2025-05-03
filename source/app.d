@@ -395,9 +395,8 @@ void main() {
             VkSubmitInfo submitInfo;
             submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
-            auto waitSemaphores = [frameBuilder.imageAvailable.semaphore];
-            submitInfo.waitSemaphoreCount = cast(uint) waitSemaphores.length;
-            submitInfo.pWaitSemaphores = waitSemaphores.ptr;
+            submitInfo.waitSemaphoreCount = cast(uint) frameBuilder.waitSemaphores.length;
+            submitInfo.pWaitSemaphores = frameBuilder.waitSemaphores.ptr;
 
             auto waitStages = cast(uint) VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
             submitInfo.pWaitDstStageMask = &waitStages;
@@ -405,17 +404,16 @@ void main() {
             submitInfo.commandBufferCount = cast(uint) frameBuilder.commandPool.commandBuffers.length;
             submitInfo.pCommandBuffers = frameBuilder.commandPool.commandBuffers.ptr;
 
-            auto signalSemaphores = [frameBuilder.renderFinished.semaphore];
-            submitInfo.signalSemaphoreCount = cast(uint) signalSemaphores.length;
-            submitInfo.pSignalSemaphores = signalSemaphores.ptr;
+            submitInfo.signalSemaphoreCount = cast(uint) frameBuilder.signalSemaphores.length;
+            submitInfo.pSignalSemaphores = frameBuilder.signalSemaphores.ptr;
 
             vkQueueSubmit(device.getQueue(), 1, &submitInfo, frameBuilder.inFlightFence.fence).vkCheck("failed to submit draw command buffer");
 
             VkPresentInfoKHR presentInfo;
             presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 
-            presentInfo.waitSemaphoreCount = cast(uint) signalSemaphores.length;
-            presentInfo.pWaitSemaphores = signalSemaphores.ptr;
+            presentInfo.waitSemaphoreCount = cast(uint) frameBuilder.signalSemaphores.length;
+            presentInfo.pWaitSemaphores = frameBuilder.signalSemaphores.ptr;
 
             auto swapChains = [swapChain.swapchain];
             presentInfo.swapchainCount = cast(uint) swapChains.length;
