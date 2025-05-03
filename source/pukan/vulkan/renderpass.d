@@ -100,7 +100,7 @@ class DefaultRenderPass(LogicalDevice) : RenderPass
     void recordCommandBuffer(
         SwapChain!LogicalDevice swapChain,
         ref VkCommandBuffer commandBuffer,
-        uint imageIndex,
+        ref VkFramebuffer frameBuffer,
         VkBuffer vertexBuffer,
         VkBuffer indexBuffer,
         uint indexCount,
@@ -112,7 +112,7 @@ class DefaultRenderPass(LogicalDevice) : RenderPass
         VkRenderPassBeginInfo renderPassInfo;
         renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
         renderPassInfo.renderPass = vkRenderPass;
-        renderPassInfo.framebuffer = swapChain.frames[imageIndex].frameBuffer;
+        renderPassInfo.framebuffer = frameBuffer;
         renderPassInfo.renderArea.offset = VkOffset2D(0, 0);
         renderPassInfo.renderArea.extent = swapChain.imageExtent;
 
