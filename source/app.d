@@ -354,7 +354,7 @@ void main() {
         // Draw frame:
         vkWaitForFences(device.device, 1, &frameBuilder.inFlightFence.fence, VK_TRUE, uint.max).vkCheck;
 
-        uint32_t imageIndex;
+        uint imageIndex;
 
         {
             auto ret = vkAcquireNextImageKHR(device.device, swapChain.swapchain, ulong.max, frameBuilder.imageAvailable.semaphore, null, &imageIndex);
@@ -391,36 +391,19 @@ void main() {
             renderPass.recordCommandBuffer(commandBuffer);
         });
 
-        frameBuilder.queueSubmit();
-
         {
-            VkPresentInfoKHR presentInfo;
-            presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+            frameBuilder.queueSubmit();
+            auto ret = frameBuilder.queueImageForPresentation(imageIndex);
 
-            presentInfo.waitSemaphoreCount = cast(uint) frameBuilder.signalSemaphores.length;
-            presentInfo.pWaitSemaphores = frameBuilder.signalSemaphores.ptr;
-
-            presentInfo.swapchainCount = cast(uint) frameBuilder.swapChains.length;
-            presentInfo.pSwapchains = frameBuilder.swapChains.ptr;
-
-            presentInfo.pImageIndices = &imageIndex;
-
-            bool framebufferResized; // unused
-
+            if (ret == VK_ERROR_OUT_OF_DATE_KHR || ret == VK_SUBOPTIMAL_KHR)
             {
-                auto ret = vkQueuePresentKHR(presentQueue, &presentInfo);
-
-                if (ret == VK_ERROR_OUT_OF_DATE_KHR || ret == VK_SUBOPTIMAL_KHR || framebufferResized)
-                {
-                    framebufferResized = false;
-                    recreateSwapChainWithNewWindowSize();
-                    continue;
-                }
-                else
-                {
-                    if(ret != VK_SUCCESS)
-                        throw new PukanExceptionWithCode(ret, "failed to acquire swap chain image");
-                }
+                recreateSwapChainWithNewWindowSize();
+                continue;
+            }
+            else
+            {
+                if(ret != VK_SUCCESS)
+                    throw new PukanExceptionWithCode(ret, "failed to acquire swap chain image");
             }
         }
 

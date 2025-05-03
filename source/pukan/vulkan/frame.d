@@ -73,6 +73,22 @@ class FrameBuilder(LogicalDevice)
 
         vkQueueSubmit(device.getQueue(), 1, &submitInfo, inFlightFence.fence).vkCheck;
     }
+
+    VkResult queueImageForPresentation(uint imageIndex)
+    {
+        VkPresentInfoKHR presentInfo;
+        presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+
+        presentInfo.waitSemaphoreCount = cast(uint) signalSemaphores.length;
+        presentInfo.pWaitSemaphores = signalSemaphores.ptr;
+
+        presentInfo.swapchainCount = cast(uint) swapChains.length;
+        presentInfo.pSwapchains = swapChains.ptr;
+
+        presentInfo.pImageIndices = &imageIndex;
+
+        return vkQueuePresentKHR(presentQueue, &presentInfo);
+    }
 }
 
 class Frame(LogicalDevice, alias device)
