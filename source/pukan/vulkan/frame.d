@@ -71,7 +71,7 @@ class FrameBuilder(LogicalDevice)
             pSignalSemaphores: signalSemaphores.ptr,
         };
 
-        vkQueueSubmit(device.getQueue(), 1, &submitInfo, inFlightFence.fence).vkCheck("failed to submit draw command buffer");
+        vkQueueSubmit(device.getQueue(), 1, &submitInfo, inFlightFence.fence).vkCheck;
     }
 }
 
