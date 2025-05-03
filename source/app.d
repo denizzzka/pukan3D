@@ -393,7 +393,7 @@ void main() {
             frameBuilder.uniformBuffer.recordUpload(commandBuffer);
 
             renderPass.recordCommandBuffer(
-                swapChain,
+                swapChain.imageExtent,
                 commandBuffer,
                 swapChain.frames[imageIndex].frameBuffer,
                 vertexBuffer.gpuBuffer.buf,

@@ -98,7 +98,7 @@ class DefaultRenderPass(LogicalDevice) : RenderPass
     };
 
     void recordCommandBuffer(
-        SwapChain!LogicalDevice swapChain,
+        VkExtent2D imageExtent,
         ref VkCommandBuffer commandBuffer,
         ref VkFramebuffer frameBuffer,
         VkBuffer vertexBuffer,
@@ -113,7 +113,7 @@ class DefaultRenderPass(LogicalDevice) : RenderPass
         renderPassInfo.renderPass = vkRenderPass;
         renderPassInfo.framebuffer = frameBuffer;
         renderPassInfo.renderArea.offset = VkOffset2D(0, 0);
-        renderPassInfo.renderArea.extent = swapChain.imageExtent;
+        renderPassInfo.renderArea.extent = imageExtent;
 
         auto clearValues = [
             VkClearValue(
@@ -135,15 +135,15 @@ class DefaultRenderPass(LogicalDevice) : RenderPass
             VkViewport viewport;
             viewport.x = 0.0f;
             viewport.y = 0.0f;
-            viewport.width = cast(float) swapChain.imageExtent.width;
-            viewport.height = cast(float) swapChain.imageExtent.height;
+            viewport.width = cast(float) imageExtent.width;
+            viewport.height = cast(float) imageExtent.height;
             viewport.minDepth = 0.0f;
             viewport.maxDepth = 1.0f;
             vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
 
             VkRect2D scissor;
             scissor.offset = VkOffset2D(0, 0);
-            scissor.extent = swapChain.imageExtent;
+            scissor.extent = imageExtent;
             vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
             auto vertexBuffers = [vertexBuffer];
