@@ -101,10 +101,10 @@ class CommandPool(LogicalDevice)
 
         vkEndCommandBuffer(buf).vkCheck("failed to record command buffer");
 
-        submitAllAndReset();
+        submitAll();
     }
 
-    void submitAllAndReset()
+    void submitAll()
     {
         VkSubmitInfo submitInfo = {
             sType: VK_STRUCTURE_TYPE_SUBMIT_INFO,
@@ -118,13 +118,5 @@ class CommandPool(LogicalDevice)
         vkResetFences(device, 1, &fence.fence).vkCheck;
         vkQueueSubmit(device.getQueue(), 1, &submitInfo, fence).vkCheck;
         vkWaitForFences(device.device, 1, &fence.fence, VK_TRUE, uint.max).vkCheck;
-
-        //TODO: relace by vkResetCommandPool
-        vkResetCommandBuffer(buf, 0 /*VkCommandBufferResetFlagBits*/).vkCheck;
-    }
-
-    void resetBuffer(uint buffIdx)
-    {
-        vkResetCommandBuffer(commandBuffers[buffIdx], 0 /*VkCommandBufferResetFlagBits*/).vkCheck;
     }
 }

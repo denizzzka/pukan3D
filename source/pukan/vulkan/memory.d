@@ -70,7 +70,7 @@ class MemoryBuffer(LogicalDevice) : MemoryBufferBase!LogicalDevice
             (cmdBuf) => recordCopyBuffer(cmdBuf, srcBuffer, dstBuffer, size)
         );
 
-        cmdPool.submitAllAndReset();
+        cmdPool.submitAll();
     }
 }
 

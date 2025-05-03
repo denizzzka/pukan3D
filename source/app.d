@@ -383,8 +383,6 @@ void main() {
 
         updateUniformBuffer(frameBuilder, sw, swapChain.imageExtent);
 
-        frameBuilder.commandPool.resetBuffer(0);
-
         frameBuilder.commandPool.recordCommands((commandBuffer) {
             frameBuilder.uniformBuffer.recordUpload(commandBuffer);
 
