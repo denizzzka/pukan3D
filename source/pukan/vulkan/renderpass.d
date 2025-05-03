@@ -103,7 +103,6 @@ class DefaultRenderPass(LogicalDevice) : RenderPass
         ref VkFramebuffer frameBuffer,
         VkBuffer vertexBuffer,
         VkBuffer indexBuffer,
-        uint indexCount,
         VkDescriptorSet[] descriptorSets,
         VkPipelineLayout pipelineLayout,
         ref VkPipeline graphicsPipeline

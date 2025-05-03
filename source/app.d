@@ -398,7 +398,6 @@ void main() {
                 swapChain.frames[imageIndex].frameBuffer,
                 vertexBuffer.gpuBuffer.buf,
                 indicesBuffer.gpuBuffer.buf,
-                cast(uint) indices.length,
                 descriptorSets,
                 pipelineLayout,
                 graphicsPipelines.pipelines[0]
