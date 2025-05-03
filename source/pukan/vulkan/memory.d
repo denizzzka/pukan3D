@@ -64,33 +64,13 @@ class MemoryBuffer(LogicalDevice) : MemoryBufferBase!LogicalDevice
     }
 
     //TODO: static?
-    void copyBuffer(VkCommandBuffer cmdBuf, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
+    void copyBuffer(CommandPool!LogicalDevice cmdPool, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
     {
-        VkCommandBufferBeginInfo oneTime = {
-            flags: VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
-        };
+        cmdPool.recordOneTime(
+            (cmdBuf) => recordCopyBuffer(cmdBuf, srcBuffer, dstBuffer, size)
+        );
 
-        CommandPool!LogicalDevice.recordBegin(cmdBuf, oneTime);
-
-        recordCopyBuffer(cmdBuf, srcBuffer, dstBuffer, size);
-
-        CommandPool!LogicalDevice.recordEnd(cmdBuf);
-
-        auto fence = device.createFence;
-        scope(exit) destroy(fence);
-
-        VkSubmitInfo submitInfo = {
-            sType: VK_STRUCTURE_TYPE_SUBMIT_INFO,
-            commandBufferCount: 1,
-            pCommandBuffers: &cmdBuf,
-        };
-
-        vkResetFences(device.device, 1, &fence.fence).vkCheck;
-        vkQueueSubmit(device.getQueue(), 1, &submitInfo, fence.fence).vkCheck;
-
-        vkWaitForFences(device.device, 1, &fence.fence, VK_TRUE, uint.max).vkCheck;
-
-        vkResetCommandBuffer(cmdBuf, 0 /*VkCommandBufferResetFlagBits*/).vkCheck;
+        cmdPool.submitAllAndReset();
     }
 }
 
@@ -150,11 +130,11 @@ class TransferBuffer(LogicalDevice)
     void upload(CommandPool)(CommandPool commandPool)
     {
         // Copy host RAM buffer to GPU RAM
-        gpuBuffer.copyBuffer(commandPool.buf, cpuBuffer.buf, gpuBuffer.buf, cpuBuf.length);
+        gpuBuffer.copyBuffer(commandPool, cpuBuffer.buf, gpuBuffer.buf, cpuBuf.length);
     }
 
-    void recordUpload(CommandPool)(CommandPool commandPool)
+    void recordUpload(VkCommandBuffer buf)
     {
-        gpuBuffer.recordCopyBuffer(commandPool.buf, cpuBuffer.buf, gpuBuffer.buf, cpuBuf.length);
+        gpuBuffer.recordCopyBuffer(buf, cpuBuffer.buf, gpuBuffer.buf, cpuBuf.length);
     }
 }

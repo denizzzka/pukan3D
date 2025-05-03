@@ -72,16 +72,23 @@ class CommandPool(LogicalDevice)
         return commandBuffers[0];
     }
 
-    static void recordBegin(ref VkCommandBuffer commandBuffer, VkCommandBufferBeginInfo beginInfo)
+    void recordCommands(VkCommandBufferBeginInfo beginInfo, void delegate(VkCommandBuffer) dg)
     {
-        debug beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-
-        vkBeginCommandBuffer(commandBuffer, &beginInfo).vkCheck;
+        vkBeginCommandBuffer(buf, &beginInfo).vkCheck;
+        dg(buf);
+        vkEndCommandBuffer(buf).vkCheck("failed to record command buffer");
     }
 
-    static void recordEnd(ref VkCommandBuffer commandBuffer)
+    void recordCommands(void delegate(VkCommandBuffer) dg)
     {
-        vkEndCommandBuffer(commandBuffer).vkCheck;
+        auto cinf = defaultBufferBeginInfo;
+        recordCommands(cinf, dg);
+    }
+
+    void recordOneTime(void delegate(VkCommandBuffer) dg)
+    {
+        auto cinf = defaultOneTimeBufferBeginInfo;
+        recordCommands(cinf, dg);
     }
 
     void oneTimeBufferRun(void delegate() dg)
@@ -94,10 +101,10 @@ class CommandPool(LogicalDevice)
 
         vkEndCommandBuffer(buf).vkCheck("failed to record command buffer");
 
-        submitAll();
+        submitAllAndReset();
     }
 
-    void submitAll()
+    void submitAllAndReset()
     {
         VkSubmitInfo submitInfo = {
             sType: VK_STRUCTURE_TYPE_SUBMIT_INFO,
@@ -105,71 +112,15 @@ class CommandPool(LogicalDevice)
             pCommandBuffers: commandBuffers.ptr,
         };
 
-        vkQueueSubmit(device.getQueue(), 1, &submitInfo, null).vkCheck;
-        vkQueueWaitIdle(device.getQueue());
-    }
+        auto fence = device.createFence;
+        scope(exit) destroy(fence);
 
-    void recordCommandBuffer(
-        SwapChain!LogicalDevice swapChain,
-        ref VkCommandBuffer commandBuffer,
-        VkRenderPass renderPass,
-        uint imageIndex,
-        VkBuffer vertexBuffer,
-        VkBuffer indexBuffer,
-        uint indexCount,
-        VkDescriptorSet[] descriptorSets,
-        VkPipelineLayout pipelineLayout,
-        ref VkPipeline graphicsPipeline
-    )
-    {
-        VkRenderPassBeginInfo renderPassInfo;
-        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-        renderPassInfo.renderPass = renderPass;
-        renderPassInfo.framebuffer = swapChain.frames[imageIndex].frameBuffer;
-        renderPassInfo.renderArea.offset = VkOffset2D(0, 0);
-        renderPassInfo.renderArea.extent = swapChain.imageExtent;
+        vkResetFences(device, 1, &fence.fence).vkCheck;
+        vkQueueSubmit(device.getQueue(), 1, &submitInfo, fence).vkCheck;
+        vkWaitForFences(device.device, 1, &fence.fence, VK_TRUE, uint.max).vkCheck;
 
-        auto clearValues = [
-            VkClearValue(
-                color: VkClearColorValue(float32: [0.0f, 0.0f, 0.0f, 1.0f]),
-            ),
-            VkClearValue(
-                depthStencil: VkClearDepthStencilValue(1, 0),
-            ),
-        ];
-
-        renderPassInfo.pClearValues = clearValues.ptr;
-        renderPassInfo.clearValueCount = cast(uint) clearValues.length;
-
-        vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-
-        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
-
-        {
-            VkViewport viewport;
-            viewport.x = 0.0f;
-            viewport.y = 0.0f;
-            viewport.width = cast(float) swapChain.imageExtent.width;
-            viewport.height = cast(float) swapChain.imageExtent.height;
-            viewport.minDepth = 0.0f;
-            viewport.maxDepth = 1.0f;
-            vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
-
-            VkRect2D scissor;
-            scissor.offset = VkOffset2D(0, 0);
-            scissor.extent = swapChain.imageExtent;
-            vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
-
-            auto vertexBuffers = [vertexBuffer];
-            VkDeviceSize[] offsets = [VkDeviceSize(0)];
-            vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers.ptr, offsets.ptr);
-            vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT16);
-            vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, cast(uint) descriptorSets.length, descriptorSets.ptr, 0, null);
-
-            vkCmdDrawIndexed(commandBuffer, cast(uint) indices.length, 1, 0, 0, 0);
-        }
-
-        vkCmdEndRenderPass(commandBuffer);
+        //TODO: relace by vkResetCommandPool
+        vkResetCommandBuffer(buf, 0 /*VkCommandBufferResetFlagBits*/).vkCheck;
     }
 
     void resetBuffer(uint buffIdx)

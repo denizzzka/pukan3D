@@ -94,7 +94,7 @@ void main() {
 
     import pukan.vulkan.bindings;
 
-    RenderPass renderPass = device.create!DefaultRenderPass(VK_FORMAT_B8G8R8A8_SRGB);
+    auto renderPass = device.create!DefaultRenderPass(VK_FORMAT_B8G8R8A8_SRGB);
     scope(exit) destroy(renderPass);
 
     alias SwapChainImpl = SwapChain!(typeof(device));
@@ -388,28 +388,23 @@ void main() {
         {
         frameBuilder.commandPool.resetBuffer(0);
 
-        VkCommandBufferBeginInfo beginInfo = {
-            sType: VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
-        };
 
-        vkBeginCommandBuffer(commandBuffer, &beginInfo).vkCheck;
+        frameBuilder.commandPool.recordCommands((commandBuffer) {
+            frameBuilder.uniformBuffer.recordUpload(commandBuffer);
 
-        frameBuilder.uniformBuffer.recordUpload(frameBuilder.commandPool);
+            renderPass.updateData(renderPass.VariableData(
+                swapChain.imageExtent,
+                swapChain.frames[imageIndex].frameBuffer,
+                vertexBuffer.gpuBuffer.buf,
+                indicesBuffer.gpuBuffer.buf,
+                descriptorSets,
+                pipelineLayout,
+                graphicsPipelines.pipelines[0]
+            ));
 
-        frameBuilder.commandPool.recordCommandBuffer(
-            swapChain,
-            commandBuffer,
-            graphicsPipelines.renderPass,
-            imageIndex,
-            vertexBuffer.gpuBuffer.buf,
-            indicesBuffer.gpuBuffer.buf,
-            cast(uint) indices.length,
-            descriptorSets,
-            pipelineLayout,
-            graphicsPipelines.pipelines[0]
-        );
+            renderPass.recordCommandBuffer(commandBuffer);
+        });
 
-        vkEndCommandBuffer(commandBuffer).vkCheck("failed to record command buffer");
         }
 
         {
