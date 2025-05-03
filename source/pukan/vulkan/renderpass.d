@@ -109,6 +109,16 @@ class DefaultRenderPass(LogicalDevice) : RenderPass
         vkCmdSetViewport(buf, 0, 1, &viewport);
     }
 
+    void setScissor(VkCommandBuffer buf, VkExtent2D imageExtent)
+    {
+        VkRect2D scissor = {
+            offset: VkOffset2D(0, 0),
+            extent: imageExtent,
+        };
+
+        vkCmdSetScissor(buf, 0, 1, &scissor);
+    }
+
     void recordCommandBuffer(
         VkExtent2D imageExtent,
         ref VkCommandBuffer commandBuffer,
@@ -144,13 +154,9 @@ class DefaultRenderPass(LogicalDevice) : RenderPass
         vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
 
         setViewport(commandBuffer, imageExtent);
+        setScissor(commandBuffer, imageExtent);
 
         {
-            VkRect2D scissor;
-            scissor.offset = VkOffset2D(0, 0);
-            scissor.extent = imageExtent;
-            vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
-
             auto vertexBuffers = [vertexBuffer];
             VkDeviceSize[] offsets = [VkDeviceSize(0)];
             vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers.ptr, offsets.ptr);
