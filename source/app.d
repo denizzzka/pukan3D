@@ -394,7 +394,6 @@ void main() {
 
             renderPass.updateData(renderPass.VariableData(
                 swapChain.imageExtent,
-                commandBuffer,
                 swapChain.frames[imageIndex].frameBuffer,
                 vertexBuffer.gpuBuffer.buf,
                 indicesBuffer.gpuBuffer.buf,
@@ -403,7 +402,7 @@ void main() {
                 graphicsPipelines.pipelines[0]
             ));
 
-            renderPass.recordCommandBuffer();
+            renderPass.recordCommandBuffer(commandBuffer);
         });
 
         }

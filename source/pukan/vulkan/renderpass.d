@@ -102,7 +102,6 @@ class DefaultRenderPass(LogicalDevice) : RenderPass
     static struct VariableData
     {
         VkExtent2D imageExtent;
-        VkCommandBuffer commandBuffer;
         VkFramebuffer frameBuffer;
         VkBuffer vertexBuffer;
         VkBuffer indexBuffer;
@@ -150,7 +149,7 @@ class DefaultRenderPass(LogicalDevice) : RenderPass
         vkCmdDrawIndexed(buf, cast(uint) indices.length, 1, 0, 0, 0);
     }
 
-    void recordCommandBuffer()
+    void recordCommandBuffer(VkCommandBuffer commandBuffer)
     {
         VkRenderPassBeginInfo renderPassInfo;
         renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
