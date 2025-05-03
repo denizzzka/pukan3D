@@ -108,6 +108,7 @@ class Semaphore(LogicalDevice)
 {
     LogicalDevice device;
     VkSemaphore semaphore;
+    alias this = semaphore;
 
     this(LogicalDevice dev)
     {

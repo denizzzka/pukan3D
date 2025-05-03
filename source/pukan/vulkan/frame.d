@@ -13,6 +13,7 @@ class FrameBuilder(LogicalDevice)
     VkQueue presentQueue;
     CommandPool!LogicalDevice commandPool;
     TransferBuffer!LogicalDevice uniformBuffer;
+    uint imageIndex;
 
     Semaphore!LogicalDevice imageAvailable;
     Semaphore!LogicalDevice renderFinished;
@@ -20,12 +21,12 @@ class FrameBuilder(LogicalDevice)
 
     VkSemaphore[] waitSemaphores;
     VkSemaphore[] signalSemaphores;
-    VkSwapchainKHR[] swapChains;
+    VkSwapchainKHR swapChain;
 
-    this(LogicalDevice dev, VkQueue graphics, VkQueue present, VkSwapchainKHR[] swp_chains)
+    this(LogicalDevice dev, VkQueue graphics, VkQueue present, VkSwapchainKHR swp_chain)
     {
         device = dev;
-        swapChains = swp_chains;
+        swapChain = swp_chain;
         graphicsQueue = graphics;
         presentQueue = present;
 
@@ -52,6 +53,11 @@ class FrameBuilder(LogicalDevice)
         destroy(commandPool);
     }
 
+    VkResult acquireNextImage()
+    {
+        return vkAcquireNextImageKHR(device, swapChain, ulong.max /* timeout */, imageAvailable, null /* fence */, &imageIndex);
+    }
+
     void queueSubmit()
     {
         auto waitStages = cast(uint) VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
@@ -74,7 +80,7 @@ class FrameBuilder(LogicalDevice)
         vkQueueSubmit(device.getQueue(), 1, &submitInfo, inFlightFence.fence).vkCheck;
     }
 
-    VkResult queueImageForPresentation(uint imageIndex)
+    VkResult queueImageForPresentation()
     {
         VkPresentInfoKHR presentInfo;
         presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -82,6 +88,7 @@ class FrameBuilder(LogicalDevice)
         presentInfo.waitSemaphoreCount = cast(uint) signalSemaphores.length;
         presentInfo.pWaitSemaphores = signalSemaphores.ptr;
 
+        VkSwapchainKHR[1] swapChains = [swapChain];
         presentInfo.swapchainCount = cast(uint) swapChains.length;
         presentInfo.pSwapchains = swapChains.ptr;
 

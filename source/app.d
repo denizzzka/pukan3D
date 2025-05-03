@@ -114,7 +114,7 @@ void main() {
     //~ vertShader.compileShader(VK_SHADER_STAGE_VERTEX_BIT);
     //~ fragShader.compileShader(VK_SHADER_STAGE_FRAGMENT_BIT);
 
-    auto frameBuilder = device.create!FrameBuilder(graphicsQueue, presentQueue, [swapChain.swapchain]);
+    auto frameBuilder = device.create!FrameBuilder(graphicsQueue, presentQueue, swapChain.swapchain);
     scope(exit) destroy(frameBuilder);
 
     import pukan.vulkan.helpers;
@@ -354,10 +354,8 @@ void main() {
         // Draw frame:
         frameBuilder.inFlightFence.wait();
 
-        uint imageIndex;
-
         {
-            auto ret = vkAcquireNextImageKHR(device.device, swapChain.swapchain, ulong.max, frameBuilder.imageAvailable.semaphore, null, &imageIndex);
+            auto ret = frameBuilder.acquireNextImage();
 
             if(ret == VK_ERROR_OUT_OF_DATE_KHR)
             {
@@ -380,7 +378,7 @@ void main() {
 
             renderPass.updateData(renderPass.VariableData(
                 swapChain.imageExtent,
-                swapChain.frames[imageIndex].frameBuffer,
+                swapChain.frames[frameBuilder.imageIndex].frameBuffer,
                 vertexBuffer.gpuBuffer.buf,
                 indicesBuffer.gpuBuffer.buf,
                 descriptorSets,
@@ -393,7 +391,7 @@ void main() {
 
         {
             frameBuilder.queueSubmit();
-            auto ret = frameBuilder.queueImageForPresentation(imageIndex);
+            auto ret = frameBuilder.queueImageForPresentation();
 
             if (ret == VK_ERROR_OUT_OF_DATE_KHR || ret == VK_SUBOPTIMAL_KHR)
             {
