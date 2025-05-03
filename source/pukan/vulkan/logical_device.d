@@ -130,6 +130,7 @@ class Fence(LogicalDevice)
 {
     LogicalDevice device;
     VkFence fence;
+    alias this = fence;
 
     this(LogicalDevice dev)
     {

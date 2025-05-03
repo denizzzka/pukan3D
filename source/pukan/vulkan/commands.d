@@ -79,16 +79,10 @@ class CommandPool(LogicalDevice)
         vkEndCommandBuffer(buf).vkCheck("failed to record command buffer");
     }
 
-    static void recordBegin(ref VkCommandBuffer commandBuffer, VkCommandBufferBeginInfo beginInfo)
+    void recordOneTime(void delegate(VkCommandBuffer) dg)
     {
-        debug beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-
-        vkBeginCommandBuffer(commandBuffer, &beginInfo).vkCheck;
-    }
-
-    static void recordEnd(ref VkCommandBuffer commandBuffer)
-    {
-        vkEndCommandBuffer(commandBuffer).vkCheck;
+        auto cinf = defaultOneTimeBufferBeginInfo;
+        recordCommands(cinf, dg);
     }
 
     void oneTimeBufferRun(void delegate() dg)
@@ -101,10 +95,10 @@ class CommandPool(LogicalDevice)
 
         vkEndCommandBuffer(buf).vkCheck("failed to record command buffer");
 
-        submitAll();
+        submitAllAndReset();
     }
 
-    void submitAll()
+    void submitAllAndReset()
     {
         VkSubmitInfo submitInfo = {
             sType: VK_STRUCTURE_TYPE_SUBMIT_INFO,
@@ -112,8 +106,15 @@ class CommandPool(LogicalDevice)
             pCommandBuffers: commandBuffers.ptr,
         };
 
-        vkQueueSubmit(device.getQueue(), 1, &submitInfo, null).vkCheck;
-        vkQueueWaitIdle(device.getQueue());
+        auto fence = device.createFence;
+        scope(exit) destroy(fence);
+
+        vkResetFences(device, 1, &fence.fence).vkCheck;
+        vkQueueSubmit(device.getQueue(), 1, &submitInfo, fence).vkCheck;
+        vkWaitForFences(device.device, 1, &fence.fence, VK_TRUE, uint.max).vkCheck;
+
+        //TODO: relace by vkResetCommandPool
+        vkResetCommandBuffer(buf, 0 /*VkCommandBufferResetFlagBits*/).vkCheck;
     }
 
     void recordCommandBuffer(
