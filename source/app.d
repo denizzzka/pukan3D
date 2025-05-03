@@ -94,7 +94,7 @@ void main() {
 
     import pukan.vulkan.bindings;
 
-    /*FIXME: RenderPass*/ auto renderPass = device.create!DefaultRenderPass(VK_FORMAT_B8G8R8A8_SRGB);
+    auto renderPass = device.create!DefaultRenderPass(VK_FORMAT_B8G8R8A8_SRGB);
     scope(exit) destroy(renderPass);
 
     alias SwapChainImpl = SwapChain!(typeof(device));
