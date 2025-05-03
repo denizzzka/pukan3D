@@ -392,7 +392,7 @@ void main() {
         frameBuilder.commandPool.recordCommands((commandBuffer) {
             frameBuilder.uniformBuffer.recordUpload(commandBuffer);
 
-            renderPass.recordCommandBuffer(
+            renderPass.updateData(renderPass.VariableData(
                 swapChain.imageExtent,
                 commandBuffer,
                 swapChain.frames[imageIndex].frameBuffer,
@@ -401,7 +401,9 @@ void main() {
                 descriptorSets,
                 pipelineLayout,
                 graphicsPipelines.pipelines[0]
-            );
+            ));
+
+            renderPass.recordCommandBuffer();
         });
 
         }

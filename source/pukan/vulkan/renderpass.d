@@ -16,6 +16,8 @@ class DefaultRenderPass(LogicalDevice) : RenderPass
 {
     LogicalDevice device;
     enum VkFormat depthFormat = DepthBuf!LogicalDevice.format;
+    VariableData data;
+    alias this = data;
 
     this(LogicalDevice dev, VkFormat imageFormat)
     {
@@ -97,6 +99,23 @@ class DefaultRenderPass(LogicalDevice) : RenderPass
         dstAccessMask: VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
     };
 
+    static struct VariableData
+    {
+        VkExtent2D imageExtent;
+        VkCommandBuffer commandBuffer;
+        VkFramebuffer frameBuffer;
+        VkBuffer vertexBuffer;
+        VkBuffer indexBuffer;
+        VkDescriptorSet[] descriptorSets;
+        VkPipelineLayout pipelineLayout;
+        VkPipeline graphicsPipeline;
+    }
+
+    void updateData(VariableData d)
+    {
+        data = d;
+    }
+
     void setViewport(VkCommandBuffer buf, VkExtent2D imageExtent)
     {
         VkViewport viewport;
@@ -131,16 +150,7 @@ class DefaultRenderPass(LogicalDevice) : RenderPass
         vkCmdDrawIndexed(buf, cast(uint) indices.length, 1, 0, 0, 0);
     }
 
-    void recordCommandBuffer(
-        VkExtent2D imageExtent,
-        ref VkCommandBuffer commandBuffer,
-        ref VkFramebuffer frameBuffer,
-        VkBuffer vertexBuffer,
-        VkBuffer indexBuffer,
-        VkDescriptorSet[] descriptorSets,
-        VkPipelineLayout pipelineLayout,
-        ref VkPipeline graphicsPipeline
-    )
+    void recordCommandBuffer()
     {
         VkRenderPassBeginInfo renderPassInfo;
         renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
