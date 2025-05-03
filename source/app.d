@@ -11,19 +11,6 @@ enum fps = 60;
 enum width = 640;
 enum height = 640;
 
-//~ struct Clock
-//~ {
-    //~ float start_time;
-    //~ float elapsed;
-//~ }
-
-//~ Clock getClock()
-//~ {
-    //~ Clock r;
-    //~ r.el
-    //~ GetTime
-//~ }
-
 // TODO: remove DebugVersion, https://github.com/dlang/phobos/issues/10750
 debug version = DebugVersion;
 version(DebugVersion)
