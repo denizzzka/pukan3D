@@ -352,7 +352,7 @@ void main() {
         glfwPollEvents();
 
         // Draw frame:
-        vkWaitForFences(device.device, 1, &frameBuilder.inFlightFence.fence, VK_TRUE, uint.max).vkCheck;
+        frameBuilder.inFlightFence.wait();
 
         uint imageIndex;
 
@@ -371,7 +371,7 @@ void main() {
             }
         }
 
-        vkResetFences(device.device, 1, &frameBuilder.inFlightFence.fence).vkCheck;
+        frameBuilder.inFlightFence.reset();
 
         updateUniformBuffer(frameBuilder, sw, swapChain.imageExtent);
 
