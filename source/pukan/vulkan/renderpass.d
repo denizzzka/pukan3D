@@ -55,13 +55,14 @@ class DefaultRenderPass(LogicalDevice) : RenderPass
 
         VkSubpassDependency dependency = defaultSubpassDependency;
 
-        VkRenderPassCreateInfo renderPassInfo;
-        renderPassInfo.attachmentCount = cast(uint) attachments.length;
-        renderPassInfo.pAttachments = attachments.ptr;
-        renderPassInfo.subpassCount = 1;
-        renderPassInfo.pSubpasses = &subpass;
-        renderPassInfo.dependencyCount = 1;
-        renderPassInfo.pDependencies = &dependency;
+        VkRenderPassCreateInfo renderPassInfo = {
+            attachmentCount: cast(uint) attachments.length,
+            pAttachments: attachments.ptr,
+            subpassCount: 1,
+            pSubpasses: &subpass,
+            dependencyCount: 1,
+            pDependencies: &dependency,
+        };
 
         vkCall(device, &renderPassInfo, device.backend.allocator, &vkRenderPass);
     }
