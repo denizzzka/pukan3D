@@ -361,7 +361,7 @@ void main() {
 
         updateUniformBuffer(frameBuilder, sw, swapChain.imageExtent);
 
-        frameBuilder.commandPool.recordCommands((commandBuffer) {
+        frameBuilder.commandPool.recordOneTime((commandBuffer) {
             frameBuilder.uniformBuffer.recordUpload(commandBuffer);
 
             renderPass.updateData(renderPass.VariableData(
