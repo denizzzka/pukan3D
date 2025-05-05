@@ -30,7 +30,7 @@ class ImageMemory(LogicalDevice) : MemoryBufferBase!LogicalDevice
         vkDestroyImage(device, image, device.backend.allocator);
     }
 
-    void addPipelineBarrier(CommandPool!LogicalDevice commandPool, VkImageLayout oldLayout, VkImageLayout newLayout)
+    void addPipelineBarrier(VkCommandBuffer buf, VkImageLayout oldLayout, VkImageLayout newLayout)
     {
         VkImageMemoryBarrier barrier;
         barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -68,7 +68,7 @@ class ImageMemory(LogicalDevice) : MemoryBufferBase!LogicalDevice
             throw new PukanException("unsupported layout transition!");
 
         vkCmdPipelineBarrier(
-            commandPool.buf,
+            buf,
             sourceStage,
             destinationStage,
             0, // dependencyFlags
@@ -80,10 +80,6 @@ class ImageMemory(LogicalDevice) : MemoryBufferBase!LogicalDevice
 
     void copyFromBuffer(CommandPool!LogicalDevice commandPool, VkBuffer srcBuffer)
     {
-        commandPool.oneTimeBufferRun(() =>
-            addPipelineBarrier(commandPool, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
-        );
-
         VkBufferImageCopy region;
         region.bufferOffset = 0;
         region.bufferRowLength = 0;
@@ -97,7 +93,9 @@ class ImageMemory(LogicalDevice) : MemoryBufferBase!LogicalDevice
         region.imageOffset = VkOffset3D(0, 0, 0);
         region.imageExtent = imageExtent;
 
-        commandPool.oneTimeBufferRun(() =>
+        commandPool.oneTimeBufferRun((buf){
+            addPipelineBarrier(buf, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+
             vkCmdCopyBufferToImage(
                 commandPool.buf,
                 srcBuffer,
@@ -105,11 +103,9 @@ class ImageMemory(LogicalDevice) : MemoryBufferBase!LogicalDevice
                 VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
                 1, // regionCount
                 &region
-            )
-        );
+            );
 
-        commandPool.oneTimeBufferRun(() =>
-            addPipelineBarrier(commandPool, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
-        );
+            addPipelineBarrier(buf, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        });
     }
 }

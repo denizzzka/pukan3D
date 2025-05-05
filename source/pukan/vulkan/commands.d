@@ -91,13 +91,13 @@ class CommandPool(LogicalDevice)
         recordCommands(cinf, dg);
     }
 
-    void oneTimeBufferRun(void delegate() dg)
+    void oneTimeBufferRun(void delegate(VkCommandBuffer) dg)
     {
         VkCommandBufferBeginInfo beginInfo = defaultOneTimeBufferBeginInfo;
 
         vkBeginCommandBuffer(buf, &beginInfo).vkCheck;
 
-        dg();
+        dg(buf);
 
         vkEndCommandBuffer(buf).vkCheck("failed to record command buffer");
 
