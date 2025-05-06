@@ -138,80 +138,13 @@ void main() {
         fragShader.createShaderStageInfo(VK_SHADER_STAGE_FRAGMENT_BIT),
     ];
 
-    import pukan.vulkan.defaults;
+    auto pipelineInfoCreator = new DefaultPipelineInfoCreator!(typeof(device))(device, descriptorSetLayout, shaderStages);
+    scope(exit) destroy(pipelineInfoCreator);
 
-    //FIXME: move to pipelines and remove viewport from renderpass module!
-    VkViewport viewport;
-    viewport.x = 0.0f;
-    viewport.y = 0.0f;
-    viewport.width = swapChain.imageExtent.width;
-    viewport.height = swapChain.imageExtent.height;
-    viewport.minDepth = 0.0f;
-    viewport.maxDepth = 1.0f;
+    pipelineInfoCreator.fillPipelineInfo();
+    VkGraphicsPipelineCreateInfo[] infos = [pipelineInfoCreator.pipelineCreateInfo];
 
-    VkRect2D scissor;
-    scissor.offset = VkOffset2D(0, 0);
-    scissor.extent = swapChain.imageExtent;
-
-    VkPipelineViewportStateCreateInfo viewportState;
-    viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
-    viewportState.viewportCount = 1;
-    viewportState.pViewports = &viewport;
-    viewportState.scissorCount = 1;
-    viewportState.pScissors = &scissor;
-
-    VkDynamicState[] dynamicStates = [
-        VK_DYNAMIC_STATE_VIEWPORT,
-        VK_DYNAMIC_STATE_SCISSOR,
-    ];
-    VkPipelineDynamicStateCreateInfo dynamicState;
-    dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
-    dynamicState.dynamicStateCount = cast(uint) dynamicStates.length;
-    dynamicState.pDynamicStates = dynamicStates.ptr;
-
-    auto bindingDescriptions = [Vertex.getBindingDescription];
-    auto attributeDescriptions = Vertex.getAttributeDescriptions;
-
-    VkPipelineVertexInputStateCreateInfo vertexInputInfo = {
-        sType: VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
-        vertexBindingDescriptionCount: cast(uint) bindingDescriptions.length,
-        pVertexBindingDescriptions: bindingDescriptions.ptr,
-        vertexAttributeDescriptionCount: cast(uint) attributeDescriptions.length,
-        pVertexAttributeDescriptions: attributeDescriptions.ptr,
-    };
-
-    auto pipelineLayout = createPipelineLayout(device, descriptorSetLayout);
-    scope(exit) vkDestroyPipelineLayout(device, pipelineLayout, device.backend.allocator);
-
-    VkPipelineDepthStencilStateCreateInfo depthStencil;
-    {
-        depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-        depthStencil.depthTestEnable = VK_TRUE;
-        depthStencil.depthWriteEnable = VK_TRUE;
-        depthStencil.depthCompareOp = VK_COMPARE_OP_LESS;
-        depthStencil.depthBoundsTestEnable = VK_FALSE;
-        depthStencil.stencilTestEnable = VK_FALSE;
-    }
-
-    VkGraphicsPipelineCreateInfo pipelineInfo;
-    pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-    pipelineInfo.stageCount = cast(uint) shaderStages.length;
-    pipelineInfo.pStages = shaderStages.ptr;
-    pipelineInfo.pVertexInputState = &vertexInputInfo;
-    pipelineInfo.pInputAssemblyState = &inputAssembly;
-    pipelineInfo.pViewportState = &viewportState;
-    pipelineInfo.pRasterizationState = &rasterizer;
-    pipelineInfo.pMultisampleState = &multisampling;
-    pipelineInfo.pDepthStencilState = &depthStencil;
-
-    pipelineInfo.pColorBlendState = &colorBlending;
-    pipelineInfo.pDynamicState = &dynamicState;
-    pipelineInfo.layout = pipelineLayout;
-    pipelineInfo.subpass = 0;
-    pipelineInfo.basePipelineHandle = null; // Optional
-    pipelineInfo.basePipelineIndex = -1; // Optional
-
-    auto graphicsPipelines = device.create!GraphicsPipelines([pipelineInfo], renderPass);
+    auto graphicsPipelines = device.create!GraphicsPipelines(infos, renderPass);
     scope(exit) destroy(graphicsPipelines);
 
     void recreateSwapChain()
@@ -370,7 +303,7 @@ void main() {
                 vertexBuffer.gpuBuffer.buf,
                 indicesBuffer.gpuBuffer.buf,
                 descriptorSets,
-                pipelineLayout,
+                pipelineInfoCreator.pipelineLayout,
                 graphicsPipelines.pipelines[0]
             ));
 
