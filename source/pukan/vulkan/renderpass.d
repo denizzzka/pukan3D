@@ -131,14 +131,14 @@ class DefaultRenderPass(LogicalDevice) : RenderPass
         return viewport;
     }
 
-    void setScissor(VkCommandBuffer buf)
+    VkRect2D getScissor()
     {
         VkRect2D scissor = {
             offset: VkOffset2D(0, 0),
             extent: imageExtent,
         };
 
-        vkCmdSetScissor(buf, 0, 1, &scissor);
+        return scissor;
     }
 
     void drawIndexed(VkCommandBuffer buf)
@@ -180,7 +180,10 @@ class DefaultRenderPass(LogicalDevice) : RenderPass
 
         auto viewport = getViewport();
         vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
-        setScissor(commandBuffer);
+
+        auto scissor = getScissor();
+        vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+
         drawIndexed(commandBuffer);
 
         vkCmdEndRenderPass(commandBuffer);
