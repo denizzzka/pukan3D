@@ -66,11 +66,9 @@ class MemoryBuffer(LogicalDevice) : MemoryBufferBase!LogicalDevice
     //TODO: static?
     void copyBuffer(CommandPool!LogicalDevice cmdPool, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
     {
-        cmdPool.recordOneTime(
+        cmdPool.oneTimeBufferRun(
             (cmdBuf) => recordCopyBuffer(cmdBuf, srcBuffer, dstBuffer, size)
         );
-
-        cmdPool.submitAll();
     }
 }
 
