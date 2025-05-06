@@ -117,16 +117,18 @@ class DefaultRenderPass(LogicalDevice) : RenderPass
         data = d;
     }
 
-    void setViewport(VkCommandBuffer buf)
+    VkViewport getViewport()
     {
-        VkViewport viewport;
-        viewport.x = 0.0f;
-        viewport.y = 0.0f;
-        viewport.width = cast(float) imageExtent.width;
-        viewport.height = cast(float) imageExtent.height;
-        viewport.minDepth = 0.0f;
-        viewport.maxDepth = 1.0f;
-        vkCmdSetViewport(buf, 0, 1, &viewport);
+        VkViewport viewport = {
+            x: 0.0f,
+            y: 0.0f,
+            width: cast(float) imageExtent.width,
+            height: cast(float) imageExtent.height,
+            minDepth: 0.0f,
+            maxDepth: 1.0f,
+        };
+
+        return viewport;
     }
 
     void setScissor(VkCommandBuffer buf)
@@ -176,7 +178,8 @@ class DefaultRenderPass(LogicalDevice) : RenderPass
 
         vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
 
-        setViewport(commandBuffer);
+        auto viewport = getViewport();
+        vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
         setScissor(commandBuffer);
         drawIndexed(commandBuffer);
 
