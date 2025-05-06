@@ -112,33 +112,26 @@ class DefaultRenderPass(LogicalDevice) : RenderPass
         VkPipeline graphicsPipeline;
     }
 
+    VkViewport viewport;
+    VkRect2D scissor;
+
     void updateData(VariableData d)
     {
         data = d;
-    }
 
-    VkViewport getViewport()
-    {
-        VkViewport viewport = {
+        viewport = VkViewport(
             x: 0.0f,
             y: 0.0f,
             width: cast(float) imageExtent.width,
             height: cast(float) imageExtent.height,
             minDepth: 0.0f,
             maxDepth: 1.0f,
-        };
+        );
 
-        return viewport;
-    }
-
-    VkRect2D getScissor()
-    {
-        VkRect2D scissor = {
+        scissor = VkRect2D(
             offset: VkOffset2D(0, 0),
             extent: imageExtent,
-        };
-
-        return scissor;
+        );
     }
 
     void drawIndexed(VkCommandBuffer buf)
@@ -178,10 +171,8 @@ class DefaultRenderPass(LogicalDevice) : RenderPass
 
         vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
 
-        auto viewport = getViewport();
         vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
 
-        auto scissor = getScissor();
         vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
         drawIndexed(commandBuffer);
