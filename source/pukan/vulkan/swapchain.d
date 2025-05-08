@@ -4,7 +4,7 @@ import pukan.vulkan;
 import pukan.vulkan.bindings;
 import std.exception: enforce;
 
-class SwapChain(LogicalDevice)
+class SwapChain
 {
     LogicalDevice device;
     VkSwapchainKHR swapchain;

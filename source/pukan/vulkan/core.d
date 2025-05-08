@@ -15,7 +15,7 @@ uint makeApiVersion(uint variant, uint major, uint minor, uint patch)
 }
 
 ///
-class Instance(alias Logger)
+class Instance
 {
     VkApplicationInfo info = {
          sType: VkStructureType.VK_STRUCTURE_TYPE_APPLICATION_INFO,
@@ -33,7 +33,12 @@ class Instance(alias Logger)
 
     static void log_info(A...)(A s)
     {
-        Logger.info(s);
+        debug
+        {
+            import std.logger;
+
+            stdThreadLocalLog().info(s);
+        }
     }
 
     ///
@@ -240,7 +245,7 @@ class Instance(alias Logger)
             VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME.ptr,
         ];
 
-        return new LogicalDevice!Instance(this, d, extension_list);
+        return new LogicalDevice(this, d, extension_list);
     }
 }
 

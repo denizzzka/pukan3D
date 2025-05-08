@@ -11,13 +11,6 @@ enum fps = 60;
 enum width = 640;
 enum height = 640;
 
-// TODO: remove DebugVersion, https://github.com/dlang/phobos/issues/10750
-debug version = DebugVersion;
-version(DebugVersion)
-    static auto getLogger() => stdThreadLocalLog();
-else
-    static auto getLogger() => MuteLogger();
-
 void main() {
     version(linux)
     version(DigitalMars)
@@ -52,7 +45,7 @@ void main() {
     foreach(i; 0 .. ext_count)
         writeln(extensions[i].to!string);
 
-    auto vk = new Backend!(getLogger)(name, makeApiVersion(1,2,3,4), extensions[0 .. ext_count]);
+    auto vk = new Instance(name, makeApiVersion(1,2,3,4), extensions[0 .. ext_count]);
     scope(exit) destroy(vk);
 
     //~ vk.printAllDevices();
@@ -84,8 +77,7 @@ void main() {
     auto renderPass = device.create!DefaultRenderPass(VK_FORMAT_B8G8R8A8_SRGB);
     scope(exit) destroy(renderPass);
 
-    alias SwapChainImpl = SwapChain!(typeof(device));
-    auto swapChain = new SwapChainImpl(device, surface, renderPass);
+    auto swapChain = new SwapChain(device, surface, renderPass);
     scope(exit) destroy(swapChain);
 
     auto graphicsQueue = device.getQueue();
@@ -133,7 +125,7 @@ void main() {
     scope descriptorPool = device.create!DescriptorPool(descriptorSetLayoutBindings);
     scope(exit) destroy(descriptorPool);
 
-    auto pipelineInfoCreator = new DefaultPipelineInfoCreator!(typeof(device))(device, descriptorPool.descriptorSetLayout, shaderStages);
+    auto pipelineInfoCreator = new DefaultPipelineInfoCreator(device, descriptorPool.descriptorSetLayout, shaderStages);
     scope(exit) destroy(pipelineInfoCreator);
 
     pipelineInfoCreator.fillPipelineInfo();
@@ -146,7 +138,7 @@ void main() {
     {
         vkDeviceWaitIdle(device.device);
         destroy(swapChain);
-        swapChain = new SwapChain!(typeof(device))(device, surface, renderPass);
+        swapChain = new SwapChain(device, surface, renderPass);
     }
 
     auto vertexBuffer = device.create!TransferBuffer(Vertex.sizeof * vertices.length, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);

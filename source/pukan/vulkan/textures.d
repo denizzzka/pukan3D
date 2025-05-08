@@ -8,10 +8,10 @@ import pukan.vulkan.helpers;
 import std.conv: to;
 import std.exception: enforce;
 
-class Texture(LogicalDevice)
+class Texture
 {
     LogicalDevice device;
-    ImageMemory!LogicalDevice textureImageMemory;
+    ImageMemory textureImageMemory;
     VkImageView imageView;
     VkSampler sampler;
 

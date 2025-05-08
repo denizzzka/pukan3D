@@ -5,7 +5,7 @@ import pukan.vulkan;
 import pukan.vulkan.bindings;
 import pukan.vulkan.helpers;
 
-class ImageMemory(LogicalDevice) : MemoryBufferBase!LogicalDevice
+class ImageMemory : MemoryBufferBase
 {
     VkImage image;
     alias this = image;
@@ -78,7 +78,7 @@ class ImageMemory(LogicalDevice) : MemoryBufferBase!LogicalDevice
         );
     }
 
-    void copyFromBuffer(CommandPool!LogicalDevice commandPool, VkBuffer srcBuffer)
+    void copyFromBuffer(CommandPool commandPool, VkBuffer srcBuffer)
     {
         VkBufferImageCopy region;
         region.bufferOffset = 0;

@@ -6,18 +6,18 @@ import pukan.vulkan.bindings;
 import pukan.vulkan.helpers;
 
 //TODO: can LogicalDevice be alias to instanced object?
-class FrameBuilder(LogicalDevice)
+class FrameBuilder
 {
     LogicalDevice device;
     VkQueue graphicsQueue;
     VkQueue presentQueue;
-    CommandPool!LogicalDevice commandPool;
-    TransferBuffer!LogicalDevice uniformBuffer;
+    CommandPool commandPool;
+    TransferBuffer uniformBuffer;
     uint imageIndex;
 
-    Semaphore!LogicalDevice imageAvailable;
-    Semaphore!LogicalDevice renderFinished;
-    Fence!LogicalDevice inFlightFence;
+    Semaphore imageAvailable;
+    Semaphore renderFinished;
+    Fence inFlightFence;
 
     VkSemaphore[] waitSemaphores;
     VkSemaphore[] signalSemaphores;
@@ -103,13 +103,13 @@ class FrameBuilder(LogicalDevice)
 class Frame(LogicalDevice, alias device)
 {
     VkImageView imageView;
-    DepthBuf!LogicalDevice depthBuf;
+    DepthBuf depthBuf;
     VkFramebuffer frameBuffer;
 
     this(VkImage image, VkExtent2D imageExtent, VkFormat imageFormat, VkRenderPass renderPass)
     {
         createImageView(imageView, device, imageFormat, image);
-        depthBuf = DepthBuf!LogicalDevice(device, imageExtent);
+        depthBuf = DepthBuf(device, imageExtent);
 
         {
             VkImageView[2] attachments = [
@@ -138,7 +138,7 @@ class Frame(LogicalDevice, alias device)
     }
 }
 
-void createImageView(LogicalDevice)(ref VkImageView imgView, LogicalDevice device, VkFormat imageFormat, VkImage image)
+void createImageView(ref VkImageView imgView, LogicalDevice device, VkFormat imageFormat, VkImage image)
 {
     VkImageViewCreateInfo cinf = {
         sType: VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
@@ -163,10 +163,10 @@ void createImageView(LogicalDevice)(ref VkImageView imgView, LogicalDevice devic
     vkCreateImageView(device, &cinf, device.backend.allocator, &imgView).vkCheck;
 }
 
-struct DepthBuf(LogicalDevice)
+struct DepthBuf
 {
     LogicalDevice device;
-    ImageMemory!LogicalDevice depthImage;
+    ImageMemory depthImage;
     VkImageView depthView;
     //TODO: autodetection need
     enum format = VK_FORMAT_D24_UNORM_S8_UINT;

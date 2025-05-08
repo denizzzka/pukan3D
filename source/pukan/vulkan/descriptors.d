@@ -4,7 +4,7 @@ import pukan.vulkan;
 import pukan.vulkan.bindings;
 import pukan.vulkan.helpers;
 
-class DescriptorPool(LogicalDevice)
+class DescriptorPool
 {
     LogicalDevice device;
     VkDescriptorSetLayout descriptorSetLayout;

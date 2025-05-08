@@ -4,7 +4,7 @@ import pukan.vulkan;
 import pukan.vulkan.bindings;
 import pukan.vulkan.helpers;
 
-class DefaultPipelineInfoCreator(LogicalDevice)
+class DefaultPipelineInfoCreator
 {
     LogicalDevice device;
     VkPipelineLayout pipelineLayout;
@@ -114,7 +114,7 @@ class DefaultPipelineInfoCreator(LogicalDevice)
     }
 }
 
-abstract class Pipelines(LogicalDevice)
+abstract class Pipelines
 {
     LogicalDevice device;
     VkPipeline[] pipelines;
@@ -132,7 +132,7 @@ abstract class Pipelines(LogicalDevice)
     }
 }
 
-class GraphicsPipelines(LogicalDevice) : Pipelines!LogicalDevice
+class GraphicsPipelines : Pipelines
 {
     RenderPass renderPass;
 
@@ -158,7 +158,7 @@ class GraphicsPipelines(LogicalDevice) : Pipelines!LogicalDevice
     }
 }
 
-auto createPipelineLayout(LogicalDevice)(LogicalDevice device, VkDescriptorSetLayout descriptorSetLayout)
+auto createPipelineLayout(LogicalDevice device, VkDescriptorSetLayout descriptorSetLayout)
 {
     // pipeline layout can be used to pass uniform vars into shaders
     VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = {

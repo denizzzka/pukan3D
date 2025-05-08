@@ -10,7 +10,7 @@ via recording commands on any command buffers allocated from the pool,
 as well as operations that allocate, free, and reset command buffers or
 the pool itself.
 */
-class CommandPool(LogicalDevice)
+class CommandPool
 {
     LogicalDevice device;
 

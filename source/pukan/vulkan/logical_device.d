@@ -7,7 +7,7 @@ import log = std.logger;
 import std.exception: enforce;
 import std.string: toStringz;
 
-class LogicalDevice(Backend)
+class LogicalDevice
 {
     Backend backend; // TODO: rewrite to "Instance instance"
     VkDevice device;
@@ -80,12 +80,12 @@ class LogicalDevice(Backend)
 
     auto loadShader(string filename)
     {
-        return new ShaderModule!LogicalDevice(this, filename);
+        return new ShaderModule(this, filename);
     }
 
     auto create(alias ClassType, A...)(A a)
     {
-        return new ClassType!LogicalDevice(this, a);
+        return new ClassType(this, a);
     }
 
     auto createSemaphore()
@@ -100,11 +100,11 @@ class LogicalDevice(Backend)
 
     auto createCommandPool()
     {
-        return new CommandPool!LogicalDevice(this, familyIdx);
+        return new CommandPool(this, familyIdx);
     }
 }
 
-class Semaphore(LogicalDevice)
+class Semaphore
 {
     LogicalDevice device;
     VkSemaphore semaphore;
@@ -127,7 +127,7 @@ class Semaphore(LogicalDevice)
     }
 }
 
-class Fence(LogicalDevice)
+class Fence
 {
     LogicalDevice device;
     VkFence fence;

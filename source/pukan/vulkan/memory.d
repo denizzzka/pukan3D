@@ -4,7 +4,7 @@ import pukan.vulkan;
 import pukan.vulkan.bindings;
 import pukan.vulkan.helpers;
 
-class MemoryBufferMappedToCPU(LogicalDevice) : MemoryBuffer!LogicalDevice
+class MemoryBufferMappedToCPU : MemoryBuffer
 {
     void[] cpuBuf; /// CPU-mapped memory buffer
 
@@ -31,7 +31,7 @@ class MemoryBufferMappedToCPU(LogicalDevice) : MemoryBuffer!LogicalDevice
 }
 
 //TODO: Incorporate into LogicalDevice by using mixin template?
-class MemoryBuffer(LogicalDevice) : MemoryBufferBase!LogicalDevice
+class MemoryBuffer : MemoryBufferBase
 {
     VkBuffer buf;
     alias this = buf;
@@ -64,7 +64,7 @@ class MemoryBuffer(LogicalDevice) : MemoryBufferBase!LogicalDevice
     }
 
     //TODO: static?
-    void copyBuffer(CommandPool!LogicalDevice cmdPool, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
+    void copyBuffer(CommandPool cmdPool, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
     {
         cmdPool.oneTimeBufferRun(
             (cmdBuf) => recordCopyBuffer(cmdBuf, srcBuffer, dstBuffer, size)
@@ -72,7 +72,7 @@ class MemoryBuffer(LogicalDevice) : MemoryBufferBase!LogicalDevice
     }
 }
 
-class MemoryBufferBase(LogicalDevice)
+class MemoryBufferBase
 {
     LogicalDevice device;
     VkDeviceMemory deviceMemory;
@@ -96,11 +96,11 @@ class MemoryBufferBase(LogicalDevice)
 }
 
 /// Ability to transfer data into GPU
-class TransferBuffer(LogicalDevice)
+class TransferBuffer
 {
     LogicalDevice device;
-    MemoryBufferMappedToCPU!LogicalDevice cpuBuffer;
-    MemoryBuffer!LogicalDevice gpuBuffer;
+    MemoryBufferMappedToCPU cpuBuffer;
+    MemoryBuffer gpuBuffer;
 
     this(LogicalDevice device, size_t size, VkBufferUsageFlags mergeUsageFlags = VK_BUFFER_USAGE_TRANSFER_DST_BIT)
     {

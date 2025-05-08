@@ -13,10 +13,10 @@ abstract class RenderPass
     void recordCommandBuffer(VkCommandBuffer commandBuffer);
 }
 
-class DefaultRenderPass(LogicalDevice) : RenderPass
+class DefaultRenderPass : RenderPass
 {
     LogicalDevice device;
-    enum VkFormat depthFormat = DepthBuf!LogicalDevice.format;
+    enum VkFormat depthFormat = DepthBuf.format;
     VariableData data;
     alias this = data;
 
