@@ -38,17 +38,23 @@ class Scene
         device.backend.useSurface(surface);
 
         renderPass = device.create!DefaultRenderPass(VK_FORMAT_B8G8R8A8_SRGB);
+        scope(failure) destroy(renderPass);
 
         swapChain = new SwapChain(device, surface, renderPass);
+        scope(failure) destroy(swapChain);
 
         graphicsQueue = device.getQueue();
         presentQueue = device.getQueue();
 
         frameBuilder = device.create!FrameBuilder(graphicsQueue, presentQueue);
+        scope(failure) destroy(frameBuilder);
 
         {
             vertShader = device.loadShader("vert.spv");
+            scope(failure) destroy(vertShader);
+
             fragShader = device.loadShader("frag.spv");
+            scope(failure) destroy(fragShader);
 
             shaderStages = [
                 vertShader.createShaderStageInfo(VK_SHADER_STAGE_VERTEX_BIT),
@@ -62,12 +68,15 @@ class Scene
         //~ fragShader.compileShader(VK_SHADER_STAGE_FRAGMENT_BIT);
 
         descriptorPool = device.create!DescriptorPool(descriptorSetLayoutBindings);
+        scope(failure) destroy(descriptorPool);
 
         pipelineInfoCreator = new DefaultPipelineInfoCreator(device, descriptorPool.descriptorSetLayout, shaderStages);
+        scope(failure) destroy(pipelineInfoCreator);
 
         VkGraphicsPipelineCreateInfo[] infos = [pipelineInfoCreator.pipelineCreateInfo];
 
         graphicsPipelines = device.create!GraphicsPipelines(infos, renderPass);
+        scope(failure) destroy(graphicsPipelines);
 
         descriptorSets = descriptorPool.allocateDescriptorSets([descriptorPool.descriptorSetLayout]);
     }
