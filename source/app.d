@@ -125,20 +125,15 @@ void main() {
         samplerLayoutBinding,
     ];
 
-    VkDescriptorSetLayoutCreateInfo descrLayoutCreateInfo = {
-        bindingCount: cast(uint) descriptorSetLayoutBindings.length,
-        pBindings: descriptorSetLayoutBindings.ptr,
-    };
-
-    scope descriptorSetLayout = create(device.device, &descrLayoutCreateInfo, vk.allocator);
-    scope(exit) destroy(descriptorSetLayout);
-
     auto shaderStages = [
         vertShader.createShaderStageInfo(VK_SHADER_STAGE_VERTEX_BIT),
         fragShader.createShaderStageInfo(VK_SHADER_STAGE_FRAGMENT_BIT),
     ];
 
-    auto pipelineInfoCreator = new DefaultPipelineInfoCreator!(typeof(device))(device, descriptorSetLayout, shaderStages);
+    scope descriptorPool = device.create!DescriptorPool(descriptorSetLayoutBindings);
+    scope(exit) destroy(descriptorPool);
+
+    auto pipelineInfoCreator = new DefaultPipelineInfoCreator!(typeof(device))(device, descriptorPool.descriptorSetLayout, shaderStages);
     scope(exit) destroy(pipelineInfoCreator);
 
     pipelineInfoCreator.fillPipelineInfo();
@@ -190,78 +185,49 @@ void main() {
         recreateSwapChain();
     }
 
-    //TODO: can be ctored automatically from descriptorSetLayoutBindings?
-    VkDescriptorPoolSize[] poolSizes = [
-        VkDescriptorPoolSize(
-            type: VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-            descriptorCount: 1, // TODO: one per frame
-        ),
-        VkDescriptorPoolSize(
-            type: VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-            descriptorCount: 1, // TODO: one per frame
-        ),
-    ];
-
-    VkDescriptorPoolCreateInfo descriptorPoolInfo = {
-        poolSizeCount: cast(uint) poolSizes.length,
-        pPoolSizes: poolSizes.ptr,
-        maxSets: 1, // TODO: number of frames
-    };
-
-    auto descriptorPool = create(device.device, &descriptorPoolInfo, vk.allocator);
-    scope(exit) destroy(descriptorPool);
-
-    VkDescriptorSetLayout[] layouts = [
-        descriptorSetLayout.vkObj,
-    ];
-    VkDescriptorSetAllocateInfo descriptorSetAllocateInfo = {
-        sType: VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
-        descriptorPool: descriptorPool,
-        descriptorSetCount: cast(uint) layouts.length,
-        pSetLayouts: layouts.ptr,
-    };
-
-    VkDescriptorSet[] descriptorSets;
-    descriptorSets.length = 1;
-    vkAllocateDescriptorSets(device.device, &descriptorSetAllocateInfo, descriptorSets.ptr).vkCheck;
-
-    VkDescriptorBufferInfo bufferInfo = {
-        buffer: frameBuilder.uniformBuffer.gpuBuffer,
-        offset: 0,
-        range: UniformBufferObject.sizeof,
-    };
-
     scope texture = device.create!Texture(frameBuilder.commandPool);
     scope(exit) destroy(texture);
 
-    VkDescriptorImageInfo imageInfo = {
-        imageLayout: VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-        imageView: texture.imageView,
-        sampler: texture.sampler,
-    };
+    auto descriptorSets = descriptorPool.allocateDescriptorSets([descriptorPool.descriptorSetLayout]);
 
-    auto descriptorWrites = [
-        VkWriteDescriptorSet(
-            sType: VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-            dstSet: descriptorSets[0 /*TODO: frame number*/],
-            dstBinding: 0,
-            dstArrayElement: 0,
-            descriptorType: VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-            descriptorCount: 1,
-            pBufferInfo: &bufferInfo,
-        ),
-        VkWriteDescriptorSet(
-            sType: VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-            dstSet: descriptorSets[0],
-            dstBinding: 1, //TODO: fetch this value from layout struct?
-            dstArrayElement: 0,
-            descriptorType: VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-            descriptorCount: 1,
-            pImageInfo: &imageInfo,
-        )
-    ];
+    VkWriteDescriptorSet[] descriptorWrites;
 
-    vkUpdateDescriptorSets(device, cast(uint) descriptorWrites.length, descriptorWrites.ptr, 0, null);
+    {
+        VkDescriptorBufferInfo bufferInfo = {
+            buffer: frameBuilder.uniformBuffer.gpuBuffer,
+            offset: 0,
+            range: UniformBufferObject.sizeof,
+        };
+
+        VkDescriptorImageInfo imageInfo = {
+            imageLayout: VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+            imageView: texture.imageView,
+            sampler: texture.sampler,
+        };
+
+        descriptorWrites = [
+            VkWriteDescriptorSet(
+                sType: VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+                dstSet: descriptorSets[0 /*TODO: frame number*/],
+                dstBinding: 0,
+                dstArrayElement: 0,
+                descriptorType: VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+                descriptorCount: 1,
+                pBufferInfo: &bufferInfo,
+            ),
+            VkWriteDescriptorSet(
+                sType: VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+                dstSet: descriptorSets[0 /*TODO: frame number*/],
+                dstBinding: 1,
+                dstArrayElement: 0,
+                descriptorType: VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+                descriptorCount: 1,
+                pImageInfo: &imageInfo,
+            )
+        ];
+
+        descriptorPool.updateSets(descriptorWrites);
+    }
 
     import pukan.exceptions;
 

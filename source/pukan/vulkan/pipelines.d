@@ -158,12 +158,12 @@ class GraphicsPipelines(LogicalDevice) : Pipelines!LogicalDevice
     }
 }
 
-auto createPipelineLayout(LogicalDevice, DescriptorSetLayout)(LogicalDevice device, DescriptorSetLayout descriptorSetLayout)
+auto createPipelineLayout(LogicalDevice)(LogicalDevice device, VkDescriptorSetLayout descriptorSetLayout)
 {
     // pipeline layout can be used to pass uniform vars into shaders
     VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = {
         setLayoutCount: 1,
-        pSetLayouts: &descriptorSetLayout.vkObj,
+        pSetLayouts: &descriptorSetLayout,
         pushConstantRangeCount: 0, // Optional
         pPushConstantRanges: null, // Optional
     };
