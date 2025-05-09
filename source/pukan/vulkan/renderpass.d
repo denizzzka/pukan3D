@@ -69,7 +69,8 @@ class DefaultRenderPass : RenderPass
 
     ~this()
     {
-        vkDestroyRenderPass(device, vkRenderPass, device.backend.allocator);
+        if(vkRenderPass)
+            vkDestroyRenderPass(device, vkRenderPass, device.backend.allocator);
     }
 
     enum VkAttachmentDescription defaultColorAttachment = {
