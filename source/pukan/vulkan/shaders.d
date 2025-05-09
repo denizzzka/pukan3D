@@ -54,10 +54,14 @@ class ShaderModule
 
     ~this()
     {
-        auto vkDestroyShaderEXT = cast(PFN_vkDestroyShaderEXT) vkGetInstanceProcAddr(device.backend.instance, "vkDestroyShaderEXT");
-        vkDestroyShaderEXT(device, ext, device.backend.allocator);
+        if(ext)
+        {
+            auto vkDestroyShaderEXT = cast(PFN_vkDestroyShaderEXT) vkGetInstanceProcAddr(device.backend.instance, "vkDestroyShaderEXT");
+            vkDestroyShaderEXT(device, ext, device.backend.allocator);
+        }
 
-        vkDestroyShaderModule(device.device, shaderModule, device.backend.allocator);
+        if(shaderModule)
+            vkDestroyShaderModule(device.device, shaderModule, device.backend.allocator);
     }
 
     auto createShaderStageInfo(VkShaderStageFlagBits stage)

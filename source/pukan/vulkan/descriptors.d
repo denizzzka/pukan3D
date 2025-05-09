@@ -49,8 +49,11 @@ class DescriptorPool
 
     ~this()
     {
-        vkDestroyDescriptorPool(device, descriptorPool, device.backend.allocator);
-        vkDestroyDescriptorSetLayout(device, descriptorSetLayout, device.backend.allocator);
+        if(descriptorPool)
+            vkDestroyDescriptorPool(device, descriptorPool, device.backend.allocator);
+
+        if(descriptorSetLayout)
+            vkDestroyDescriptorSetLayout(device, descriptorSetLayout, device.backend.allocator);
     }
 
     auto allocateDescriptorSets(VkDescriptorSetLayout[] layouts)
