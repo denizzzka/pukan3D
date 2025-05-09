@@ -50,7 +50,8 @@ class CommandPool
 
     ~this()
     {
-        vkDestroyCommandPool(device.device, commandPool, device.backend.allocator);
+        if(commandPool)
+            vkDestroyCommandPool(device.device, commandPool, device.backend.allocator);
     }
 
     private void initBuffs(uint count)

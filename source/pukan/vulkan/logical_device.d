@@ -60,7 +60,8 @@ class LogicalDevice
 
     ~this()
     {
-        vkDestroyDevice(device, backend.allocator);
+        if(device)
+            vkDestroyDevice(device, backend.allocator);
     }
 
     //TODO: remove
@@ -123,7 +124,8 @@ class Semaphore
 
     ~this()
     {
-        vkDestroySemaphore(device.device, semaphore, device.backend.allocator);
+        if(semaphore)
+            vkDestroySemaphore(device.device, semaphore, device.backend.allocator);
     }
 }
 
@@ -147,7 +149,8 @@ class Fence
 
     ~this()
     {
-        vkDestroyFence(device.device, fence, device.backend.allocator);
+        if(fence)
+            vkDestroyFence(device.device, fence, device.backend.allocator);
     }
 
     void wait()

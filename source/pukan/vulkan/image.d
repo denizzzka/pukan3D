@@ -27,7 +27,8 @@ class ImageMemory : MemoryBufferBase
 
     ~this()
     {
-        vkDestroyImage(device, image, device.backend.allocator);
+        if(image)
+            vkDestroyImage(device, image, device.backend.allocator);
     }
 
     void addPipelineBarrier(VkCommandBuffer buf, VkImageLayout oldLayout, VkImageLayout newLayout)

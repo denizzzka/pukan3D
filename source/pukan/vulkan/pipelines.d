@@ -26,7 +26,8 @@ class DefaultPipelineInfoCreator
 
     ~this()
     {
-        vkDestroyPipelineLayout(device, pipelineLayout, device.backend.allocator);
+        if(pipelineLayout)
+            vkDestroyPipelineLayout(device, pipelineLayout, device.backend.allocator);
     }
 
     VkPipelineDepthStencilStateCreateInfo depthStencil;
