@@ -26,7 +26,8 @@ class MemoryBufferMappedToCPU : MemoryBuffer
 
     ~this()
     {
-        vkUnmapMemory(device, deviceMemory);
+        if(deviceMemory)
+            vkUnmapMemory(device, deviceMemory);
     }
 }
 
@@ -50,7 +51,8 @@ class MemoryBuffer : MemoryBufferBase
 
     ~this()
     {
-        vkDestroyBuffer(device.device, buf, device.backend.allocator);
+        if(buf)
+            vkDestroyBuffer(device.device, buf, device.backend.allocator);
     }
 
     //TODO: static?
@@ -91,7 +93,8 @@ class MemoryBufferBase
 
     ~this()
     {
-        vkFreeMemory(device.device, deviceMemory, device.backend.allocator);
+        if(deviceMemory)
+            vkFreeMemory(device.device, deviceMemory, device.backend.allocator);
     }
 }
 
