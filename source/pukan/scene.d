@@ -38,23 +38,27 @@ class Scene
         device.backend.useSurface(surface);
 
         renderPass = device.create!DefaultRenderPass(VK_FORMAT_B8G8R8A8_SRGB);
+        scope(failure) destroy(renderPass);
 
-        swapChain = new SwapChain(device, surface, renderPass);
+        swapChain = new SwapChain(device, surface, renderPass, null);
+        scope(failure) destroy(swapChain);
 
         graphicsQueue = device.getQueue();
         presentQueue = device.getQueue();
 
         frameBuilder = device.create!FrameBuilder(graphicsQueue, presentQueue);
+        scope(failure) destroy(frameBuilder);
 
-        {
-            vertShader = device.loadShader("vert.spv");
-            fragShader = device.loadShader("frag.spv");
+        vertShader = device.create!ShaderModule("vert.spv");
+        scope(failure) destroy(vertShader);
 
-            shaderStages = [
-                vertShader.createShaderStageInfo(VK_SHADER_STAGE_VERTEX_BIT),
-                fragShader.createShaderStageInfo(VK_SHADER_STAGE_FRAGMENT_BIT),
-            ];
-        }
+        fragShader = device.create!ShaderModule("frag.spv");
+        scope(failure) destroy(fragShader);
+
+        shaderStages = [
+            vertShader.createShaderStageInfo(VK_SHADER_STAGE_VERTEX_BIT),
+            fragShader.createShaderStageInfo(VK_SHADER_STAGE_FRAGMENT_BIT),
+        ];
 
         // Not used, just for testing:
         //TODO: fix compilation
@@ -62,31 +66,36 @@ class Scene
         //~ fragShader.compileShader(VK_SHADER_STAGE_FRAGMENT_BIT);
 
         descriptorPool = device.create!DescriptorPool(descriptorSetLayoutBindings);
+        scope(failure) destroy(descriptorPool);
 
         pipelineInfoCreator = new DefaultPipelineInfoCreator(device, descriptorPool.descriptorSetLayout, shaderStages);
+        scope(failure) destroy(pipelineInfoCreator);
 
         VkGraphicsPipelineCreateInfo[] infos = [pipelineInfoCreator.pipelineCreateInfo];
 
         graphicsPipelines = device.create!GraphicsPipelines(infos, renderPass);
+        scope(failure) destroy(graphicsPipelines);
 
         descriptorSets = descriptorPool.allocateDescriptorSets([descriptorPool.descriptorSetLayout]);
     }
 
     void recreateSwapChain()
     {
-        vkDeviceWaitIdle(device);
-        destroy(swapChain);
-        swapChain = new SwapChain(device, surface, renderPass);
+        swapChain = new SwapChain(device, surface, renderPass, swapChain);
     }
 
-    void drawNextFrame(void delegate(SwapChain.FrameIns currFrame) dg)
+    void drawNextFrame(void delegate(ref Frame frame) dg)
     {
         import pukan.exceptions: PukanExceptionWithCode;
 
-        frameBuilder.inFlightFence.wait();
+        swapChain.currSync.inFlightFence.wait();
+
+        swapChain.oldSwapchainsMaintenance();
+
+        uint imageIndex;
 
         {
-            auto ret = frameBuilder.acquireNextImage(swapChain.swapchain);
+            auto ret = frameBuilder.acquireNextImage(swapChain, imageIndex);
 
             if(ret == VK_ERROR_OUT_OF_DATE_KHR)
             {
@@ -100,14 +109,15 @@ class Scene
             }
         }
 
-        frameBuilder.inFlightFence.reset();
+        swapChain.currSync.inFlightFence.reset();
 
-        ref currFrame = swapChain.frames[frameBuilder.imageIndex];
+        ref currFrame = swapChain.frames[imageIndex];
         dg(currFrame);
 
         {
-            frameBuilder.queueSubmit();
-            auto ret = frameBuilder.queueImageForPresentation(swapChain.swapchain);
+            frameBuilder.queueSubmit(swapChain);
+
+            auto ret = frameBuilder.queueImageForPresentation(swapChain, imageIndex);
 
             if (ret == VK_ERROR_OUT_OF_DATE_KHR || ret == VK_SUBOPTIMAL_KHR)
             {
@@ -121,5 +131,7 @@ class Scene
                     throw new PukanExceptionWithCode(ret, "failed to queue image for presentation");
             }
         }
+
+        swapChain.toNextFrame();
     }
 }

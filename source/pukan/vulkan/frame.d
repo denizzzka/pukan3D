@@ -13,7 +13,6 @@ class FrameBuilder
     VkQueue presentQueue;
     CommandPool commandPool;
     TransferBuffer uniformBuffer;
-    uint imageIndex;
 
     Semaphore imageAvailable;
     Semaphore renderFinished;
@@ -29,35 +28,28 @@ class FrameBuilder
         presentQueue = present;
 
         commandPool = device.createCommandPool();
+        scope(failure) destroy(commandPool);
 
         // FIXME: bad idea to allocate a memory buffer only for one uniform buffer,
         // need to allocate more memory then divide it into pieces
         uniformBuffer = device.create!TransferBuffer(UniformBufferObject.sizeof, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
-
-        imageAvailable = device.create!Semaphore;
-        renderFinished = device.create!Semaphore;
-        inFlightFence = device.create!Fence;
-
-        waitSemaphores = [imageAvailable.semaphore];
-        signalSemaphores = [renderFinished.semaphore];
     }
 
     ~this()
     {
-        destroy(inFlightFence);
-        destroy(renderFinished);
-        destroy(imageAvailable);
         destroy(uniformBuffer);
         destroy(commandPool);
     }
 
-    VkResult acquireNextImage(VkSwapchainKHR swapChain)
+    VkResult acquireNextImage(SwapChain swapChain, out uint imageIndex)
     {
-        return vkAcquireNextImageKHR(device, swapChain, ulong.max /* timeout */, imageAvailable, null /* fence */, &imageIndex);
+        return vkAcquireNextImageKHR(device, swapChain.swapchain, ulong.max /* timeout */, swapChain.currSync.imageAvailable, null /* fence */, &imageIndex);
     }
 
-    void queueSubmit()
+    void queueSubmit(SwapChain swapChain)
     {
+        ref sync = swapChain.currSync;
+
         auto waitStages = cast(uint) VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 
         VkSubmitInfo submitInfo = {
@@ -65,30 +57,32 @@ class FrameBuilder
 
             pWaitDstStageMask: &waitStages,
 
-            waitSemaphoreCount: cast(uint) waitSemaphores.length,
-            pWaitSemaphores: waitSemaphores.ptr,
+            waitSemaphoreCount: cast(uint) sync.waitSemaphores.length,
+            pWaitSemaphores: sync.waitSemaphores.ptr,
 
             commandBufferCount: cast(uint) commandPool.commandBuffers.length,
             pCommandBuffers: commandPool.commandBuffers.ptr,
 
-            signalSemaphoreCount: cast(uint) signalSemaphores.length,
-            pSignalSemaphores: signalSemaphores.ptr,
+            signalSemaphoreCount: cast(uint) sync.signalSemaphores.length,
+            pSignalSemaphores: sync.signalSemaphores.ptr,
         };
 
-        vkQueueSubmit(device.getQueue(), 1, &submitInfo, inFlightFence.fence).vkCheck;
+        vkQueueSubmit(device.getQueue(), 1, &submitInfo, sync.inFlightFence).vkCheck;
     }
 
-    VkResult queueImageForPresentation(VkSwapchainKHR swapChain)
+    VkResult queueImageForPresentation(SwapChain swapChain, ref uint imageIndex)
     {
-        VkSwapchainKHR[1] swapChains = [swapChain];
+        ref sync = swapChain.currSync;
+
+        VkSwapchainKHR[1] swapChains = [swapChain.swapchain];
 
         VkPresentInfoKHR presentInfo = {
             sType: VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
 
             pImageIndices: &imageIndex,
 
-            waitSemaphoreCount: cast(uint) signalSemaphores.length,
-            pWaitSemaphores: signalSemaphores.ptr,
+            waitSemaphoreCount: cast(uint) sync.signalSemaphores.length,
+            pWaitSemaphores: sync.signalSemaphores.ptr,
 
             swapchainCount: cast(uint) swapChains.length,
             pSwapchains: swapChains.ptr,
@@ -98,14 +92,17 @@ class FrameBuilder
     }
 }
 
-class Frame(alias device)
+class Frame
 {
+    LogicalDevice device;
     VkImageView imageView;
     DepthBuf depthBuf;
     VkFramebuffer frameBuffer;
 
-    this(VkImage image, VkExtent2D imageExtent, VkFormat imageFormat, VkRenderPass renderPass)
+    this(LogicalDevice dev, VkImage image, VkExtent2D imageExtent, VkFormat imageFormat, VkRenderPass renderPass)
     {
+        device = dev;
+
         createImageView(imageView, device, imageFormat, image);
         depthBuf = DepthBuf(device, imageExtent);
 

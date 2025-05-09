@@ -10,10 +10,13 @@ class DefaultPipelineInfoCreator
     VkPipelineLayout pipelineLayout;
     VkPipelineShaderStageCreateInfo[] shaderStages;
 
-    this(DescriptorSetLayout)(LogicalDevice dev, DescriptorSetLayout descriptorSetLayout, VkPipelineShaderStageCreateInfo[] shads)
+    this(LogicalDevice dev, VkDescriptorSetLayout descriptorSetLayout, VkPipelineShaderStageCreateInfo[] shads)
     {
         device = dev;
+
         pipelineLayout = createPipelineLayout(device, descriptorSetLayout); //TODO: move out from this class?
+        scope(failure) destroy(pipelineLayout);
+
         shaderStages = shads;
 
         initDepthStencil();

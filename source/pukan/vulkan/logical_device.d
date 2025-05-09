@@ -79,11 +79,6 @@ class LogicalDevice
         return ret;
     }
 
-    auto loadShader(string filename)
-    {
-        return new ShaderModule(this, filename);
-    }
-
     auto create(alias ClassType, A...)(A a)
     {
         return new ClassType(this, a);

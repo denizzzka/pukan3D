@@ -54,6 +54,8 @@ class ShaderModule
 
     ~this()
     {
+        assert(device.device);
+
         if(ext)
         {
             auto vkDestroyShaderEXT = cast(PFN_vkDestroyShaderEXT) vkGetInstanceProcAddr(device.backend.instance, "vkDestroyShaderEXT");
