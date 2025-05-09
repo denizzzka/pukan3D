@@ -240,8 +240,8 @@ void main() {
 
             auto remaining = frameDuration - (curr - prevTime);
 
-            if(!remaining.isNegative)
-                Thread.sleep(remaining);
+            //~ if(!remaining.isNegative)
+                //~ Thread.sleep(remaining);
 
             prevTime = curr;
         }

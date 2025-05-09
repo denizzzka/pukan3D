@@ -47,7 +47,7 @@ class SwapChain
             imageArrayLayers: 1, // number of views in a multiview/stereo surface. For non-stereoscopic-3D applications, this value is 1
             imageUsage: VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, // specifies that the image can be used to create a VkImageView suitable for use as a color or resolve attachment in a VkFramebuffer
             imageSharingMode: VK_SHARING_MODE_EXCLUSIVE,
-            presentMode: VkPresentModeKHR.VK_PRESENT_MODE_MAILBOX_KHR,
+            presentMode: VkPresentModeKHR.VK_PRESENT_MODE_FIFO_KHR,
             minImageCount: 3, // triple buffering will be used
             preTransform: capabilities.currentTransform,
             compositeAlpha: VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
