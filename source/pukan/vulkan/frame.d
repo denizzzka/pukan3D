@@ -210,9 +210,9 @@ struct DepthBuf
 
     ~this()
     {
-        if(device is null) return;
+        if(depthView)
+            vkDestroyImageView(device, depthView, device.backend.allocator);
 
-        vkDestroyImageView(device, depthView, device.backend.allocator);
         destroy(depthImage);
     }
 }
