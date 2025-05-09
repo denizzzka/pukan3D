@@ -14,13 +14,6 @@ class FrameBuilder
     CommandPool commandPool;
     TransferBuffer uniformBuffer;
 
-    Semaphore imageAvailable;
-    Semaphore renderFinished;
-    Fence inFlightFence;
-
-    VkSemaphore[] waitSemaphores;
-    VkSemaphore[] signalSemaphores;
-
     this(LogicalDevice dev, VkQueue graphics, VkQueue present)
     {
         device = dev;
