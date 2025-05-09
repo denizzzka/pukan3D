@@ -65,8 +65,10 @@ class SwapChain
     ~this()
     {
         foreach(ref frame; frames)
-            destroy(frame);
+            if(frame)
+                destroy(frame);
 
-        vkDestroySwapchainKHR(device.device, swapchain, device.backend.allocator);
+        if(swapchain)
+            vkDestroySwapchainKHR(device.device, swapchain, device.backend.allocator);
     }
 }
