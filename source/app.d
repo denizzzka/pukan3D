@@ -52,7 +52,13 @@ void main() {
     //~ vk.printAllAvailableLayers();
 
     auto device = vk.createLogicalDevice();
-    scope(exit) destroy(device);
+    scope(exit)
+    {
+        import core.memory: GC;
+
+        GC.collect();
+        destroy(device);
+    }
 
     debug auto dbg = vk.attachFlightRecorder();
     debug scope(exit) destroy(dbg);
@@ -117,13 +123,7 @@ void main() {
     }
 
     scope scene = new Scene(device, surface, descriptorSetLayoutBindings, &windowSizeChanged);
-    scope(exit)
-    {
-        import core.memory: GC;
-
-        destroy(scene);
-        GC.collect();
-    }
+    scope(exit) destroy(scene);
 
     //FIXME: remove refs
     ref swapChain = scene.swapChain;
