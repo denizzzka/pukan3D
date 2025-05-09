@@ -21,12 +21,10 @@ class FrameBuilder
 
     VkSemaphore[] waitSemaphores;
     VkSemaphore[] signalSemaphores;
-    VkSwapchainKHR swapChain;
 
-    this(LogicalDevice dev, VkQueue graphics, VkQueue present, VkSwapchainKHR swp_chain)
+    this(LogicalDevice dev, VkQueue graphics, VkQueue present)
     {
         device = dev;
-        swapChain = swp_chain;
         graphicsQueue = graphics;
         presentQueue = present;
 
@@ -53,7 +51,7 @@ class FrameBuilder
         destroy(commandPool);
     }
 
-    VkResult acquireNextImage()
+    VkResult acquireNextImage(VkSwapchainKHR swapChain)
     {
         return vkAcquireNextImageKHR(device, swapChain, ulong.max /* timeout */, imageAvailable, null /* fence */, &imageIndex);
     }
@@ -80,7 +78,7 @@ class FrameBuilder
         vkQueueSubmit(device.getQueue(), 1, &submitInfo, inFlightFence.fence).vkCheck;
     }
 
-    VkResult queueImageForPresentation()
+    VkResult queueImageForPresentation(VkSwapchainKHR swapChain)
     {
         VkSwapchainKHR[1] swapChains = [swapChain];
 
@@ -100,7 +98,7 @@ class FrameBuilder
     }
 }
 
-class Frame(LogicalDevice, alias device)
+class Frame(alias device)
 {
     VkImageView imageView;
     DepthBuf depthBuf;

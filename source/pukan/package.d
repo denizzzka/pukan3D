@@ -1,5 +1,6 @@
 module pukan;
 
+public import pukan.scene;
 public import pukan.vulkan;
 
 import pukan.vulkan.bindings;

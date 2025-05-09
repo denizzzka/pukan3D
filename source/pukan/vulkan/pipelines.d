@@ -20,6 +20,8 @@ class DefaultPipelineInfoCreator
         initDynamicStates();
         initVertexInputStateCreateInfo();
         initViewportState();
+
+        fillPipelineInfo();
     }
 
     ~this()
@@ -134,13 +136,9 @@ abstract class Pipelines
 
 class GraphicsPipelines : Pipelines
 {
-    RenderPass renderPass;
-
     this(LogicalDevice dev, VkGraphicsPipelineCreateInfo[] infos, RenderPass renderPass)
     {
         super(dev);
-
-        this.renderPass = renderPass;
 
         foreach(ref inf; infos)
             inf.renderPass = renderPass.vkRenderPass;

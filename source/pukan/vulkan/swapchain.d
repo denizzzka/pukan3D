@@ -11,7 +11,7 @@ class SwapChain
     VkImage[] images;
     VkFormat imageFormat;
     VkExtent2D imageExtent;
-    alias FrameIns = Frame!(LogicalDevice, device);
+    alias FrameIns = Frame!device;
     FrameIns[] frames;
 
     this(LogicalDevice device, VkSurfaceKHR surface, RenderPass renderPass)

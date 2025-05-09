@@ -68,93 +68,34 @@ void main() {
         cast(ulong*) &surface
     );
 
-    vk.useSurface(surface);
     vk.printSurfaceFormats(vk.devices[vk.deviceIdx], surface);
     vk.printPresentModes(vk.devices[vk.deviceIdx], surface);
 
     import pukan.vulkan.bindings;
 
-    auto renderPass = device.create!DefaultRenderPass(VK_FORMAT_B8G8R8A8_SRGB);
-    scope(exit) destroy(renderPass);
-
-    auto swapChain = new SwapChain(device, surface, renderPass);
-    scope(exit) destroy(swapChain);
-
-    auto graphicsQueue = device.getQueue();
-    auto presentQueue = device.getQueue();
-
-    auto vertShader = device.loadShader("vert.spv");
-    scope(exit) destroy(vertShader);
-    auto fragShader = device.loadShader("frag.spv");
-    scope(exit) destroy(fragShader);
-
-    // Not used, just for testing:
-    //TODO: fix compilation
-    //~ vertShader.compileShader(VK_SHADER_STAGE_VERTEX_BIT);
-    //~ fragShader.compileShader(VK_SHADER_STAGE_FRAGMENT_BIT);
-
-    auto frameBuilder = device.create!FrameBuilder(graphicsQueue, presentQueue, swapChain.swapchain);
-    scope(exit) destroy(frameBuilder);
-
-    import pukan.vulkan.helpers;
-
-    VkDescriptorSetLayoutBinding uboLayoutBinding = {
-        binding: 0,
-        descriptorType: VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-        descriptorCount: 1,
-        stageFlags: VK_SHADER_STAGE_VERTEX_BIT,
-    };
-
-    VkDescriptorSetLayoutBinding samplerLayoutBinding = {
-        binding: 1,
-        descriptorType: VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-        descriptorCount: 1,
-        stageFlags: VK_SHADER_STAGE_FRAGMENT_BIT,
-    };
-
-    auto descriptorSetLayoutBindings = [
-        uboLayoutBinding,
-        samplerLayoutBinding,
-    ];
-
-    auto shaderStages = [
-        vertShader.createShaderStageInfo(VK_SHADER_STAGE_VERTEX_BIT),
-        fragShader.createShaderStageInfo(VK_SHADER_STAGE_FRAGMENT_BIT),
-    ];
-
-    scope descriptorPool = device.create!DescriptorPool(descriptorSetLayoutBindings);
-    scope(exit) destroy(descriptorPool);
-
-    auto pipelineInfoCreator = new DefaultPipelineInfoCreator(device, descriptorPool.descriptorSetLayout, shaderStages);
-    scope(exit) destroy(pipelineInfoCreator);
-
-    pipelineInfoCreator.fillPipelineInfo();
-    VkGraphicsPipelineCreateInfo[] infos = [pipelineInfoCreator.pipelineCreateInfo];
-
-    auto graphicsPipelines = device.create!GraphicsPipelines(infos, renderPass);
-    scope(exit) destroy(graphicsPipelines);
-
-    void recreateSwapChain()
+    VkDescriptorSetLayoutBinding[] descriptorSetLayoutBindings;
     {
-        vkDeviceWaitIdle(device.device);
-        destroy(swapChain);
-        swapChain = new SwapChain(device, surface, renderPass);
+        VkDescriptorSetLayoutBinding uboLayoutBinding = {
+            binding: 0,
+            descriptorType: VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+            descriptorCount: 1,
+            stageFlags: VK_SHADER_STAGE_VERTEX_BIT,
+        };
+
+        VkDescriptorSetLayoutBinding samplerLayoutBinding = {
+            binding: 1,
+            descriptorType: VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+            descriptorCount: 1,
+            stageFlags: VK_SHADER_STAGE_FRAGMENT_BIT,
+        };
+
+        descriptorSetLayoutBindings = [
+            uboLayoutBinding,
+            samplerLayoutBinding,
+        ];
     }
 
-    auto vertexBuffer = device.create!TransferBuffer(Vertex.sizeof * vertices.length, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
-    scope(exit) destroy(vertexBuffer);
-
-    auto indicesBuffer = device.create!TransferBuffer(ushort.sizeof * indices.length, VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
-    scope(exit) destroy(indicesBuffer);
-
-    // Copy vertices to mapped memory
-    vertexBuffer.cpuBuf[0..$] = cast(void[]) vertices;
-    indicesBuffer.cpuBuf[0..$] = cast(void[]) indices;
-
-    vertexBuffer.upload(frameBuilder.commandPool);
-    indicesBuffer.upload(frameBuilder.commandPool);
-
-    void recreateSwapChainWithNewWindowSize()
+    void windowSizeChanged()
     {
         int width;
         int height;
@@ -173,14 +114,39 @@ void main() {
             glfwGetFramebufferSize(window, &width, &height);
             glfwWaitEvents();
         }
-
-        recreateSwapChain();
     }
+
+    scope scene = new Scene(device, surface, descriptorSetLayoutBindings, &windowSizeChanged);
+    scope(exit)
+    {
+        import core.memory: GC;
+
+        destroy(scene);
+        GC.collect();
+    }
+
+    //FIXME: remove refs
+    ref swapChain = scene.swapChain;
+    ref frameBuilder = scene.frameBuilder;
+    ref pipelineInfoCreator = scene.pipelineInfoCreator;
+    ref graphicsPipelines = scene.graphicsPipelines;
+    ref descriptorSets = scene.descriptorSets;
+
+    auto vertexBuffer = device.create!TransferBuffer(Vertex.sizeof * vertices.length, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
+    scope(exit) destroy(vertexBuffer);
+
+    auto indicesBuffer = device.create!TransferBuffer(ushort.sizeof * indices.length, VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
+    scope(exit) destroy(indicesBuffer);
+
+    // Copy vertices to mapped memory
+    vertexBuffer.cpuBuf[0..$] = cast(void[]) vertices;
+    indicesBuffer.cpuBuf[0..$] = cast(void[]) indices;
+
+    vertexBuffer.upload(frameBuilder.commandPool);
+    indicesBuffer.upload(frameBuilder.commandPool);
 
     scope texture = device.create!Texture(frameBuilder.commandPool);
     scope(exit) destroy(texture);
-
-    auto descriptorSets = descriptorPool.allocateDescriptorSets([descriptorPool.descriptorSetLayout]);
 
     VkWriteDescriptorSet[] descriptorWrites;
 
@@ -218,7 +184,7 @@ void main() {
             )
         ];
 
-        descriptorPool.updateSets(descriptorWrites);
+        scene.descriptorPool.updateSets(descriptorWrites);
     }
 
     import pukan.exceptions;
@@ -230,59 +196,25 @@ void main() {
     {
         glfwPollEvents();
 
-        // Draw frame:
-        frameBuilder.inFlightFence.wait();
+        scene.drawNextFrame((cur) {
+            updateUniformBuffer(frameBuilder, sw, swapChain.imageExtent);
 
-        {
-            auto ret = frameBuilder.acquireNextImage();
+            frameBuilder.commandPool.recordOneTime((commandBuffer) {
+                frameBuilder.uniformBuffer.recordUpload(commandBuffer);
 
-            if(ret == VK_ERROR_OUT_OF_DATE_KHR)
-            {
-                recreateSwapChain();
-                continue;
-            }
-            else
-            {
-                if(ret != VK_SUCCESS && ret != VK_SUBOPTIMAL_KHR)
-                    throw new PukanExceptionWithCode(ret, "failed to acquire swap chain image");
-            }
-        }
+                scene.renderPass.updateData(scene.renderPass.VariableData(
+                    swapChain.imageExtent,
+                    cur.frameBuffer,
+                    vertexBuffer.gpuBuffer.buf,
+                    indicesBuffer.gpuBuffer.buf,
+                    descriptorSets,
+                    pipelineInfoCreator.pipelineLayout,
+                    graphicsPipelines.pipelines[0]
+                ));
 
-        frameBuilder.inFlightFence.reset();
-
-        updateUniformBuffer(frameBuilder, sw, swapChain.imageExtent);
-
-        frameBuilder.commandPool.recordOneTime((commandBuffer) {
-            frameBuilder.uniformBuffer.recordUpload(commandBuffer);
-
-            renderPass.updateData(renderPass.VariableData(
-                swapChain.imageExtent,
-                swapChain.frames[frameBuilder.imageIndex].frameBuffer,
-                vertexBuffer.gpuBuffer.buf,
-                indicesBuffer.gpuBuffer.buf,
-                descriptorSets,
-                pipelineInfoCreator.pipelineLayout,
-                graphicsPipelines.pipelines[0]
-            ));
-
-            renderPass.recordCommandBuffer(commandBuffer);
+                scene.renderPass.recordCommandBuffer(commandBuffer);
+            });
         });
-
-        {
-            frameBuilder.queueSubmit();
-            auto ret = frameBuilder.queueImageForPresentation();
-
-            if (ret == VK_ERROR_OUT_OF_DATE_KHR || ret == VK_SUBOPTIMAL_KHR)
-            {
-                recreateSwapChainWithNewWindowSize();
-                continue;
-            }
-            else
-            {
-                if(ret != VK_SUCCESS)
-                    throw new PukanExceptionWithCode(ret, "failed to acquire swap chain image");
-            }
-        }
 
         {
             import core.thread.osthread: Thread;
