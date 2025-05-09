@@ -120,6 +120,10 @@ class VkObj(T...)
 
     ~this()
     {
+        static if(methodsHaveThisPtr)
+            if(vkThis is null)
+                return;
+
         mixin(dtorName~"("~(methodsHaveThisPtr ? "vkThis, " : "")~"vkObj, allocator);");
     }
 }
