@@ -85,8 +85,12 @@ class Texture
 
     ~this()
     {
-        vkDestroySampler(device, sampler, device.backend.allocator);
-        vkDestroyImageView(device, imageView, device.backend.allocator);
+        if(sampler)
+            vkDestroySampler(device, sampler, device.backend.allocator);
+
+        if(imageView)
+            vkDestroyImageView(device, imageView, device.backend.allocator);
+
         destroy(textureImageMemory);
     }
 }

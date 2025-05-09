@@ -131,8 +131,11 @@ class Frame(alias device)
 
     ~this()
     {
-        vkDestroyFramebuffer(device, frameBuffer, device.backend.allocator);
-        vkDestroyImageView(device, imageView, device.backend.allocator);
+        if(frameBuffer)
+            vkDestroyFramebuffer(device, frameBuffer, device.backend.allocator);
+
+        if(imageView)
+            vkDestroyImageView(device, imageView, device.backend.allocator);
     }
 }
 
