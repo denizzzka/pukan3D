@@ -120,8 +120,7 @@ class Scene
 
         swapChain.currSync.inFlightFence.reset();
 
-        ref currFrame = swapChain.frames[imageIndex];
-        dg(currFrame);
+        dg(swapChain.frames[imageIndex]);
 
         {
             frameBuilder.queueSubmit(swapChain);

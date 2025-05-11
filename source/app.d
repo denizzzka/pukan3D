@@ -126,11 +126,11 @@ void main() {
     scope(exit) destroy(scene);
 
     //FIXME: remove refs
-    ref swapChain = scene.swapChain;
-    ref frameBuilder = scene.frameBuilder;
-    ref pipelineInfoCreator = scene.pipelineInfoCreator;
-    ref graphicsPipelines = scene.graphicsPipelines;
-    ref descriptorSets = scene.descriptorSets;
+    auto swapChain = &scene.swapChain;
+    auto frameBuilder = &scene.frameBuilder;
+    //~ ref pipelineInfoCreator = scene.pipelineInfoCreator;
+    //~ ref graphicsPipelines = scene.graphicsPipelines;
+    auto descriptorSets = &scene.descriptorSets;
 
     auto vertexBuffer = device.create!TransferBuffer(Vertex.sizeof * vertices.length, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
     scope(exit) destroy(vertexBuffer);
@@ -139,16 +139,16 @@ void main() {
     scope(exit) destroy(indicesBuffer);
 
     // Using any (first) buffer as buffer for initial loading
-    ref initBuf = swapChain.currSync.commandBuf;
+    auto initBuf = &swapChain.currSync.commandBuf;
 
     // Copy vertices to mapped memory
     vertexBuffer.cpuBuf[0..$] = cast(void[]) vertices;
     indicesBuffer.cpuBuf[0..$] = cast(void[]) indices;
 
-    vertexBuffer.uploadImmediate(swapChain.commandPool, initBuf);
-    indicesBuffer.uploadImmediate(swapChain.commandPool, initBuf);
+    vertexBuffer.uploadImmediate(swapChain.commandPool, *initBuf);
+    indicesBuffer.uploadImmediate(swapChain.commandPool, *initBuf);
 
-    scope texture = device.create!Texture(swapChain.commandPool, initBuf);
+    scope texture = device.create!Texture(swapChain.commandPool, *initBuf);
     scope(exit) destroy(texture);
 
     VkWriteDescriptorSet[] descriptorWrites;
@@ -169,7 +169,7 @@ void main() {
         descriptorWrites = [
             VkWriteDescriptorSet(
                 sType: VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-                dstSet: descriptorSets[0 /*TODO: frame number*/],
+                dstSet: (*descriptorSets)[0 /*TODO: frame number*/],
                 dstBinding: 0,
                 dstArrayElement: 0,
                 descriptorType: VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
@@ -178,7 +178,7 @@ void main() {
             ),
             VkWriteDescriptorSet(
                 sType: VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-                dstSet: descriptorSets[0 /*TODO: frame number*/],
+                dstSet: (*descriptorSets)[0 /*TODO: frame number*/],
                 dstBinding: 1,
                 dstArrayElement: 0,
                 descriptorType: VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
@@ -211,9 +211,9 @@ void main() {
                         cur.frameBuffer,
                         vertexBuffer.gpuBuffer.buf,
                         indicesBuffer.gpuBuffer.buf,
-                        descriptorSets,
-                        pipelineInfoCreator.pipelineLayout,
-                        graphicsPipelines.pipelines[0]
+                        *descriptorSets,
+                        scene.pipelineInfoCreator.pipelineLayout,
+                        scene.graphicsPipelines.pipelines[0]
                     ));
 
                     scene.renderPass.recordCommandBuffer(commandBuffer);

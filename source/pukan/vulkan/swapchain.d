@@ -22,7 +22,7 @@ class SwapChain
 
     this(LogicalDevice device, CommandPool cPool, VkSurfaceKHR surface, RenderPass renderPass, SwapChain old)
     {
-        auto ref ins = device.backend;
+        auto ins = device.backend;
 
         const capab = ins.getSurfaceCapabilities(ins.devices[ins.deviceIdx], surface);
 
@@ -33,7 +33,7 @@ class SwapChain
     {
         import std.conv: to;
 
-        ref cap = capabilities;
+        auto cap = capabilities;
 
         enforce(cap.currentExtent.width != uint.max, "unsupported, see VkSurfaceCapabilitiesKHR(3) Manual Page");
         enforce(cap.minImageCount > 0);

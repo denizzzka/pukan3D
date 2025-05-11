@@ -37,7 +37,7 @@ class FrameBuilder
     //TODO: move to swapchain?
     void queueSubmit(SwapChain swapChain)
     {
-        ref sync = swapChain.currSync;
+        auto sync = swapChain.currSync;
 
         auto waitStages = cast(uint) VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 
@@ -61,7 +61,7 @@ class FrameBuilder
 
     VkResult queueImageForPresentation(SwapChain swapChain, ref uint imageIndex)
     {
-        ref sync = swapChain.currSync;
+        auto sync = swapChain.currSync;
 
         VkSwapchainKHR[1] swapChains = [swapChain.swapchain];
 
