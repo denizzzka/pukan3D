@@ -9,6 +9,7 @@ class SwapChain
     LogicalDevice device;
     VkSwapchainKHR swapchain;
     SwapChain oldSwapChain;
+    CommandPool commandPool;
     VkImage[] images;
     VkFormat imageFormat;
     VkExtent2D imageExtent;
@@ -73,7 +74,11 @@ class SwapChain
                 assert(old.swapchain == cinf.oldSwapchain);
         }
 
+        commandPool = device.createCommandPool();
+        scope(failure) destroy(commandPool);
+
         vkCreateSwapchainKHR(d.device, &cinf, d.backend.allocator, &swapchain).vkCheck;
+        //TODO: need scope(failure) guard for swapchain?
 
         images = getArrayFrom!vkGetSwapchainImagesKHR(device.device, swapchain);
         enforce(images.length >= 3);
@@ -83,8 +88,10 @@ class SwapChain
         foreach(i, ref frame; frames)
             frame = new Frame(device, images[i], imageExtent, imageFormat, renderPass);
 
-        foreach(ref s; syncPrimitives)
-            s = new SyncFramesInFlight(device);
+        auto commandBuffers = commandPool.allocateBuffers(syncPrimitives.length);
+
+        foreach(i, ref s; syncPrimitives)
+            s = new SyncFramesInFlight(device, commandBuffers[i]);
     }
 
     ~this()
@@ -96,6 +103,8 @@ class SwapChain
             destroy(frame);
 
         destroy(oldSwapChain);
+
+        destroy(commandPool);
 
         if(swapchain)
             vkDestroySwapchainKHR(device.device, swapchain, device.backend.allocator);
@@ -138,8 +147,12 @@ class SyncFramesInFlight
     VkSemaphore[] waitSemaphores;
     VkSemaphore[] signalSemaphores;
 
-    this(LogicalDevice device)
+    VkCommandBuffer commandBuf;
+
+    this(LogicalDevice device, VkCommandBuffer cb)
     {
+        commandBuf = cb;
+
         imageAvailable = device.create!Semaphore;
         renderFinished = device.create!Semaphore;
         inFlightFence = device.create!Fence;

@@ -15,7 +15,6 @@ class CommandPool
     LogicalDevice device;
 
     VkCommandPool commandPool;
-    VkCommandBuffer[] commandBuffers;
 
     enum VkCommandPoolCreateInfo defaultPoolCreateInfo = {
         sType: VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
@@ -44,8 +43,6 @@ class CommandPool
         cinf.queueFamilyIndex = queueFamilyIndex;
 
         vkCreateCommandPool(device.device, &cinf, device.backend.allocator, &commandPool).vkCheck;
-
-        initBuffs(1);
     }
 
     ~this()
@@ -54,51 +51,49 @@ class CommandPool
             vkDestroyCommandPool(device.device, commandPool, device.backend.allocator);
     }
 
-    private void initBuffs(uint count)
+    VkCommandBuffer[] allocateBuffers(uint count)
     {
-        commandBuffers.length = count;
+        VkCommandBuffer[] ret;
+        ret.length = count;
 
-        foreach(i, ref buf; commandBuffers)
+        foreach(i, ref buf; ret)
         {
             auto allocInfo = defaultBufferAllocateInfo;
             allocInfo.commandPool = commandPool;
-            allocInfo.commandBufferCount = cast(uint) commandBuffers.length;
+            allocInfo.commandBufferCount = count;
 
             vkAllocateCommandBuffers(device.device, &allocInfo, &buf).vkCheck;
         }
+
+        return ret;
     }
 
-    auto ref buf()
-    {
-        return commandBuffers[0];
-    }
-
-    void recordCommands(VkCommandBufferBeginInfo beginInfo, void delegate(VkCommandBuffer) dg)
+    void recordCommands(VkCommandBufferBeginInfo beginInfo, VkCommandBuffer buf, void delegate(VkCommandBuffer) dg)
     {
         vkBeginCommandBuffer(buf, &beginInfo).vkCheck;
         dg(buf);
         vkEndCommandBuffer(buf).vkCheck("failed to record command buffer");
     }
 
-    void recordCommands(void delegate(VkCommandBuffer) dg)
+    void recordCommands(VkCommandBuffer buf, void delegate(VkCommandBuffer) dg)
     {
         auto cinf = defaultBufferBeginInfo;
-        recordCommands(cinf, dg);
+        recordCommands(cinf, buf, dg);
     }
 
-    void recordOneTime(void delegate(VkCommandBuffer) dg)
+    void recordOneTime(VkCommandBuffer buf, void delegate(VkCommandBuffer) dg)
     {
         auto cinf = defaultOneTimeBufferBeginInfo;
-        recordCommands(cinf, dg);
+        recordCommands(cinf, buf, dg);
     }
 
-    void oneTimeBufferRun(void delegate(VkCommandBuffer) dg)
+    void oneTimeBufferRun(VkCommandBuffer buf, void delegate(VkCommandBuffer) dg)
     {
-        recordOneTime(dg);
-        submitAll();
+        recordOneTime(buf, dg);
+        submitBuffers([buf]);
     }
 
-    void submitAll()
+    void submitBuffers(VkCommandBuffer[] commandBuffers)
     {
         VkSubmitInfo submitInfo = {
             sType: VK_STRUCTURE_TYPE_SUBMIT_INFO,

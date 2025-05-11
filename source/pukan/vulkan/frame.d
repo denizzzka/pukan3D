@@ -11,7 +11,6 @@ class FrameBuilder
     LogicalDevice device;
     VkQueue graphicsQueue;
     VkQueue presentQueue;
-    CommandPool commandPool;
     TransferBuffer uniformBuffer;
 
     this(LogicalDevice dev, VkQueue graphics, VkQueue present)
@@ -19,9 +18,6 @@ class FrameBuilder
         device = dev;
         graphicsQueue = graphics;
         presentQueue = present;
-
-        commandPool = device.createCommandPool();
-        scope(failure) destroy(commandPool);
 
         // FIXME: bad idea to allocate a memory buffer only for one uniform buffer,
         // need to allocate more memory then divide it into pieces
@@ -31,7 +27,6 @@ class FrameBuilder
     ~this()
     {
         destroy(uniformBuffer);
-        destroy(commandPool);
     }
 
     VkResult acquireNextImage(SwapChain swapChain, out uint imageIndex)
@@ -39,6 +34,7 @@ class FrameBuilder
         return vkAcquireNextImageKHR(device, swapChain.swapchain, ulong.max /* timeout */, swapChain.currSync.imageAvailable, null /* fence */, &imageIndex);
     }
 
+    //TODO: move to swapchain?
     void queueSubmit(SwapChain swapChain)
     {
         ref sync = swapChain.currSync;
@@ -53,8 +49,8 @@ class FrameBuilder
             waitSemaphoreCount: cast(uint) sync.waitSemaphores.length,
             pWaitSemaphores: sync.waitSemaphores.ptr,
 
-            commandBufferCount: cast(uint) commandPool.commandBuffers.length,
-            pCommandBuffers: commandPool.commandBuffers.ptr,
+            commandBufferCount: 1,
+            pCommandBuffers: &sync.commandBuf,
 
             signalSemaphoreCount: cast(uint) sync.signalSemaphores.length,
             pSignalSemaphores: sync.signalSemaphores.ptr,

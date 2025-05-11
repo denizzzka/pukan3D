@@ -138,14 +138,17 @@ void main() {
     auto indicesBuffer = device.create!TransferBuffer(ushort.sizeof * indices.length, VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
     scope(exit) destroy(indicesBuffer);
 
+    // Using any (first) buffer as buffer for initial loading
+    ref initBuf = swapChain.currSync.commandBuf;
+
     // Copy vertices to mapped memory
     vertexBuffer.cpuBuf[0..$] = cast(void[]) vertices;
     indicesBuffer.cpuBuf[0..$] = cast(void[]) indices;
 
-    vertexBuffer.upload(frameBuilder.commandPool);
-    indicesBuffer.upload(frameBuilder.commandPool);
+    vertexBuffer.upload(swapChain.commandPool, initBuf);
+    indicesBuffer.upload(swapChain.commandPool, initBuf);
 
-    scope texture = device.create!Texture(frameBuilder.commandPool);
+    scope texture = device.create!Texture(swapChain.commandPool, initBuf);
     scope(exit) destroy(texture);
 
     VkWriteDescriptorSet[] descriptorWrites;
@@ -199,18 +202,23 @@ void main() {
         scene.drawNextFrame((cur) {
             updateUniformBuffer(frameBuilder, sw, swapChain.imageExtent);
 
-            frameBuilder.commandPool.recordOneTime((commandBuffer) {
-                frameBuilder.uniformBuffer.recordUpload(commandBuffer);
+            //FIXME: remove
+            ref commandBuffer = swapChain.currSync.commandBuf;
 
-                scene.renderPass.updateData(scene.renderPass.VariableData(
-                    swapChain.imageExtent,
-                    cur.frameBuffer,
-                    vertexBuffer.gpuBuffer.buf,
-                    indicesBuffer.gpuBuffer.buf,
-                    descriptorSets,
-                    pipelineInfoCreator.pipelineLayout,
-                    graphicsPipelines.pipelines[0]
-                ));
+            swapChain.commandPool.recordOneTime(
+                commandBuffer,
+                (commandBuffer) {
+                    frameBuilder.uniformBuffer.recordUpload(commandBuffer);
+
+                    scene.renderPass.updateData(scene.renderPass.VariableData(
+                        swapChain.imageExtent,
+                        cur.frameBuffer,
+                        vertexBuffer.gpuBuffer.buf,
+                        indicesBuffer.gpuBuffer.buf,
+                        descriptorSets,
+                        pipelineInfoCreator.pipelineLayout,
+                        graphicsPipelines.pipelines[0]
+                    ));
 
                 scene.renderPass.recordCommandBuffer(commandBuffer);
             });
