@@ -320,16 +320,26 @@ class FlightRecorder(TBackend)
         fun(backend.instance, messenger, backend.allocator);
     }
 
-    extern(C) static uint messenger_callback(
+    extern(C) static VkBool32 messenger_callback(
         VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
         VkDebugUtilsMessageTypeFlagsEXT messageType,
         const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
         void* pUserData
-    )
+    ) //FIXME: nothrow
     {
         //TODO: move out from renderer package
         import std.conv: to;
+        import std.stdio: writeln;
 
-        throw new PukanException(pCallbackData.pMessage.to!string);
+        writeln(pCallbackData.pMessage.to!string);
+
+        if(messageSeverity == VkDebugUtilsMessageSeverityFlagBitsEXT.VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT)
+        {
+            import core.stdc.stdlib;
+
+            abort();
+        }
+
+        return VK_FALSE;
     }
 }
