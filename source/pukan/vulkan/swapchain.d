@@ -20,16 +20,16 @@ class SwapChain
 
     private ubyte framesSinceSwapchainReplacement = 0;
 
-    this(LogicalDevice device, VkSurfaceKHR surface, RenderPass renderPass, SwapChain old)
+    this(LogicalDevice device, CommandPool cPool, VkSurfaceKHR surface, RenderPass renderPass, SwapChain old)
     {
         auto ref ins = device.backend;
 
         const capab = ins.getSurfaceCapabilities(ins.devices[ins.deviceIdx], surface);
 
-        this(device, capab, renderPass, old);
+        this(device, cPool, capab, renderPass, old);
     }
 
-    this(LogicalDevice device, VkSurfaceCapabilitiesKHR capabilities, RenderPass renderPass, SwapChain old)
+    this(LogicalDevice device, CommandPool cPool, VkSurfaceCapabilitiesKHR capabilities, RenderPass renderPass, SwapChain old)
     {
         import std.conv: to;
 
@@ -56,12 +56,13 @@ class SwapChain
             oldSwapchain: (old is null) ? null : old.swapchain,
         };
 
-        this(device, cinf, renderPass, old);
+        this(device, cPool, cinf, renderPass, old);
     }
 
-    this(LogicalDevice d, VkSwapchainCreateInfoKHR cinf, RenderPass renderPass, SwapChain old)
+    this(LogicalDevice d, CommandPool cPool, VkSwapchainCreateInfoKHR cinf, RenderPass renderPass, SwapChain old)
     {
         device = d;
+        commandPool = cPool;
         oldSwapChain = old;
         imageFormat = cinf.imageFormat;
         imageExtent = cinf.imageExtent;
@@ -73,9 +74,6 @@ class SwapChain
             else
                 assert(old.swapchain == cinf.oldSwapchain);
         }
-
-        commandPool = device.createCommandPool();
-        scope(failure) destroy(commandPool);
 
         vkCreateSwapchainKHR(d.device, &cinf, d.backend.allocator, &swapchain).vkCheck;
         //TODO: need scope(failure) guard for swapchain?
@@ -103,8 +101,6 @@ class SwapChain
             destroy(frame);
 
         destroy(oldSwapChain);
-
-        destroy(commandPool);
 
         if(swapchain)
             vkDestroySwapchainKHR(device.device, swapchain, device.backend.allocator);
