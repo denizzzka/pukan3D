@@ -335,6 +335,12 @@ class FlightRecorder(TBackend)
 
         if(messageSeverity == VkDebugUtilsMessageSeverityFlagBitsEXT.VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT)
         {
+            // Ugly way to dump stack trace
+            try
+                throw new Exception("unused");
+            catch(Exception e)
+                e.info.writeln;
+
             import core.stdc.stdlib;
 
             abort();
