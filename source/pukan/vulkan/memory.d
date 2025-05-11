@@ -68,7 +68,7 @@ class MemoryBuffer : MemoryBufferBase
     //TODO: static?
     void copyBuffer(CommandPool cmdPool, VkCommandBuffer buf, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
     {
-        cmdPool.oneTimeBufferRun(
+        cmdPool.recordOneTimeAndSubmit(
             buf,
             (cmdBuf) => recordCopyBuffer(cmdBuf, srcBuffer, dstBuffer, size)
         );

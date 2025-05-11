@@ -75,19 +75,13 @@ class CommandPool
         vkEndCommandBuffer(buf).vkCheck("failed to record command buffer");
     }
 
-    void recordCommands(VkCommandBuffer buf, void delegate(VkCommandBuffer) dg)
-    {
-        auto cinf = defaultBufferBeginInfo;
-        recordCommands(cinf, buf, dg);
-    }
-
     void recordOneTime(VkCommandBuffer buf, void delegate(VkCommandBuffer) dg)
     {
         auto cinf = defaultOneTimeBufferBeginInfo;
         recordCommands(cinf, buf, dg);
     }
 
-    void oneTimeBufferRun(VkCommandBuffer buf, void delegate(VkCommandBuffer) dg)
+    void recordOneTimeAndSubmit(VkCommandBuffer buf, void delegate(VkCommandBuffer) dg)
     {
         recordOneTime(buf, dg);
         submitBuffers([buf]);

@@ -94,7 +94,7 @@ class ImageMemory : MemoryBufferBase
         region.imageOffset = VkOffset3D(0, 0, 0);
         region.imageExtent = imageExtent;
 
-        commandPool.oneTimeBufferRun(buf, (buf){
+        commandPool.recordOneTimeAndSubmit(buf, (buf){
             addPipelineBarrier(buf, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 
             vkCmdCopyBufferToImage(
