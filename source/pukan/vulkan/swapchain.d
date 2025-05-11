@@ -83,15 +83,19 @@ class SwapChain
         foreach(i, ref frame; frames)
             frame = new Frame(device, images[i], imageExtent, imageFormat, renderPass);
 
-        syncPrimitives = new SyncFramesInFlight(device);
+        foreach(ref s; syncPrimitives)
+            s = new SyncFramesInFlight(device);
     }
 
     ~this()
     {
-        destroy(oldSwapChain);
+        foreach(ref s; syncPrimitives)
+            destroy(s);
 
         foreach(ref frame; frames)
             destroy(frame);
+
+        destroy(oldSwapChain);
 
         if(swapchain)
             vkDestroySwapchainKHR(device.device, swapchain, device.backend.allocator);
