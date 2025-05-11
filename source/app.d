@@ -229,7 +229,7 @@ void main() {
             static size_t fps;
 
             frameNum++;
-            writeln("FPS: ", fps, " frame: ", frameNum);
+            writeln("FPS: ", fps, " frame: ", frameNum, " currentFrameSyncIdx: ", swapChain.currentFrameSyncIdx);
 
             enum targetFPS = 80;
             enum frameDuration = dur!"nsecs"(1_000_000_000 / targetFPS);

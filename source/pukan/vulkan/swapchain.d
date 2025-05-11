@@ -14,7 +14,7 @@ class SwapChain
     VkFormat imageFormat;
     VkExtent2D imageExtent;
     Frame[] frames; //TODO: rename to frameBuffers
-    enum maxFramesInFlight = 2; // not same as frames.length
+    enum maxFramesInFlight = 3; // not same as frames.length
     SyncFramesInFlight[maxFramesInFlight] syncPrimitives;
     int currentFrameSyncIdx;
 
@@ -139,6 +139,7 @@ class SwapChain
     }
 }
 
+//TODO: struct?
 class SyncFramesInFlight
 {
     Semaphore imageAvailable;
