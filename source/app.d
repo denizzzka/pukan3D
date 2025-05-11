@@ -145,8 +145,8 @@ void main() {
     vertexBuffer.cpuBuf[0..$] = cast(void[]) vertices;
     indicesBuffer.cpuBuf[0..$] = cast(void[]) indices;
 
-    vertexBuffer.upload(swapChain.commandPool, initBuf);
-    indicesBuffer.upload(swapChain.commandPool, initBuf);
+    vertexBuffer.uploadImmediate(swapChain.commandPool, initBuf);
+    indicesBuffer.uploadImmediate(swapChain.commandPool, initBuf);
 
     scope texture = device.create!Texture(swapChain.commandPool, initBuf);
     scope(exit) destroy(texture);

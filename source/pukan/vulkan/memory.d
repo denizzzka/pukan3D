@@ -65,8 +65,9 @@ class MemoryBuffer : MemoryBufferBase
         vkCmdCopyBuffer(cmdBuf, srcBuffer, dstBuffer, 1, &copyRegion);
     }
 
+    /// begin-copy-end-submit
     //TODO: static?
-    void copyBuffer(CommandPool cmdPool, VkCommandBuffer buf, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
+    void copyBufferImmediateSubmit(CommandPool cmdPool, VkCommandBuffer buf, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
     {
         cmdPool.recordOneTimeAndSubmit(
             buf,
@@ -129,10 +130,10 @@ class TransferBuffer
 
     auto ref cpuBuf() => cpuBuffer.cpuBuf;
 
-    void upload(CommandPool commandPool, VkCommandBuffer buf)
+    void uploadImmediate(CommandPool commandPool, VkCommandBuffer buf)
     {
         // Copy host RAM buffer to GPU RAM
-        gpuBuffer.copyBuffer(commandPool, buf, cpuBuffer.buf, gpuBuffer.buf, cpuBuf.length);
+        gpuBuffer.copyBufferImmediateSubmit(commandPool, buf, cpuBuffer.buf, gpuBuffer.buf, cpuBuf.length);
     }
 
     void recordUpload(VkCommandBuffer buf)
