@@ -136,6 +136,11 @@ class SwapChain
             }
         }
     }
+
+    void recToCurrOneTimeBuffer(void delegate(VkCommandBuffer) dg)
+    {
+        commandPool.recordOneTime(currSync.commandBuf, dg);
+    }
 }
 
 class SyncFramesInFlight

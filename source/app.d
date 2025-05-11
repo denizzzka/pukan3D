@@ -202,11 +202,7 @@ void main() {
         scene.drawNextFrame((cur) {
             updateUniformBuffer(frameBuilder, sw, swapChain.imageExtent);
 
-            //FIXME: remove
-            ref commandBuffer = swapChain.currSync.commandBuf;
-
-            swapChain.commandPool.recordOneTime(
-                commandBuffer,
+            swapChain.recToCurrOneTimeBuffer(
                 (commandBuffer) {
                     frameBuilder.uniformBuffer.recordUpload(commandBuffer);
 
@@ -220,8 +216,9 @@ void main() {
                         graphicsPipelines.pipelines[0]
                     ));
 
-                scene.renderPass.recordCommandBuffer(commandBuffer);
-            });
+                    scene.renderPass.recordCommandBuffer(commandBuffer);
+                }
+            );
         });
 
         {
