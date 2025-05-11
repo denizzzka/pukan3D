@@ -331,6 +331,7 @@ class FlightRecorder(TBackend)
         import std.conv: to;
         import std.stdio: writeln;
 
+        writeln("Severity: ", messageSeverity, " type: ", messageType);
         writeln(pCallbackData.pMessage.to!string);
 
         if(messageSeverity == VkDebugUtilsMessageSeverityFlagBitsEXT.VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT)
