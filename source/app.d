@@ -8,8 +8,8 @@ import std.stdio;
 import std.string: toStringz;
 
 enum fps = 60;
-enum width = 640;
-enum height = 640;
+enum width = 1;
+enum height = 1;
 
 void main() {
     version(linux)
@@ -27,7 +27,8 @@ void main() {
     enforce(glfwVulkanSupported());
 
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    //~ glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+    glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
 
     auto window = glfwCreateWindow(width, height, name.toStringz, null, null);
     enforce(window, "Cannot create a window");
@@ -190,6 +191,8 @@ void main() {
         scene.descriptorPool.updateSets(descriptorWrites);
     }
 
+    return;
+
     import pukan.exceptions;
 
     auto sw = StopWatch(AutoStart.yes);
@@ -230,6 +233,9 @@ void main() {
 
             frameNum++;
             writeln("FPS: ", fps, ", frame: ", frameNum, ", currentFrameSyncIdx: ", swapChain.currentFrameSyncIdx);
+
+            if(frameNum > 15)
+                return;
 
             enum targetFPS = 80;
             enum frameDuration = dur!"nsecs"(1_000_000_000 / targetFPS);
