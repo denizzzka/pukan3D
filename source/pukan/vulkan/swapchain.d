@@ -95,12 +95,12 @@ class SwapChain
     ~this()
     {
         foreach(ref s; syncPrimitives)
-            destroy(s);
+            destroy_DISABLED(s);
 
         foreach(ref frame; frames)
-            destroy(frame);
+            destroy_DISABLED(frame);
 
-        destroy(oldSwapChain);
+        destroy_DISABLED(oldSwapChain);
 
         if(swapchain)
             vkDestroySwapchainKHR(device.device, swapchain, device.backend.allocator);
@@ -126,7 +126,7 @@ class SwapChain
                 framesSinceSwapchainReplacement++;
             else
             {
-                destroy(oldSwapChain);
+                destroy_DISABLED(oldSwapChain);
                 oldSwapChain = null;
                 framesSinceSwapchainReplacement = 0;
             }

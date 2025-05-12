@@ -32,7 +32,7 @@ class Texture
 
         //FIXME: TransferBuffer is used only as src buffer
         scope buf = device.create!MemoryBufferMappedToCPU(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
-        scope(exit) destroy(buf);
+        scope(exit) destroy_DISABLED(buf);
 
         buf.cpuBuf[0 .. $] = image.allPixelsAtOnce;
 
@@ -92,6 +92,6 @@ class Texture
         if(imageView)
             vkDestroyImageView(device, imageView, device.backend.allocator);
 
-        destroy(textureImageMemory);
+        destroy_DISABLED(textureImageMemory);
     }
 }

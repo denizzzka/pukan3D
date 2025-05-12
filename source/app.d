@@ -47,7 +47,7 @@ void main() {
         writeln(extensions[i].to!string);
 
     auto vk = new Instance(name, makeApiVersion(1,2,3,4), extensions[0 .. ext_count]);
-    scope(exit) destroy(vk);
+    scope(exit) destroy_DISABLED(vk);
 
     //~ vk.printAllDevices();
     //~ vk.printAllAvailableLayers();
@@ -58,11 +58,11 @@ void main() {
         import core.memory: GC;
 
         GC.collect();
-        destroy(device);
+        destroy_DISABLED(device);
     }
 
     debug auto dbg = vk.attachFlightRecorder();
-    debug scope(exit) destroy(dbg);
+    debug scope(exit) destroy_DISABLED(dbg);
 
     import pukan.vulkan.bindings: VkSurfaceKHR;
     static import glfw3.internal;
@@ -124,7 +124,7 @@ void main() {
     }
 
     scope scene = new Scene(device, surface, descriptorSetLayoutBindings, &windowSizeChanged);
-    scope(exit) destroy(scene);
+    scope(exit) destroy_DISABLED(scene);
 
     //FIXME: remove refs
     auto swapChain = &scene.swapChain;
@@ -134,10 +134,10 @@ void main() {
     auto descriptorSets = &scene.descriptorSets;
 
     auto vertexBuffer = device.create!TransferBuffer(Vertex.sizeof * vertices.length, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
-    scope(exit) destroy(vertexBuffer);
+    scope(exit) destroy_DISABLED(vertexBuffer);
 
     auto indicesBuffer = device.create!TransferBuffer(ushort.sizeof * indices.length, VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
-    scope(exit) destroy(indicesBuffer);
+    scope(exit) destroy_DISABLED(indicesBuffer);
 
     // Using any (first) buffer as buffer for initial loading
     auto initBuf = &swapChain.currSync.commandBuf;
@@ -150,7 +150,7 @@ void main() {
     indicesBuffer.uploadImmediate(swapChain.commandPool, *initBuf);
 
     scope texture = device.create!Texture(swapChain.commandPool, *initBuf);
-    scope(exit) destroy(texture);
+    scope(exit) destroy_DISABLED(texture);
 
     VkWriteDescriptorSet[] descriptorWrites;
 

@@ -39,25 +39,25 @@ class Scene
         device.backend.useSurface(surface);
 
         renderPass = device.create!DefaultRenderPass(VK_FORMAT_B8G8R8A8_SRGB);
-        scope(failure) destroy(renderPass);
+        scope(failure) destroy_DISABLED(renderPass);
 
         commandPool = device.createCommandPool();
-        scope(failure) destroy(commandPool);
+        scope(failure) destroy_DISABLED(commandPool);
 
         swapChain = new SwapChain(device, commandPool, surface, renderPass, null);
-        scope(failure) destroy(swapChain);
+        scope(failure) destroy_DISABLED(swapChain);
 
         graphicsQueue = device.getQueue();
         presentQueue = device.getQueue();
 
         frameBuilder = device.create!FrameBuilder(graphicsQueue, presentQueue);
-        scope(failure) destroy(frameBuilder);
+        scope(failure) destroy_DISABLED(frameBuilder);
 
         vertShader = device.create!ShaderModule("vert.spv");
-        scope(failure) destroy(vertShader);
+        scope(failure) destroy_DISABLED(vertShader);
 
         fragShader = device.create!ShaderModule("frag.spv");
-        scope(failure) destroy(fragShader);
+        scope(failure) destroy_DISABLED(fragShader);
 
         shaderStages = [
             vertShader.createShaderStageInfo(VK_SHADER_STAGE_VERTEX_BIT),
@@ -70,22 +70,22 @@ class Scene
         //~ fragShader.compileShader(VK_SHADER_STAGE_FRAGMENT_BIT);
 
         descriptorPool = device.create!DescriptorPool(descriptorSetLayoutBindings);
-        scope(failure) destroy(descriptorPool);
+        scope(failure) destroy_DISABLED(descriptorPool);
 
         pipelineInfoCreator = new DefaultPipelineInfoCreator(device, descriptorPool.descriptorSetLayout, shaderStages);
-        scope(failure) destroy(pipelineInfoCreator);
+        scope(failure) destroy_DISABLED(pipelineInfoCreator);
 
         VkGraphicsPipelineCreateInfo[] infos = [pipelineInfoCreator.pipelineCreateInfo];
 
         graphicsPipelines = device.create!GraphicsPipelines(infos, renderPass);
-        scope(failure) destroy(graphicsPipelines);
+        scope(failure) destroy_DISABLED(graphicsPipelines);
 
         descriptorSets = descriptorPool.allocateDescriptorSets([descriptorPool.descriptorSetLayout]);
     }
 
     ~this()
     {
-        destroy(swapChain);
+        destroy_DISABLED(swapChain);
     }
 
     void recreateSwapChain()

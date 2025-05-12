@@ -13,3 +13,5 @@ public import pukan.vulkan.surface;
 public import pukan.vulkan.shaders;
 public import pukan.vulkan.swapchain;
 public import pukan.vulkan.textures;
+
+void destroy_DISABLED(T)(T v){}

@@ -124,8 +124,8 @@ class TransferBuffer
 
     ~this()
     {
-        destroy(gpuBuffer);
-        destroy(cpuBuffer);
+        destroy_DISABLED(gpuBuffer);
+        destroy_DISABLED(cpuBuffer);
     }
 
     auto ref cpuBuf() => cpuBuffer.cpuBuf;

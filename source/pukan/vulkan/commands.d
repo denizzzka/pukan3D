@@ -96,7 +96,7 @@ class CommandPool
         };
 
         auto fence = device.createFence;
-        scope(exit) destroy(fence);
+        scope(exit) destroy_DISABLED(fence);
 
         vkResetFences(device, 1, &fence.fence).vkCheck;
         vkQueueSubmit(device.getQueue(), 1, &submitInfo, fence).vkCheck;

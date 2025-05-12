@@ -26,7 +26,7 @@ class FrameBuilder
 
     ~this()
     {
-        destroy(uniformBuffer);
+        destroy_DISABLED(uniformBuffer);
     }
 
     VkResult acquireNextImage(SwapChain swapChain, out uint imageIndex)
@@ -199,6 +199,6 @@ struct DepthBuf
         if(depthView)
             vkDestroyImageView(device, depthView, device.backend.allocator);
 
-        destroy(depthImage);
+        destroy_DISABLED(depthImage);
     }
 }

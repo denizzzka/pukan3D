@@ -15,7 +15,7 @@ class DefaultPipelineInfoCreator
         device = dev;
 
         pipelineLayout = createPipelineLayout(device, descriptorSetLayout); //TODO: move out from this class?
-        scope(failure) destroy(pipelineLayout);
+        scope(failure) destroy_DISABLED(pipelineLayout);
 
         shaderStages = shads;
 
