@@ -19,6 +19,9 @@ void main() {
         registerMemoryAssertHandler();
     }
 
+    import core.memory: GC;
+    GC.disable();
+
     immutable name = "D/pukan3D/GLFW project";
 
     enforce(glfwInit());
@@ -55,9 +58,6 @@ void main() {
     auto device = vk.createLogicalDevice();
     scope(exit)
     {
-        import core.memory: GC;
-
-        GC.collect();
         destroy_DISABLED(device);
     }
 
