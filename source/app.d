@@ -61,9 +61,6 @@ void main() {
         destroy_DISABLED(device);
     }
 
-    debug auto dbg = vk.attachFlightRecorder();
-    debug scope(exit) destroy_DISABLED(dbg);
-
     import pukan.vulkan.bindings: VkSurfaceKHR;
     static import glfw3.internal;
 
