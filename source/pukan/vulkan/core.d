@@ -21,6 +21,8 @@ static struct DefaultMemoryAllocator
 
     static VkAllocationCallbacks defaultAllocator;
 
+    static int[void*] ptrsAllocated;
+
     static this()
     {
         defaultAllocator = DefaultMemoryAllocator.getCallbacks();
@@ -29,6 +31,8 @@ static struct DefaultMemoryAllocator
     extern(C):
     nothrow:
 
+    static int counter;
+
     static void* alloc(void* userData, size_t sz, size_t alignment, VkSystemAllocationScope allocationScope)
     {
         auto p = c.aligned_alloc(alignment, sz);
@@ -36,21 +40,41 @@ static struct DefaultMemoryAllocator
         if(p is null)
             onInvalidMemoryOperationError();
 
+        const found = (p in ptrsAllocated);
+        assert(!found, "VK malloc: double allocation!");
+
+        ptrsAllocated[p] = counter;
+        counter++;
+
         return p;
     }
 
     static void* realloc(void* userData, void* orig, size_t sz, size_t alignment, VkSystemAllocationScope allocationScope)
     {
+        const found = (orig in ptrsAllocated);
+        assert(found, "VK realloc: ptr not allocated!");
+        ptrsAllocated.remove(orig);
+
         auto p = c.realloc(orig, sz);
 
         if(p is null)
             onInvalidMemoryOperationError();
+
+        ptrsAllocated[p] = counter;
+        counter++;
 
         return p;
     }
 
     static void free(void* userData, void* orig)
     {
+        if(orig is null)
+            return;
+
+        const found = (orig in ptrsAllocated);
+        assert(found, "VK free: ptr not allocated!");
+        ptrsAllocated.remove(orig);
+
         c.free(orig);
     }
 
