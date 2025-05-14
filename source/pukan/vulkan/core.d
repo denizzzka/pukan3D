@@ -381,7 +381,7 @@ class FlightRecorder(TBackend)
         VkDebugUtilsMessageTypeFlagsEXT messageType,
         const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
         void* pUserData
-    ) //FIXME: nothrow
+    )
     {
         //TODO: move out from renderer package
         import std.conv: to;

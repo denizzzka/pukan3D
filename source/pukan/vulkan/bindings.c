@@ -1,7 +1,5 @@
 // This trampoline file is need because importC can't import .h files directly
 
-#pragma attribute(push, nogc, nothrow)
-
 #include <vulkan/vulkan.h>
 
 #ifdef WIN32
