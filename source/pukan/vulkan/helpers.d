@@ -92,25 +92,6 @@ class VkObj(T...)
     BaseType vkObj;
     alias this = vkObj;
 
-    this(T a)
-    {
-        // Placed out of debug scope to check release code too
-        enum sTypeMustBe = getCreateInfoStructureType!TCreateInfo;
-
-        debug
-        {
-            auto ref createInfo = a[createInfoIdx];
-            createInfo.sType = sTypeMustBe;
-        }
-
-        static if(methodsHaveThisPtr)
-            vkThis = a[0];
-
-        allocator = a[createInfoIdx + 1];
-
-        vkCall(a, &vkObj);
-    }
-
     this(BaseType o, VkAllocationCallbacks* alloc)
     in(o !is null)
     {

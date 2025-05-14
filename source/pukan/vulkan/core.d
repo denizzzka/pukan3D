@@ -72,8 +72,6 @@ static struct DefaultMemoryAllocator
 ///
 class Instance
 {
-    VkAllocationCallbacks* allocator = null;
-
     VkApplicationInfo info = {
          sType: VkStructureType.VK_STRUCTURE_TYPE_APPLICATION_INFO,
          apiVersion: makeApiVersion(0, 1, 2, 0),
@@ -81,8 +79,8 @@ class Instance
          engineVersion: makeApiVersion(0, 0, 0, 1),
     };
 
-    alias VkT = VkObj!(VkInstanceCreateInfo*, VkAllocationCallbacks*);
-    VkT instance;
+    VkInstance instance;
+    VkAllocationCallbacks* allocator = null;
 
     // non-dispatcheable handles, so placing it here
     VkSurfaceKHR surface;
@@ -146,17 +144,10 @@ class Instance
             pNext: &layersSettings,
         };
 
-        instance = create(&createInfo, &DefaultMemoryAllocator.defaultAllocator);
         allocator = &DefaultMemoryAllocator.defaultAllocator;
+        vkCall(&createInfo, allocator, &instance);
 
         log_info("Vulkan instance created");
-    }
-
-    ///
-    this(VkInstance ins)
-    {
-        instance = new VkT(ins, null);
-        log_info("Vulkan instance obtained");
     }
 
     ~this()
@@ -164,7 +155,7 @@ class Instance
         if(surface)
             vkDestroySurfaceKHR(instance, surface, allocator);
 
-        destroy(instance);
+        vkDestroyInstance(instance, allocator);
     }
 
     mixin SurfaceMethods;
