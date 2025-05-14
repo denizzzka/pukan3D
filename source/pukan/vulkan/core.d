@@ -19,11 +19,26 @@ static struct DefaultMemoryAllocator
     import core.exception: onInvalidMemoryOperationError;
     import c = core.stdc.stdlib;
 
-    static VkAllocationCallbacks defaultAllocator;
+    static VkAllocationCallbacks callbacks;
+
+    import core.sync.mutex;
+    static shared Mutex mtx;
+
+    shared static this()
+    {
+        mtx = new shared Mutex();
+    }
 
     static this()
     {
-        defaultAllocator = DefaultMemoryAllocator.getCallbacks();
+        callbacks = VkAllocationCallbacks(
+            pUserData: null,
+            pfnAllocation: &alloc,
+            pfnReallocation: &realloc,
+            pfnFree: &free,
+            pfnInternalAllocation: null,
+            pfnInternalFree: null,
+        );
     }
 
     extern(C):
@@ -31,6 +46,9 @@ static struct DefaultMemoryAllocator
 
     static void* alloc(void* userData, size_t sz, size_t alignment, VkSystemAllocationScope allocationScope)
     {
+        mtx.lock_nothrow();
+        scope(exit) mtx.unlock_nothrow();
+
         auto p = c.aligned_alloc(alignment, sz);
 
         if(p is null)
@@ -41,6 +59,9 @@ static struct DefaultMemoryAllocator
 
     static void* realloc(void* userData, void* orig, size_t sz, size_t alignment, VkSystemAllocationScope allocationScope)
     {
+        mtx.lock_nothrow();
+        scope(exit) mtx.unlock_nothrow();
+
         auto p = c.realloc(orig, sz);
 
         if(p is null)
@@ -51,21 +72,10 @@ static struct DefaultMemoryAllocator
 
     static void free(void* userData, void* orig)
     {
+        mtx.lock_nothrow();
+        scope(exit) mtx.unlock_nothrow();
+
         c.free(orig);
-    }
-
-    static auto getCallbacks()
-    {
-        VkAllocationCallbacks ac = {
-            pUserData: null,
-            pfnAllocation: &alloc,
-            pfnReallocation: &realloc,
-            pfnFree: &free,
-            pfnInternalAllocation: null,
-            pfnInternalFree: null,
-        };
-
-        return ac;
     }
 }
 
@@ -144,7 +154,7 @@ class Instance
             pNext: &layersSettings,
         };
 
-        allocator = &DefaultMemoryAllocator.defaultAllocator;
+        allocator = &DefaultMemoryAllocator.callbacks;
         vkCall(&createInfo, allocator, &instance);
 
         log_info("Vulkan instance created");
