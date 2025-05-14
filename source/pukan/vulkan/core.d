@@ -147,6 +147,7 @@ class Instance
         };
 
         instance = create(&createInfo, &DefaultMemoryAllocator.defaultAllocator);
+        allocator = &DefaultMemoryAllocator.defaultAllocator;
 
         log_info("Vulkan instance created");
     }
