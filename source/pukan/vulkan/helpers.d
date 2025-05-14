@@ -80,6 +80,7 @@ void vkCall(T...)(T a)
     }
 
     static assert(is(T[$-2] == VkAllocationCallbacks*));
+    assert(a[$-2] !is null);
 
     mixin("VkResult r = "~ctorName~"(a);");
     r.vkCheck(baseName~" creation failed");
