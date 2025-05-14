@@ -79,6 +79,8 @@ void vkCall(T...)(T a)
         createInfo.sType = sTypeMustBe;
     }
 
+    static assert(is(T[$-2] == VkAllocationCallbacks*));
+
     mixin("VkResult r = "~ctorName~"(a);");
     r.vkCheck(baseName~" creation failed");
 }
