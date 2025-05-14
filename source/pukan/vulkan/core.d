@@ -14,9 +14,66 @@ uint makeApiVersion(uint variant, uint major, uint minor, uint patch)
     return ((((uint)(variant)) << 29U) | (((uint)(major)) << 22U) | (((uint)(minor)) << 12U) | ((uint)(patch)));
 }
 
+static struct DefaultMemoryAllocator
+{
+    import core.exception: onInvalidMemoryOperationError;
+    import c = core.stdc.stdlib;
+
+    static VkAllocationCallbacks defaultAllocator;
+
+    static this()
+    {
+        defaultAllocator = DefaultMemoryAllocator.getCallbacks();
+    }
+
+    extern(C):
+    nothrow:
+
+    static void* alloc(void* userData, size_t sz, size_t alignment, VkSystemAllocationScope allocationScope)
+    {
+        auto p = c.aligned_alloc(alignment, sz);
+
+        if(p is null)
+            onInvalidMemoryOperationError();
+
+        return p;
+    }
+
+    static void* realloc(void* userData, void* orig, size_t sz, size_t alignment, VkSystemAllocationScope allocationScope)
+    {
+        auto p = c.realloc(orig, sz);
+
+        if(p is null)
+            onInvalidMemoryOperationError();
+
+        return p;
+    }
+
+    static void free(void* userData, void* orig)
+    {
+        c.free(orig);
+    }
+
+    static auto getCallbacks()
+    {
+        VkAllocationCallbacks ac = {
+            pUserData: null,
+            pfnAllocation: &alloc,
+            pfnReallocation: &realloc,
+            pfnFree: &free,
+            pfnInternalAllocation: null,
+            pfnInternalFree: null,
+        };
+
+        return ac;
+    }
+}
+
 ///
 class Instance
 {
+    VkAllocationCallbacks* allocator = null;
+
     VkApplicationInfo info = {
          sType: VkStructureType.VK_STRUCTURE_TYPE_APPLICATION_INFO,
          apiVersion: makeApiVersion(0, 1, 2, 0),
@@ -26,7 +83,6 @@ class Instance
 
     alias VkT = VkObj!(VkInstanceCreateInfo*, VkAllocationCallbacks*);
     VkT instance;
-    VkAllocationCallbacks* allocator = null;
 
     // non-dispatcheable handles, so placing it here
     VkSurfaceKHR surface;
@@ -90,7 +146,7 @@ class Instance
             pNext: &layersSettings,
         };
 
-        instance = create(&createInfo, allocator);
+        instance = create(&createInfo, &DefaultMemoryAllocator.defaultAllocator);
 
         log_info("Vulkan instance created");
     }
