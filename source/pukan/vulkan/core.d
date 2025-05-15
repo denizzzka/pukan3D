@@ -105,8 +105,18 @@ class Instance
         }
     }
 
+    alias CreateInstanceProc = typeof(&vkCreateInstance);
+
     ///
     this(string appName, uint appVer, const(char*)[] extension_list)
+    {
+        CreateInstanceProc createProc = &vkCreateInstance;
+
+        this(createProc, appName, appVer, extension_list);
+    }
+
+    ///
+    this(CreateInstanceProc createInstanceProc, string appName, uint appVer, const(char*)[] extension_list)
     {
         info.pApplicationName = appName.toStringz;
         info.applicationVersion = appVer;
@@ -155,7 +165,7 @@ class Instance
         };
 
         allocator = &DefaultMemoryAllocator.callbacks;
-        vkCall(&createInfo, allocator, &instance);
+        createInstanceProc(&createInfo, allocator, &instance).vkCheck;
 
         log_info("Vulkan instance created");
     }

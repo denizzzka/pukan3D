@@ -45,7 +45,8 @@ void main() {
     foreach(i; 0 .. ext_count)
         writeln(extensions[i].to!string);
 
-    auto vk = new Instance(name, makeApiVersion(1,2,3,4), extensions[0 .. ext_count]);
+    auto createInstanceProc = cast(Instance.CreateInstanceProc) glfwGetInstanceProcAddress(null, "vkCreateInstance");
+    auto vk = new Instance(createInstanceProc, name, makeApiVersion(1,2,3,4), extensions[0 .. ext_count]);
     scope(exit) destroy(vk);
 
     //~ vk.printAllDevices();
