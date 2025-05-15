@@ -35,8 +35,9 @@ static struct DefaultMemoryAllocator
 
     static void* alloc(void* userData, size_t sz, size_t alignment, VkSystemAllocationScope allocationScope)
     {
-        auto p = c.aligned_alloc(alignment, sz);
+        auto p = c.malloc(/*FIXME: alignment?? */ sz);
 
+        //TODO: errno check
         if(p is null)
             onInvalidMemoryOperationError();
 
@@ -127,6 +128,8 @@ class Instance
         info.pApplicationName = appName.toStringz;
         info.applicationVersion = appVer;
 
+        allocator = &DefaultMemoryAllocator.defaultAllocator;
+
         version(Windows)
             extension_list ~= VK_KHR_WIN32_SURFACE_EXTENSION_NAME.ptr;
         else
@@ -170,7 +173,7 @@ class Instance
             pNext: &layersSettings,
         };
 
-        instance = create(&createInfo, &DefaultMemoryAllocator.defaultAllocator);
+        instance = create(&createInfo, allocator);
 
         log_info("Vulkan instance created");
     }
