@@ -11,7 +11,7 @@ import std.string: toStringz;
 /// VK_MAKE_API_VERSION macros
 uint makeApiVersion(uint variant, uint major, uint minor, uint patch)
 {
-    return ((((uint)(variant)) << 29U) | (((uint)(major)) << 22U) | (((uint)(minor)) << 12U) | ((uint)(patch)));
+    return (((cast(uint)variant) << 29U) | ((cast(uint)major) << 22U) | ((cast(uint)minor) << 12U) | (cast(uint)patch));
 }
 
 static struct DefaultMemoryAllocator
