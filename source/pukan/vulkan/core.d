@@ -19,13 +19,28 @@ static struct DefaultMemoryAllocator
     import core.exception: onInvalidMemoryOperationError;
     import c = core.stdc.stdlib;
 
-    static VkAllocationCallbacks defaultAllocator;
+    static VkAllocationCallbacks callbacks;
+
+    import core.sync.mutex;
+    static shared Mutex mtx;
+
+    shared static this()
+    {
+        mtx = new shared Mutex();
+    }
 
     static int[void*] ptrsAllocated;
 
     static this()
     {
-        defaultAllocator = DefaultMemoryAllocator.getCallbacks();
+        callbacks = VkAllocationCallbacks(
+            pUserData: null,
+            pfnAllocation: &alloc,
+            pfnReallocation: &realloc,
+            pfnFree: &free,
+            pfnInternalAllocation: null,
+            pfnInternalFree: null,
+        );
     }
 
     extern(C):
@@ -35,6 +50,9 @@ static struct DefaultMemoryAllocator
 
     static void* alloc(void* userData, size_t sz, size_t alignment, VkSystemAllocationScope allocationScope)
     {
+        mtx.lock_nothrow();
+        scope(exit) mtx.unlock_nothrow();
+
         auto p = c.malloc(/*FIXME: alignment?? */ sz);
 
         //TODO: errno check
@@ -52,6 +70,9 @@ static struct DefaultMemoryAllocator
 
     static void* realloc(void* userData, void* orig, size_t sz, size_t alignment, VkSystemAllocationScope allocationScope)
     {
+        mtx.lock_nothrow();
+        scope(exit) mtx.unlock_nothrow();
+
         const found = (orig in ptrsAllocated);
         assert(found, "VK realloc: ptr not allocated!");
         ptrsAllocated.remove(orig);
@@ -72,25 +93,14 @@ static struct DefaultMemoryAllocator
         if(orig is null)
             return;
 
+        mtx.lock_nothrow();
+        scope(exit) mtx.unlock_nothrow();
+
         const found = (orig in ptrsAllocated);
         assert(found, "VK free: ptr not allocated!");
         ptrsAllocated.remove(orig);
 
         c.free(orig);
-    }
-
-    static auto getCallbacks()
-    {
-        VkAllocationCallbacks ac = {
-            pUserData: null,
-            pfnAllocation: &alloc,
-            pfnReallocation: &realloc,
-            pfnFree: &free,
-            pfnInternalAllocation: null,
-            pfnInternalFree: null,
-        };
-
-        return ac;
     }
 }
 
@@ -128,7 +138,7 @@ class Instance
         info.pApplicationName = appName.toStringz;
         info.applicationVersion = appVer;
 
-        allocator = &DefaultMemoryAllocator.defaultAllocator;
+        allocator = &DefaultMemoryAllocator.callbacks;
 
         version(Windows)
             extension_list ~= VK_KHR_WIN32_SURFACE_EXTENSION_NAME.ptr;
