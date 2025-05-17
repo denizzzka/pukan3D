@@ -11,6 +11,14 @@ enum fps = 60;
 enum width = 1;
 enum height = 1;
 
+//~ static extern(C) int mcheck_pedantic(void*);
+
+//~ export extern(C) void free(void*) {};
+
+import ldc.attributes;
+@noSanitize("memory")
+void init_glfw() { enforce(glfwInit()); }
+
 void main() {
     version(linux)
     version(DigitalMars)
@@ -24,7 +32,7 @@ void main() {
 
     immutable name = "D/pukan3D/GLFW project";
 
-    enforce(glfwInit());
+    init_glfw();
     scope(exit) glfwTerminate();
 
     enforce(glfwVulkanSupported());
@@ -49,6 +57,11 @@ void main() {
     foreach(i; 0 .. ext_count)
         writeln(extensions[i].to!string);
 
+    //~ assert(mcheck_pedantic(null) != -1);
+
+    //~ scope vkLib = new VulcanLibrary();
+    //~ scope(exit) destroy_DISABLED(vkLib);
+
     auto vk = new Instance(name, makeApiVersion(1,2,3,4), extensions[0 .. ext_count]);
     scope(exit) destroy_DISABLED(vk);
 
@@ -72,8 +85,8 @@ void main() {
         cast(ulong*) &surface
     );
 
-    vk.printSurfaceFormats(vk.devices[vk.deviceIdx], surface);
-    vk.printPresentModes(vk.devices[vk.deviceIdx], surface);
+    //~ vk.printSurfaceFormats(vk.devices[vk.deviceIdx], surface);
+    //~ vk.printPresentModes(vk.devices[vk.deviceIdx], surface);
 
     import pukan.vulkan.bindings;
 
@@ -121,72 +134,78 @@ void main() {
     }
 
     scope scene = new Scene(device, surface, descriptorSetLayoutBindings, &windowSizeChanged);
-    scope(exit) destroy_DISABLED(scene);
-
-    //FIXME: remove refs
-    auto swapChain = &scene.swapChain;
-    auto frameBuilder = &scene.frameBuilder;
-    //~ ref pipelineInfoCreator = scene.pipelineInfoCreator;
-    //~ ref graphicsPipelines = scene.graphicsPipelines;
-    auto descriptorSets = &scene.descriptorSets;
-
-    auto vertexBuffer = device.create!TransferBuffer(Vertex.sizeof * vertices.length, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
-    scope(exit) destroy_DISABLED(vertexBuffer);
-
-    auto indicesBuffer = device.create!TransferBuffer(ushort.sizeof * indices.length, VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
-    scope(exit) destroy_DISABLED(indicesBuffer);
-
-    // Using any (first) buffer as buffer for initial loading
-    auto initBuf = &swapChain.currSync.commandBuf;
-
-    // Copy vertices to mapped memory
-    vertexBuffer.cpuBuf[0..$] = cast(void[]) vertices;
-    indicesBuffer.cpuBuf[0..$] = cast(void[]) indices;
-
-    vertexBuffer.uploadImmediate(swapChain.commandPool, *initBuf);
-    indicesBuffer.uploadImmediate(swapChain.commandPool, *initBuf);
-
-    scope texture = device.create!Texture(swapChain.commandPool, *initBuf);
-    scope(exit) destroy_DISABLED(texture);
-
-    VkWriteDescriptorSet[] descriptorWrites;
-
+    scope(exit)
     {
-        VkDescriptorBufferInfo bufferInfo = {
-            buffer: frameBuilder.uniformBuffer.gpuBuffer,
-            offset: 0,
-            range: UniformBufferObject.sizeof,
-        };
-
-        VkDescriptorImageInfo imageInfo = {
-            imageLayout: VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-            imageView: texture.imageView,
-            sampler: texture.sampler,
-        };
-
-        descriptorWrites = [
-            VkWriteDescriptorSet(
-                sType: VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-                dstSet: (*descriptorSets)[0 /*TODO: frame number*/],
-                dstBinding: 0,
-                dstArrayElement: 0,
-                descriptorType: VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-                descriptorCount: 1,
-                pBufferInfo: &bufferInfo,
-            ),
-            VkWriteDescriptorSet(
-                sType: VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-                dstSet: (*descriptorSets)[0 /*TODO: frame number*/],
-                dstBinding: 1,
-                dstArrayElement: 0,
-                descriptorType: VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-                descriptorCount: 1,
-                pImageInfo: &imageInfo,
-            )
-        ];
-
-        scene.descriptorPool.updateSets(descriptorWrites);
+        destroy_DISABLED(scene);
+        GC.collect();
     }
 
-    vkDeviceWaitIdle(device.device);
+return;
+
+    //~ //FIXME: remove refs
+    //~ auto swapChain = &scene.swapChain;
+    //~ auto frameBuilder = &scene.frameBuilder;
+    //~ ref pipelineInfoCreator = scene.pipelineInfoCreator;
+    //~ ref graphicsPipelines = scene.graphicsPipelines;
+    //~ auto descriptorSets = &scene.descriptorSets;
+
+    //~ auto vertexBuffer = device.create!TransferBuffer(Vertex.sizeof * vertices.length, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
+    //~ scope(exit) destroy_DISABLED(vertexBuffer);
+
+    //~ auto indicesBuffer = device.create!TransferBuffer(ushort.sizeof * indices.length, VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
+    //~ scope(exit) destroy_DISABLED(indicesBuffer);
+
+    //~ // Using any (first) buffer as buffer for initial loading
+    //~ auto initBuf = &swapChain.currSync.commandBuf;
+
+    //~ // Copy vertices to mapped memory
+    //~ vertexBuffer.cpuBuf[0..$] = cast(void[]) vertices;
+    //~ indicesBuffer.cpuBuf[0..$] = cast(void[]) indices;
+
+    //~ vertexBuffer.uploadImmediate(swapChain.commandPool, *initBuf);
+    //~ indicesBuffer.uploadImmediate(swapChain.commandPool, *initBuf);
+
+    //~ scope texture = device.create!Texture(swapChain.commandPool, *initBuf);
+    //~ scope(exit) destroy_DISABLED(texture);
+
+    //~ VkWriteDescriptorSet[] descriptorWrites;
+
+    //~ {
+        //~ VkDescriptorBufferInfo bufferInfo = {
+            //~ buffer: frameBuilder.uniformBuffer.gpuBuffer,
+            //~ offset: 0,
+            //~ range: UniformBufferObject.sizeof,
+        //~ };
+
+        //~ VkDescriptorImageInfo imageInfo = {
+            //~ imageLayout: VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+            //~ imageView: texture.imageView,
+            //~ sampler: texture.sampler,
+        //~ };
+
+        //~ descriptorWrites = [
+            //~ VkWriteDescriptorSet(
+                //~ sType: VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+                //~ dstSet: (*descriptorSets)[0 /*TODO: frame number*/],
+                //~ dstBinding: 0,
+                //~ dstArrayElement: 0,
+                //~ descriptorType: VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+                //~ descriptorCount: 1,
+                //~ pBufferInfo: &bufferInfo,
+            //~ ),
+            //~ VkWriteDescriptorSet(
+                //~ sType: VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+                //~ dstSet: (*descriptorSets)[0 /*TODO: frame number*/],
+                //~ dstBinding: 1,
+                //~ dstArrayElement: 0,
+                //~ descriptorType: VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+                //~ descriptorCount: 1,
+                //~ pImageInfo: &imageInfo,
+            //~ )
+        //~ ];
+
+        //~ scene.descriptorPool.updateSets(descriptorWrites);
+    //~ }
+
+    //~ vkDeviceWaitIdle(device.device);
 }
