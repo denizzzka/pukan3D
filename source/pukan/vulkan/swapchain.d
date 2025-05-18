@@ -155,6 +155,9 @@ class SyncFramesInFlight
     {
         commandBuf = cb;
 
+        import core.memory: GC;
+        GC.collect();
+
         imageAvailable = device.create!Semaphore;
         renderFinished = device.create!Semaphore;
         inFlightFence = device.create!Fence;
