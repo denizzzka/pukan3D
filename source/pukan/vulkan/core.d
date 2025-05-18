@@ -29,7 +29,7 @@ static struct DefaultMemoryAllocator
         mtx = new shared Mutex();
     }
 
-    static int[void*] ptrsAllocated;
+    __gshared int[void*] ptrsAllocated;
 
     static this()
     {
@@ -46,6 +46,8 @@ static struct DefaultMemoryAllocator
     extern(C):
     nothrow:
 
+    import core.stdc.stdio;
+
     static int counter;
 
     static void* alloc(void* userData, size_t sz, size_t alignment, VkSystemAllocationScope allocationScope)
@@ -54,6 +56,7 @@ static struct DefaultMemoryAllocator
         scope(exit) mtx.unlock_nothrow();
 
         auto p = c.malloc(/*FIXME: alignment?? */ sz);
+        printf("ALLOCATOR: %p\n", p);
 
         //TODO: errno check
         if(p is null)
@@ -72,6 +75,8 @@ static struct DefaultMemoryAllocator
     {
         mtx.lock_nothrow();
         scope(exit) mtx.unlock_nothrow();
+
+        printf("REALLOC: %p\n", orig);
 
         const found = (orig in ptrsAllocated);
         assert(found, "VK realloc: ptr not allocated!");
@@ -96,8 +101,16 @@ static struct DefaultMemoryAllocator
         mtx.lock_nothrow();
         scope(exit) mtx.unlock_nothrow();
 
+        printf("FREE: %p\n", orig);
+
         const found = (orig in ptrsAllocated);
-        assert(found, "VK free: ptr not allocated!");
+        if(!found)
+        {
+            printf("VK free: %p was not allocated!\n", orig);
+            fflush(stdout);
+            assert(false);
+        }
+
         ptrsAllocated.remove(orig);
 
         c.free(orig);
